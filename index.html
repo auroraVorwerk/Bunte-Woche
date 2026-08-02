@@ -176,8 +176,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .pcard .why{margin-top:10px;font-size:.85rem;border-left:2px solid var(--line);padding-left:12px;color:var(--muted)}
 /* Statistik */
 .stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1520px;font-size:.8rem}
-.stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
-.stat thead th{background:var(--surface-3);font-weight:700;color:var(--text)}
+.stat th,.stat td{border:1px solid rgba(255,255,255,.10);border-radius:6px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
+.stat thead th{background:var(--surface-3);font-weight:700;color:var(--text);border-color:rgba(255,255,255,.16)}
 .stat thead tr.grp th{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:6px 8px}
 .stat thead tr.grp th.empty{background:transparent;border-color:transparent}
 .stat th.vh{height:158px;padding:10px 2px;font-size:.7rem;font-weight:600;white-space:nowrap}
@@ -187,8 +187,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat .col-alt{width:120px}
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
-/* Gruppentrenner */
-.stat th.gs,.stat td.gs{border-left:2px solid rgba(255,255,255,.16)}
+/* Gruppentrenner – deutlich kräftiger als das feine Zellraster */
+.stat th.gs,.stat td.gs{border-left:3px solid rgba(255,255,255,.34)}
 /* Klebende Spalten */
 .stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
 .stat thead th.sticky{z-index:4;background:var(--surface-3)}
@@ -197,7 +197,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 /* Zeilenwechsel + Hervorhebung */
 .stat tbody tr.z0 td{background:#2e2c29}
 .stat tbody tr.z1 td{background:#35332f}
-.stat tbody tr.hl td{background:#403d36;border-color:var(--surface)}
+.stat tbody tr.hl td{background:#413e37}
 .stat tbody tr.hl td.sticky{box-shadow:inset 3px 0 0 var(--accent)}
 .stat tbody tr:hover td{filter:brightness(1.06)}
 /* Tagesbanner */
@@ -208,7 +208,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat td.name small{display:block;color:var(--muted);font-size:.72rem}
 .stat td.alt{font-size:.78rem}
 .stat td.off{color:transparent}
-.stat td.tick{font-weight:800}
+.stat td.tick{font-weight:800;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22)}
 .stat td.num{font-family:"JetBrains Mono",monospace}
 .stat td.strong{font-weight:700;color:var(--text)}
 .stat tr.sum td{background:color-mix(in srgb,var(--accent) 18%,var(--surface));font-weight:700;font-family:"JetBrains Mono",monospace}
