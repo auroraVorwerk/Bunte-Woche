@@ -216,6 +216,61 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat tr.sum td.lbl{text-align:left;padding-left:12px;font-family:"Manrope",sans-serif}
 .stat tr.empty td{background:transparent;border-color:transparent;color:var(--muted);padding:40px 10px}
 .statnote{font-size:.76rem;color:var(--faint);margin-top:12px;padding:0 4px}
+
+/* Auswertungen */
+.rangebar{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:14px 16px;margin-bottom:16px}
+.rangebar .rl{display:block;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
+.asec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:20px;margin-bottom:16px}
+.asec h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.asec .sub{font-size:.8rem;color:var(--muted);margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:10px}
+.kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:14px}
+.kpi .kl{display:block;font-size:.7rem;color:var(--muted);line-height:1.3;min-height:2.2em}
+.kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.4rem;font-weight:600;margin-top:4px}
+.kpi .ks{display:block;font-size:.7rem;color:var(--faint);margin-top:2px}
+.kpi.hero{background:color-mix(in srgb,var(--accent) 18%,var(--surface-2))}
+.ah4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:24px 0 10px}
+.ascroll{overflow-x:auto}
+.atable{width:100%;min-width:460px;border-collapse:separate;border-spacing:0 4px;font-size:.82rem}
+.atable th{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;text-align:right;padding:0 10px 4px;white-space:nowrap}
+.atable th:first-child{text-align:left}
+.atable td{background:var(--surface-2);padding:11px 10px;text-align:right;font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.atable td:first-child{text-align:left;font-family:"Manrope",sans-serif;font-weight:600;border-radius:var(--r) 0 0 var(--r)}
+.atable td:last-child{border-radius:0 var(--r) var(--r) 0}
+.atable tr.best td{background:color-mix(in srgb,var(--accent) 22%,var(--surface-2))}
+.aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+.aline{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.83rem}
+.aline .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aline .bar{flex:0 0 42%;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;position:relative}
+.aline .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:4px}
+.aline .vl{flex:none;width:92px;text-align:right;font-family:"JetBrains Mono",monospace;color:var(--muted)}
+
+.pdfbtn{background:var(--accent);color:#1e2a22;border:0;border-radius:999px;padding:7px 14px;font-size:.72rem;font-weight:800;cursor:pointer;letter-spacing:.04em}
+.pdfbtn:hover{filter:brightness(1.08)}
+.printhead{display:none}
+
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  html,body{background:#fff!important;color:#111!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend{display:none!important}
+  .wrap{padding:0!important;max-width:none}
+  .board{background:#fff!important;border:0!important;padding:0!important}
+  .scroller{overflow:visible!important;transform:scale(var(--pscale,1));transform-origin:top left;width:max-content}
+  .printhead{display:block!important;color:#111;font-weight:800;font-size:13pt;margin-bottom:5mm}
+  .printhead small{display:block;font-weight:400;font-size:9pt;color:#555}
+  .stat{min-width:0!important}
+  .stat th,.stat td{border-color:#c9c9c9!important;padding:5px 6px}
+  .stat thead th{background:#eee!important;color:#111!important}
+  .stat tbody tr.z0 td{background:#fff!important;color:#111!important}
+  .stat tbody tr.z1 td{background:#f5f5f5!important;color:#111!important}
+  .stat tbody tr.hl td{background:#fff!important;color:#111!important;box-shadow:none!important}
+  .stat td.name small{color:#666!important}
+  .stat tr.sep td{background:#444!important}
+  .stat tr.sum td{background:#e6ede7!important;color:#111!important}
+  .stat tr.dayrow span{background:#dde5de!important;color:#111!important}
+  .stat td.off{background:#fbfbfb!important}
+}
 .page{display:none}
 .page.active{display:block}
 .placeholder{border:1px dashed var(--line);border-radius:var(--r-xl);padding:44px 20px;text-align:center;color:var(--muted);font-size:.9rem}
@@ -265,10 +320,17 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
       <button class="nav" id="next2" aria-label="Nächste Woche"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button>
     </div>
     <button class="todaybtn" id="todayBtn2" hidden>Zur aktuellen Woche</button>
+    <div class="printhead" id="printhead"></div>
     <div class="board"><div class="scroller"><table class="stat" id="statTable"></table></div></div>
     <p class="statnote">Jeder nachbereitete Kundentermin trägt sich hier automatisch ein.</p>
   </section>
-  <section class="page" id="page-auswertungen"><div class="placeholder">Auswertungen – noch leer.</div></section>
+  <section class="page" id="page-auswertungen">
+    <div class="rangebar">
+      <span class="rl">Zeitraum</span>
+      <div class="seg" id="rangeSeg"></div>
+    </div>
+    <div id="ausw"></div>
+  </section>
   <section class="page" id="page-provision"><div class="placeholder">Provisionsrechner – bauen wir zuletzt.</div></section>
   <section class="page" id="page-wunsch"><div class="placeholder">Provisionswunsch – noch leer.</div></section>
 </main>
@@ -329,6 +391,7 @@ function vertriebswoche(week,year){
 /* ================= Daten (später Firebase) ================= */
 const entries = {};        // "2026-08-03|14" -> Eintrag
 const potenzial = [];      // Potenzialliste
+const verlauf = [];        // {datum, art:"verschoben"|"abgesagt"} für die Auswertung
 let monday = mondayOf(new Date());
 const key = (day,hour) => `${day}|${hour}`;
 const toDec = t => {const [h,m]=t.split(":").map(Number); return h+m/60;};
@@ -659,7 +722,10 @@ function paint(){
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> saveNb(e);
     const dc = document.getElementById('doCancel');
-    if(dc) dc.onclick = ()=>{ delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll(); };
+    if(dc) dc.onclick = ()=>{
+      verlauf.push({datum:draft.day, art:"abgesagt"});
+      delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll();
+    };
     const dm = document.getElementById('doMove');
     if(dm) dm.onclick = ()=>{
       collect();
@@ -669,6 +735,7 @@ function paint(){
       if(entries[key(nd,nh)]){ error="Auf diesem Platz steht schon ein Eintrag."; repaint(); return; }
       entries[key(nd,nh)] = {...e, status:undefined};
       delete entries[key(draft.day,draft.hour)];
+      verlauf.push({datum:draft.day, art:"verschoben"});
       closeModal(); renderAll();
     };
     return;
@@ -866,7 +933,7 @@ function renderStat(){
   const COLS = 30;
   let head = `<thead>
     <tr class="grp">
-      <th class="empty sticky s1 col-time"></th><th class="empty sticky s2 col-name"></th>
+      <th class="empty sticky s1 col-time"><button class="pdfbtn" id="pdfBtn" title="Als PDF exportieren">PDF</button></th><th class="empty sticky s2 col-name"></th>
       <th colspan="5" class="gs">Kontaktweg</th><th colspan="2" class="gs">Kunde</th><th colspan="2">Gebiet</th>
       <th colspan="3" class="gs">Profi</th><th class="gs">Kunde</th><th colspan="12" class="gs">Vorgeführt</th>
       <th colspan="3" class="gs">Einheiten und Umsätze</th>
@@ -958,9 +1025,188 @@ document.getElementById('statTable').addEventListener('click', ev=>{
 });
 
 
+/* Druck: Tabelle so skalieren, dass sie immer auf eine Seite passt */
+function preparePrint(){
+  const t = document.getElementById('statTable');
+  const {week} = isoWeek(monday);
+  document.getElementById('printhead').innerHTML =
+    `Bunte Woche – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
+  const w = t.scrollWidth, h = t.scrollHeight;
+  const PW = 1062, PH = 700;                       // A4 quer, 8 mm Rand, abzüglich Kopfzeile
+  const k = Math.min(PW/(w||1), PH/(h||1), 1);
+  document.documentElement.style.setProperty('--pscale', k.toFixed(3));
+}
+addEventListener('beforeprint', preparePrint);
+document.addEventListener('click', ev=>{
+  if(ev.target.id === 'pdfBtn'){ preparePrint(); setTimeout(()=>window.print(), 60); }
+});
+
+/* ================= Auswertungen ================= */
+const RANGES = [{w:1,t:"1 Woche"},{w:4,t:"4 Wochen"},{w:13,t:"13 Wochen"},{w:26,t:"26 Wochen"},{w:52,t:"52 Wochen"}];
+let rangeWeeks = 4;
+const TAGESZEIT = ["Vormittag","Nachmittag","Abend"];
+const WETTER = ["Sonnig","Wolkig","Regnerisch"];
+const TEMPS = ["unter 0°C","0–15°C","15–25°C","über 25°C"];
+
+const dur = n => Math.max(0,(toDec(n.realEnde||"0:00")||0) - (toDec(n.realStart||"0:00")||0));
+const tageszeit = n => { const h = toDec(n.realStart||"12:00"); return h<12?"Vormittag":(h<17?"Nachmittag":"Abend"); };
+const dec = (v,d=1) => (isFinite(v) && v>0) ? v.toFixed(d).replace(".",",") : "–";
+const pct = (a,b) => b ? Math.round(a/b*100)+" %" : "–";
+const sumOf = (arr,f) => arr.reduce((s,x)=>s+(+f(x)||0),0);
+
+/* Zeitraum: N Wochen zurück, inklusive der laufenden */
+function rangeKeys(weeks){
+  const to = mondayOf(new Date()); to.setDate(to.getDate()+6);
+  const from = mondayOf(new Date()); from.setDate(from.getDate() - (weeks-1)*7);
+  return {from:dk(from), to:dk(to), fromD:from, toD:to};
+}
+function pick(weeks,filter){
+  const {from,to} = rangeKeys(weeks);
+  const out = [];
+  Object.keys(entries).forEach(k=>{
+    const [day,h] = k.split("|");
+    if(day < from || day > to) return;
+    const e = entries[k];
+    if(filter(e)) out.push({day,h:+h,e,n:e.nb||{},wd:(fromDk(day).getDay()+6)%7});
+  });
+  return out;
+}
+
+/* Kennzahlen, die auch andere Seiten nutzen können */
+function quoten(weeks = rangeWeeks){
+  const fgb = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Festgebietsbegehung" && e.nb && e.nb.realStart);
+  const pro = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Promotion" && e.nb && e.nb.realStart);
+  const kt  = pick(weeks, e=>e.kind==="kunde");
+  const gem = kt.filter(x=>x.e.status==="stattgefunden");
+  const {from,to} = rangeKeys(weeks);
+  const bewegt = verlauf.filter(v=>v.datum>=from && v.datum<=to);
+  const std = a => sumOf(a,x=>dur(x.n));
+  return {
+    zeitraum:{weeks,from,to},
+    fgb:{ n:fgb.length, std:std(fgb), tueren:sumOf(fgb,x=>x.n.tueren), erreicht:sumOf(fgb,x=>x.n.erreicht),
+          termine:sumOf(fgb,x=>x.n.termine), rueck:sumOf(fgb,x=>x.n.rueck),
+          d2d:fgb.filter(x=>x.e.modus==="Door to Door").length, best:fgb.filter(x=>x.e.modus==="Bestandskunde").length, list:fgb },
+    promo:{ n:pro.length, std:std(pro), ansprachen:sumOf(pro,x=>x.n.ansprachen), gespraeche:sumOf(pro,x=>x.n.gespraeche),
+            termine:sumOf(pro,x=>x.n.termine), kontakte:sumOf(pro,x=>x.n.kontakte), list:pro },
+    termine:{ gesamt:kt.length+bewegt.length, stattgefunden:gem.length,
+              verschoben:bewegt.filter(v=>v.art==="verschoben").length,
+              abgesagt:bewegt.filter(v=>v.art==="abgesagt").length,
+              verkauft:gem.filter(x=>x.n.verkauft==="Ja").length,
+              vorgefuehrt:gem.filter(x=>(x.n.vorgefuehrt||[]).length>0).length,
+              einheiten:sumOf(gem,x=>x.n.einheiten), umsatz:sumOf(gem,x=>num(x.n.umsatz)),
+              k70:sumOf(gem,x=>num(x.n.k70betrag)),
+              neu:gem.filter(x=>x.n.kundenstatus==="Neukunde").length,
+              bestand:gem.filter(x=>x.n.kundenstatus==="Bestandskunde").length,
+              fg:gem.filter(x=>x.n.gebiet==="Festgebiet").length,
+              wg:gem.filter(x=>x.n.gebiet==="Weißgebiet").length,
+              list:gem }
+  };
+}
+
+const kpi = (l,v,s="",cls="") => `<div class="kpi ${cls}"><span class="kl">${l}</span><span class="kv">${v}</span>${s?`<span class="ks">${s}</span>`:""}</div>`;
+
+/* Aufschlüsselung nach Wetter, Temperatur, Wochentag, Tageszeit */
+function grpTable(list, groupFn, order, spec){
+  const g = new Map();
+  list.forEach(x=>{ const k = groupFn(x); if(!k) return; (g.get(k) || g.set(k,[]).get(k)).push(x); });
+  const keys = (order||[...g.keys()]).filter(k=>g.has(k));
+  if(!keys.length) return `<p class="aempty">Noch keine Daten.</p>`;
+  const rows = keys.map(k=>({k, v:spec.calc(g.get(k))}));
+  const bestVal = Math.max(...rows.map(r=>r.v.leit));
+  return `<div class="ascroll"><table class="atable">
+    <thead><tr><th>${spec.head}</th>${spec.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
+    <tbody>${rows.map(r=>`<tr class="${r.v.leit===bestVal && bestVal>0 ? "best":""}">
+      <td>${r.k}</td>${r.v.cells.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+const fgbCalc = arr => {
+  const std = sumOf(arr,x=>dur(x.n)), t = sumOf(arr,x=>x.n.tueren), te = sumOf(arr,x=>x.n.termine);
+  return {leit: std ? te/std : 0, cells:[arr.length, dec(std), dec(std?t/std:0), dec(std?te/std:0), pct(te,t)]};
+};
+const proCalc = arr => {
+  const std = sumOf(arr,x=>dur(x.n)), a = sumOf(arr,x=>x.n.ansprachen), te = sumOf(arr,x=>x.n.termine);
+  return {leit: std ? te/std : 0, cells:[arr.length, dec(std), dec(std?a/std:0), dec(std?te/std:0), pct(te,a)]};
+};
+const FGB_COLS = ["Einsätze","Stunden","Türen/Std","Termine/Std","Termin je Tür"];
+const PRO_COLS = ["Einsätze","Stunden","Ansprachen/Std","Termine/Std","Termin je Ansprache"];
+
+function block(list, calc, cols){
+  return `<div class="ah4">Nach Wetter</div>${grpTable(list,x=>x.n.wetter,WETTER,{head:"Wetter",cols,calc})}
+    <div class="ah4">Nach Temperatur</div>${grpTable(list,x=>x.n.temp,TEMPS,{head:"Temperatur",cols,calc})}
+    <div class="ah4">Nach Wochentag</div>${grpTable(list,x=>DAYS_L[x.wd],DAYS_L,{head:"Tag",cols,calc})}
+    <div class="ah4">Nach Tageszeit</div>${grpTable(list,x=>tageszeit(x.n),TAGESZEIT,{head:"Zeit",cols,calc})}`;
+}
+
+function renderAusw(){
+  document.getElementById('rangeSeg').innerHTML =
+    RANGES.map(r=>`<button type="button" data-rw="${r.w}" aria-pressed="${r.w===rangeWeeks}">${r.t}</button>`).join("");
+
+  const q = quoten();
+  const f = q.fgb, p = q.promo, t = q.termine;
+
+  const s1 = `<div class="asec"><h3>Festgebietsbegehung</h3>
+    <p class="sub">${f.n} Einsätze · ${dec(f.std)} Stunden im gewählten Zeitraum</p>
+    <div class="kpis">
+      ${kpi("Türen pro Stunde", dec(f.std?f.tueren/f.std:0), `${f.tueren||0} Türen gesamt`,"hero")}
+      ${kpi("Termine pro Stunde", dec(f.std?f.termine/f.std:0), `${f.termine||0} Termine gesamt`,"hero")}
+      ${kpi("Erreicht je Tür", pct(f.erreicht,f.tueren), `${f.erreicht||0} erreicht`)}
+      ${kpi("Termin je Tür", pct(f.termine,f.tueren))}
+      ${kpi("Termin je Erreichtem", pct(f.termine,f.erreicht))}
+      ${kpi("Rückmeldungstermine", f.rueck||"–")}
+      ${kpi("Door to Door", `${f.d2d}`, pct(f.d2d,f.n))}
+      ${kpi("Bestandskunden", `${f.best}`, pct(f.best,f.n))}
+      ${kpi("Ø Dauer je Einsatz", dec(f.n?f.std/f.n:0)+" h")}
+    </div>
+    ${block(f.list,fgbCalc,FGB_COLS)}</div>`;
+
+  const s2 = `<div class="asec"><h3>Promotion</h3>
+    <p class="sub">${p.n} Einsätze · ${dec(p.std)} Stunden im gewählten Zeitraum</p>
+    <div class="kpis">
+      ${kpi("Ansprachen pro Stunde", dec(p.std?p.ansprachen/p.std:0), `${p.ansprachen||0} gesamt`,"hero")}
+      ${kpi("Termine pro Stunde", dec(p.std?p.termine/p.std:0), `${p.termine||0} Termine gesamt`,"hero")}
+      ${kpi("Gespräch je Ansprache", pct(p.gespraeche,p.ansprachen), `${p.gespraeche||0} Gespräche`)}
+      ${kpi("Termin je Gespräch", pct(p.termine,p.gespraeche))}
+      ${kpi("Termin je Ansprache", pct(p.termine,p.ansprachen))}
+      ${kpi("Kontakte", p.kontakte||"–", `${dec(p.std?p.kontakte/p.std:0)} pro Stunde`)}
+      ${kpi("Ø Dauer je Einsatz", dec(p.n?p.std/p.n:0)+" h")}
+    </div>
+    ${block(p.list,proCalc,PRO_COLS)}</div>`;
+
+  const demoCount = d => t.list.filter(x=>(x.n.vorgefuehrt||[]).includes(d)).length;
+  const maxDemo = Math.max(1,...DEMO.map(demoCount));
+  const s3 = `<div class="asec"><h3>Kundentermine</h3>
+    <p class="sub">${t.gesamt} Termine im gewählten Zeitraum, davon ${t.stattgefunden} nachbereitet</p>
+    <div class="kpis">
+      ${kpi("Stattgefunden", `${t.stattgefunden}`, pct(t.stattgefunden,t.gesamt),"hero")}
+      ${kpi("Verschoben", `${t.verschoben}`, pct(t.verschoben,t.gesamt))}
+      ${kpi("Abgesagt", `${t.abgesagt}`, pct(t.abgesagt,t.gesamt))}
+      ${kpi("Vorführquote", pct(t.vorgefuehrt,t.stattgefunden), "Termine mit Vorführung")}
+      ${kpi("Abschlussquote", pct(t.verkauft,t.stattgefunden), `${t.verkauft} Abschlüsse`,"hero")}
+      ${kpi("Einheiten je Termin", dec(t.stattgefunden?t.einheiten/t.stattgefunden:0,2), `${t.einheiten||0} gesamt`)}
+      ${kpi("Umsatz je Termin", eur(t.stattgefunden?t.umsatz/t.stattgefunden:0)+" €", `${eur(t.umsatz)} € gesamt`)}
+      ${kpi("K70 je Termin", eur(t.stattgefunden?t.k70/t.stattgefunden:0)+" €", `${eur(t.k70)} € gesamt`)}
+      ${kpi("Neukunde / Bestand", `${t.neu} / ${t.bestand}`, `${pct(t.neu,t.stattgefunden)} neu`)}
+      ${kpi("Festgebiet / Weißgebiet", `${t.fg} / ${t.wg}`, `${pct(t.fg,t.stattgefunden)} Festgebiet`)}
+    </div>
+    <div class="ah4">Wie oft wird was vorgeführt?</div>
+    ${t.stattgefunden ? DEMO.map(d=>{
+      const c = demoCount(d);
+      return `<div class="aline"><span class="nm">${d}</span>
+        <span class="bar"><i style="width:${c/maxDemo*100}%"></i></span>
+        <span class="vl">${c} · ${pct(c,t.stattgefunden)}</span></div>`;
+    }).join("") : `<p class="aempty">Noch keine nachbereiteten Termine.</p>`}</div>`;
+
+  document.getElementById('ausw').innerHTML = s1 + s2 + s3;
+}
+document.getElementById('rangeSeg').addEventListener('click', ev=>{
+  const b = ev.target.closest('[data-rw]');
+  if(!b) return;
+  rangeWeeks = +b.dataset.rw;
+  renderAusw();
+});
+
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); }
+function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
