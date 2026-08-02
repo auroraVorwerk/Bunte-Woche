@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#262624">
 <title>Bunte Woche</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -96,6 +98,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .metric input:hover{background:rgba(255,255,255,.04)}
 .metric .sep{color:var(--faint)}
 .metric .ist{width:44%;text-align:center;font-size:.82rem;font-weight:600}
+.metric.one .ist{width:100%}
 .metric .soll{width:44%;text-align:center;color:var(--faint);font-size:.82rem}
 
 /* Legende */
@@ -188,10 +191,10 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
 /* Durchgehende Trennlinien mit Abstand zu den Blöcken */
-.stat td.vsep,.stat th.vsep{width:13px;min-width:13px;padding:0;border:0;border-radius:0;background:
-  linear-gradient(to right,transparent 0 5px,rgba(255,255,255,.34) 5px 7px,transparent 7px 13px)}
-.stat tr.sep td{padding:0;height:9px;border:0;border-radius:0;background:
-  linear-gradient(to bottom,transparent 0 3px,rgba(255,255,255,.34) 3px 5px,transparent 5px 9px)}
+.stat td.vsep,.stat th.vsep{width:14px;min-width:14px;padding:0;border:0;border-radius:0;background:
+  linear-gradient(to right,transparent 0 6px,rgba(255,255,255,.34) 6px 8px,transparent 8px 14px)}
+.stat tr.sep td{padding:0;height:10px;border:0;border-radius:0;background:
+  linear-gradient(to bottom,transparent 0 4px,rgba(255,255,255,.34) 4px 6px,transparent 6px 10px)}
 /* Klebende Spalten */
 .stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
 .stat thead th.sticky{z-index:4;background:var(--surface-3)}
@@ -245,10 +248,10 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .fazit b{font-weight:800}
 .fazit.leer{background:var(--surface-2);border-left-color:var(--line);color:var(--muted);font-size:.86rem}
 .fazit .warn{display:block;margin-top:8px;font-size:.76rem;color:var(--muted)}
-.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.field.wf{background:var(--surface-2);border-radius:var(--r-lg);padding:13px 15px;margin:0}
-.field.wf label{font-size:.72rem;color:var(--muted);min-height:2.3em}
-.field.wf input{background:var(--surface);border:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:1.05rem;font-weight:600;padding:10px 12px}
+.wgrid{display:grid;grid-template-columns:1fr;gap:10px;max-width:430px;margin:0 auto}
+.field.wf{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin:0;text-align:center}
+.field.wf label{font-size:.74rem;color:var(--muted);min-height:0;margin-bottom:7px}
+.field.wf input{background:var(--surface);border:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:1.15rem;font-weight:600;padding:11px 12px;text-align:center}
 .field.wf .unit{display:block;font-size:.68rem;color:var(--faint);margin-top:5px}
 .hinweis{font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.5}
 .mini{background:var(--surface-3);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.72rem;cursor:pointer;margin-left:6px}
@@ -269,28 +272,62 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .pdfbtn:hover{filter:brightness(1.08)}
 .printhead{display:none}
 
+
+/* Login */
+.login{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
+.login[hidden]{display:none}
+.loginbox{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:26px 24px}
+.loginbox .lgmark{font-weight:800;font-size:1.6rem;letter-spacing:-.03em;margin-bottom:20px}
+.loginbox h2{font-size:1.05rem;font-weight:700;margin-bottom:3px}
+.loginbox .lgsub{font-size:.8rem;color:var(--muted);margin-bottom:18px}
+.loginbox .btn{width:100%;margin-top:6px}
+.loginbox .lghint{font-size:.74rem;color:var(--faint);margin-top:14px;text-align:center}
+.loginbox .err[hidden]{display:none}
+.drawer .foot{font-size:.75rem;color:var(--muted);line-height:1.5}
+.drawer .foot b{color:var(--text);display:block}
+.drawer .foot button{margin-top:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:6px 14px;font-size:.74rem;cursor:pointer}
+.drawer .foot button:hover{border-color:var(--accent);color:var(--text)}
+/* Fremdansicht */
+.viewbanner{background:color-mix(in srgb,var(--accent) 22%,var(--surface));border:1px solid var(--accent);
+  border-radius:var(--r-lg);padding:12px 16px;margin:16px 0 0;font-size:.85rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.viewbanner[hidden]{display:none}
+.viewbanner b{font-weight:700}
+.viewbanner button{margin-left:auto;background:var(--surface);border:1px solid var(--line);color:var(--text);
+  border-radius:999px;padding:7px 14px;font-size:.76rem;cursor:pointer}
+.teambar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.teambar .btn{flex:0 0 auto}
+.teambar select{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:11px 16px;
+  min-width:210px;color:var(--text);-webkit-appearance:none;appearance:none}
+.tmblock{margin-bottom:16px}
+.tmblock h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px 4px}
+
 @media print{
   @page{size:A4 landscape;margin:8mm}
-  html,body{background:#fff!important;color:#111!important}
+  html,body{background:#fff!important;color:#000!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend{display:none!important}
+  .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend,.login{display:none!important}
   .wrap{padding:0!important;max-width:none}
   .board{background:#fff!important;border:0!important;padding:0!important}
   .scroller{overflow:visible!important;transform:scale(var(--pscale,1));transform-origin:top left;width:max-content}
-  .printhead{display:block!important;color:#111;font-weight:800;font-size:13pt;margin-bottom:5mm}
-  .printhead small{display:block;font-weight:400;font-size:9pt;color:#555}
+  .printhead{display:block!important;color:#000;font-weight:800;font-size:12pt;margin-bottom:4mm}
+  .printhead small{display:block;font-weight:400;font-size:8pt;color:#555}
   .stat{min-width:0!important}
-  .stat th,.stat td{border-color:#c9c9c9!important;padding:5px 6px}
-  .stat thead th{background:#eee!important;color:#111!important}
-  .stat tbody tr.z0 td{background:#fff!important;color:#111!important}
-  .stat tbody tr.z1 td{background:#f5f5f5!important;color:#111!important}
-  .stat tbody tr.hl td{background:#fff!important;color:#111!important;box-shadow:none!important}
-  .stat td.name small{color:#666!important}
-  .stat tr.sep td{background:linear-gradient(to bottom,transparent 0 3px,#999 3px 5px,transparent 5px 9px)!important}
-  .stat td.vsep,.stat th.vsep{background:linear-gradient(to right,transparent 0 5px,#999 5px 7px,transparent 7px 13px)!important}
-  .stat tr.sum td{background:#e6ede7!important;color:#111!important}
-  .stat tr.dayrow span{background:#dde5de!important;color:#111!important}
-  .stat td.off{background:#fbfbfb!important}
+  .stat th,.stat td{background:#fff!important;color:#000!important;border:.4pt solid #b9b9b9!important;
+    border-radius:0!important;padding:3px 5px!important;box-shadow:none!important;font-weight:500!important}
+  .stat thead th{background:#f2f2f2!important;font-weight:700!important}
+  .stat th.vh{height:135px}
+  .stat td.tick{font-size:13pt!important;font-weight:700!important;line-height:1}
+  .stat td.off{background:#fff!important}
+  .stat td.name{color:#000!important}
+  .stat td.name small{color:#555!important}
+  .stat tr.sum td{background:#f2f2f2!important;font-weight:700!important}
+  .stat tr.dayrow td{border:0!important;padding:6px 0 2px!important}
+  .stat tr.dayrow span{background:#fff!important;color:#000!important;border:.4pt solid #999;font-size:8pt}
+  .stat td.vsep,.stat th.vsep{width:7px!important;min-width:7px!important;border:0!important;
+    background:linear-gradient(to right,transparent 0 3px,#555 3px 3.6px,transparent 3.6px 7px)!important}
+  .stat tr.sep td{height:5px!important;border:0!important;
+    background:linear-gradient(to bottom,transparent 0 2px,#555 2px 2.6px,transparent 2.6px 5px)!important}
 }
 .page{display:none}
 .page.active{display:block}
@@ -299,6 +336,23 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 </style>
 </head>
 <body>
+
+<div class="login" id="login">
+  <div class="loginbox">
+    <div class="lgmark">Bunte Woche</div>
+    <h2>Anmelden</h2>
+    <p class="lgsub">Beim ersten Mal wirst du automatisch registriert.</p>
+    <div class="field"><label for="lgDk">DK-Nummer</label>
+      <input id="lgDk" placeholder="DK00000000" autocomplete="off" spellcheck="false"></div>
+    <div class="row2">
+      <div class="field"><label for="lgVor">Vorname</label><input id="lgVor" autocomplete="off"></div>
+      <div class="field"><label for="lgNach">Nachname</label><input id="lgNach" autocomplete="off"></div>
+    </div>
+    <p class="err" id="lgErr" hidden></p>
+    <button class="btn primary" id="lgBtn">Anmelden</button>
+    <p class="lghint">Teamleiter melden sich mit <b>TL-DK</b> und acht Ziffern an.</p>
+  </div>
+</div>
 
 <header class="topbar" id="topbar">
   <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
@@ -313,10 +367,12 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   <a class="navlink" href="#auswertungen" data-page="auswertungen">Auswertungen</a>
   <a class="navlink" href="#provision" data-page="provision">Provisionsrechner</a>
   <a class="navlink" href="#wunsch" data-page="wunsch">Provisionswunsch</a>
-  <div class="foot">Bunte Woche</div>
+  <a class="navlink" href="#team" data-page="team" id="navTeam" hidden>Teammitglieder</a>
+  <div class="foot" id="drawerFoot"></div>
 </nav>
 
 <main class="wrap">
+  <div class="viewbanner" id="viewBanner" hidden></div>
   <div class="hero">
     <h1>Bunte Woche</h1>
     <div class="pagetitle" id="pagetitle">Planer</div>
@@ -353,6 +409,18 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
     <div id="ausw"></div>
   </section>
   <section class="page" id="page-provision"><div id="prov"></div></section>
+  <section class="page" id="page-team">
+    <div class="asec">
+      <h3>Teammitglieder</h3>
+      <p class="sub">Mitglieder hinzufügen und ihre Woche ansehen.</p>
+      <div class="teambar">
+        <button class="btn primary" id="addMember">Mitglied hinzufügen</button>
+        <select id="memberSel"><option value="">— Mitglied auswählen —</option></select>
+      </div>
+      <p class="hinweis" id="teamHint"></p>
+    </div>
+    <div id="tmViews"></div>
+  </section>
   <section class="page" id="page-wunsch">
     <div class="asec">
       <h3>Provisionswunsch</h3>
@@ -370,13 +438,13 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch"};
+const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
 const HOURS_ASC   = [...START_HOURS].reverse();                // 7 … 22 (Logik)
 const METRICS  = [{n:"Festgebietsumsatz",k:"fg"},{n:"Weißgebiet",k:"wg"},
-                  {n:"K70 Verkauf",k:"k70",click:"rahmen"},{n:"K70 Einkauf",k:"k70ein",click:"einkauf"}];
+                  {n:"K70 Verkauf",k:"k70",click:"rahmen"},{n:"K70 Einkauf",k:"k70ein",click:"einkauf",noSoll:true}];
 const QUELLEN  = ["Festgebietsbegehung","Promotion","Vertriebsadresse","Empfehlung","Premium CheckIn"];
 const MEETINGS = ["Teammeeting","Training","Schulung"];
 const DEMO = ["VK7 Grundgerät","EB7 Elektrobürste","SP7 Saugwischer","PB7 Polsterbürste","MR7 Milbenaufsatz",
@@ -418,6 +486,7 @@ function vertriebswoche(week,year){
 }
 
 /* ================= Daten (später Firebase) ================= */
+var viewUser = null;       // gesetzt, wenn ein Teamleiter fremde Daten ansieht
 const entries = {};        // "2026-08-03|14" -> Eintrag
 const potenzial = [];      // Potenzialliste
 const verlauf = [];        // {datum, art:"verschoben"|"abgesagt"} für die Auswertung
@@ -521,14 +590,17 @@ function render(){
   const soll = sollWerte();
   METRICS.forEach(m=>{
     const lbl = m.click ? `<button class="mlbl" data-mclick="${m.click}">${m.n}</button>` : m.n;
-    h += `<div class="cell metriclbl">${lbl}<small>ist / soll</small></div>`;
+    h += `<div class="cell metriclbl">${lbl}<small>${m.noSoll?"ist":"ist / soll"}</small></div>`;
     weekDays.forEach((d,i)=>{
-      h += `<div class="cell metric"><span class="ist">${eur(totals[i][m.k])}</span><span class="sep">/</span><span class="soll">${eur(soll[m.k])}</span></div>`;
+      h += m.noSoll
+        ? `<div class="cell metric one"><span class="ist">${eur(totals[i][m.k])}</span></div>`
+        : `<div class="cell metric"><span class="ist">${eur(totals[i][m.k])}</span><span class="sep">/</span><span class="soll">${eur(soll[m.k])}</span></div>`;
     });
   });
   grid.innerHTML = h;
 }
 grid.addEventListener('click', ev=>{
+  if(viewUser) return;
   const ml = ev.target.closest('[data-mclick]');
   if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
   const s = ev.target.closest('.slot');
@@ -578,6 +650,7 @@ const modal = document.getElementById('modal'), sheet = document.getElementById(
 let draft = null, step = "kind", error = "";
 
 function openSlot(day,hour){
+  if(viewUser) return;                      // fremde Daten sind schreibgeschützt
   draft = {day,hour,nb:{}};
   error = "";
   const e = entries[key(day,hour)];
@@ -955,11 +1028,11 @@ function wireSegs(){
 
 /* ================= Statistik ================= */
 const KONTAKT = [
-  {t:"Promotion",           q:"Promotion"},
-  {t:"Empfehlung",          q:"Empfehlung"},
-  {t:"Premium CheckIn",     q:"Premium CheckIn"},
-  {t:"Festgebietsbegehung", q:"Festgebietsbegehung"},
-  {t:"Vertriebsadresse",    q:"Vertriebsadresse"}
+  {t:"Promotion",           q:"Promotion",           c:"#F2B33D"},
+  {t:"Empfehlung",          q:"Empfehlung",          c:"#9A6CE8"},
+  {t:"Premium CheckIn",     q:"Premium CheckIn",     c:"#E8C4F2"},
+  {t:"Festgebietsbegehung", q:"Festgebietsbegehung", c:"#A9D18E"},
+  {t:"Vertriebsadresse",    q:"Vertriebsadresse",    c:"#77CDF5"}
 ];
 /* Farben je Spalte */
 const C_KONTAKT  = "#8FB0D6";                       // Kontaktweg
@@ -997,7 +1070,7 @@ function renderStat(){
   document.getElementById('rangeText2').textContent = `${fmt(weekDays[0])} – ${fmt(weekDays[6])}`;
   document.getElementById('todayBtn2').hidden = (+monday === +mondayOf(new Date()));
 
-  const vh = t => `<th class="vh col-tick"><span>${t}</span></th>`;
+  const vh = (t,c) => `<th class="vh col-tick"${c?` style="background:${c};color:${textOn(c)}"`:""}><span>${t}</span></th>`;
   const VH = `<th class="vsep"></th>`, V = `<td class="vsep"></td>`;
   const COLS = 37;
   let head = `<thead>
@@ -1009,12 +1082,12 @@ function renderStat(){
     </tr>
     <tr>
       <th class="sticky s1 col-time">Uhrzeit</th><th class="sticky s2 col-name">Kunde und Anschrift</th>
-      ${VH}${KONTAKT.map(k=>vh(k.t)).join("")}
-      ${VH}${vh("Neukunde")}${vh("Kunde")}
-      ${VH}${vh("Festgebiet")}${vh("Weißgebiet")}
-      ${VH}${vh("Jobticket")}${vh("Empfehlung")}${vh("PCI vereinbart")}
+      ${VH}${KONTAKT.map(k=>vh(k.t,k.c)).join("")}
+      ${VH}${vh("Neukunde",C_NEUKUNDE)}${vh("Kunde",C_KUNDE)}
+      ${VH}${vh("Festgebiet",C_FG)}${vh("Weißgebiet",C_WG)}
+      ${VH}${vh("Jobticket",C_JOB)}${vh("Empfehlung",C_EMPF)}${vh("PCI vereinbart",C_PCI)}
       ${VH}<th class="col-alt">Altgeräte</th>
-      ${VH}${DEMO.map(d=>vh(d)).join("")}${vh("Service")}${vh("Demotücher")}
+      ${VH}${DEMO.map(d=>vh(d,demoColor(d))).join("")}${vh("Service",C_SERVICE)}${vh("Demotücher",C_SERVICE)}
       ${VH}<th class="col-num">Anzahl Einheiten</th><th class="col-num">Brutto Einheiten</th><th class="col-num">Brutto K70</th>
     </tr></thead>`;
 
@@ -1035,7 +1108,7 @@ function renderStat(){
       body += `<tr class="${zc}">
         <td class="sticky s1 num">${pad(r.h)}–${pad(r.h+2)}</td>
         <td class="name sticky s2">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
-        ${V}${KONTAKT.map(k=>tick(e.quelle===k.q,C_KONTAKT)).join("")}
+        ${V}${KONTAKT.map(k=>tick(e.quelle===k.q,k.c)).join("")}
         ${V}${tick(n.kundenstatus==="Neukunde",C_NEUKUNDE)}${tick(n.kundenstatus==="Bestandskunde",C_KUNDE)}
         ${V}${tick(n.gebiet==="Festgebiet",C_FG)}${tick(n.gebiet==="Weißgebiet",C_WG)}
         ${V}${n.job==="Ja" ? cnt(n.jobAnzahl||1,C_JOB) : `<td class="off"></td>`}
@@ -1210,7 +1283,7 @@ function sollWerte(){
   }
   if(settings.bestellrahmen > 0){
     const proTag = settings.bestellrahmen / Math.max(1,(wunsch.tage||5) * vm.weeks);
-    out.k70 = proTag; out.k70ein = proTag;
+    out.k70 = proTag;
   }
   return out;
 }
@@ -1341,6 +1414,7 @@ function renderWunsch(){
     </div>` : `<div class="asec"><p class="aempty">Sobald Einkommen, Einkommen pro Auftrag und Abschlussquote stehen, erscheinen hier die Umsatzziele — und der Planer bekommt seine Soll-Werte.</p></div>`;
 }
 document.getElementById('wunschForm').addEventListener('change', ev=>{
+  if(viewUser) return;
   const f = ev.target.closest('[data-wf]');
   if(f) setzeWunsch(f.dataset.wf, num(f.value));
 });
@@ -1514,9 +1588,209 @@ document.getElementById('rangeSeg').addEventListener('click', ev=>{
   renderAusw();
 });
 
+
+/* ================= Konto, Team, Cloud ================= */
+/* ▼▼▼ Firebase: hier die Zugangsdaten aus der Firebase-Konsole eintragen ▼▼▼ */
+const FIREBASE_CONFIG = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+/* ▲▲▲ Bleibt das leer, läuft alles nur lokal im Browser ▲▲▲ */
+
+let db = null, me = null;
+try{
+  if(FIREBASE_CONFIG.databaseURL && typeof firebase !== "undefined"){
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.database();
+  }
+}catch(err){ db = null; }
+
+/* Lokaler Speicher – schlägt er fehl, läuft die App trotzdem */
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const DK_RE = /^(TL-)?DK\d{8}$/;
+const SEED_USERS = {
+  "DK00000000":   {dk:"DK00000000",   vorname:"Admin",  nachname:"admin",   rolle:"Admin",         team:["DK10000002","DK10000003"]},
+  "TL-DK10000001":{dk:"TL-DK10000001",vorname:"Test",   nachname:"Leader",  rolle:"Teamleader",    team:["DK10000002","DK10000003"]},
+  "DK10000002":   {dk:"DK10000002",   vorname:"Test",   nachname:"Berater", rolle:"Kundenberater", team:[]},
+  "DK10000003":   {dk:"DK10000003",   vorname:"Zweiter",nachname:"Berater", rolle:"Kundenberater", team:[]},
+  "DK10000004":   {dk:"DK10000004",   vorname:"Dritter",nachname:"Berater", rolle:"Kundenberater", team:[]},
+  "DK10000005":   {dk:"DK10000005",   vorname:"Vierter",nachname:"Berater", rolle:"Kundenberater", team:[]}
+};
+function localUsers(){ const u = store.get('bw-users'); return u || {...SEED_USERS}; }
+async function userGet(dk){
+  if(db){ const s = await db.ref('users/'+dk).once('value'); return s.val(); }
+  return localUsers()[dk] || null;
+}
+async function userSet(u){
+  if(db){ await db.ref('users/'+u.dk).set(u); return; }
+  const all = localUsers(); all[u.dk] = u; store.set('bw-users', all);
+}
+
+/* Alle Daten eines Benutzers als ein Paket */
+function dataBlob(){
+  return {entries, potenzial, verlauf, einkaeufe, settings, wunsch, ts:Date.now()};
+}
+function applyData(d){
+  Object.keys(entries).forEach(k=>delete entries[k]);
+  Object.assign(entries, (d && d.entries) || {});
+  potenzial.length = 0; ((d && d.potenzial) || []).forEach(x=>potenzial.push(x));
+  verlauf.length = 0;   ((d && d.verlauf)   || []).forEach(x=>verlauf.push(x));
+  einkaeufe.length = 0; ((d && d.einkaeufe) || []).forEach(x=>einkaeufe.push(x));
+  Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
+  Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
+}
+async function loadData(dk){
+  if(db){ const s = await db.ref('data/'+dk).once('value'); return s.val(); }
+  return store.get('bw-data-'+dk);
+}
+let saveTimer = null;
+function saveData(){
+  if(!me || viewUser) return;                       // fremde Daten nie überschreiben
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    const blob = dataBlob();
+    store.set('bw-data-'+me.dk, blob);
+    if(db) db.ref('data/'+me.dk).set(blob).catch(()=>{});
+  }, 500);
+}
+
+/* ---------- Anmeldung ---------- */
+const loginEl = document.getElementById('login');
+function lgError(msg){
+  const e = document.getElementById('lgErr');
+  e.textContent = msg; e.hidden = !msg;
+}
+async function doLogin(dkRaw, vor, nach){
+  const dk = (dkRaw||"").trim().toUpperCase().replace(/\s/g,"");
+  vor = (vor||"").trim(); nach = (nach||"").trim();
+  if(!DK_RE.test(dk)) return lgError("Die DK-Nummer muss DK und acht Ziffern haben, Teamleiter TL-DK und acht Ziffern.");
+  if(!vor || !nach)   return lgError("Bitte Vor- und Nachnamen eintragen.");
+  let u = await userGet(dk);
+  if(u){
+    const passt = u.vorname.toLowerCase()===vor.toLowerCase() && u.nachname.toLowerCase()===nach.toLowerCase();
+    if(!passt) return lgError("Zu dieser DK-Nummer ist ein anderer Name registriert.");
+  }else{
+    u = {dk, vorname:vor, nachname:nach,
+         rolle: dk==="DK00000000" ? "Admin" : (dk.startsWith("TL-") ? "Teamleader" : "Kundenberater"),
+         team: []};
+    await userSet(u);
+  }
+  me = u;
+  store.set('bw-session', {dk});
+  applyData(await loadData(dk));
+  loginEl.hidden = true;
+  document.getElementById('navTeam').hidden = !(me.rolle==="Teamleader" || me.rolle==="Admin");
+  document.getElementById('drawerFoot').innerHTML =
+    `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
+  document.getElementById('logoutBtn').onclick = logout;
+  await fuelleMemberSelect();
+  renderAll();
+}
+function logout(){
+  store.del('bw-session');
+  me = null; viewUser = null;
+  applyData(null);
+  loginEl.hidden = false;
+  location.hash = "#planer";
+  setMenu(false);
+}
+document.getElementById('lgBtn').onclick = ()=> doLogin(
+  document.getElementById('lgDk').value,
+  document.getElementById('lgVor').value,
+  document.getElementById('lgNach').value);
+document.getElementById('login').addEventListener('keydown', e=>{ if(e.key==="Enter") document.getElementById('lgBtn').click(); });
+
+/* ---------- Teamansicht ---------- */
+async function fuelleMemberSelect(){
+  const sel = document.getElementById('memberSel');
+  if(!me || !sel) return;
+  const team = me.team || [];
+  const namen = [];
+  for(const dk of team){
+    const u = await userGet(dk);
+    if(u) namen.push({dk, name:`${u.vorname} ${u.nachname}`});
+  }
+  sel.innerHTML = `<option value="">— Mitglied auswählen —</option>` +
+    namen.map(n=>`<option value="${n.dk}" ${viewUser&&viewUser.dk===n.dk?"selected":""}>${n.name}</option>`).join("");
+  document.getElementById('teamHint').textContent = namen.length
+    ? `${namen.length} Mitglied${namen.length>1?"er":""} im Team.`
+    : "Noch keine Mitglieder. Der Kundenberater muss sich zuerst selbst angemeldet haben.";
+}
+async function zeigeMember(dk){
+  if(!dk){ zurueckZuMir(); return; }
+  const u = await userGet(dk);
+  if(!u) return;
+  viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
+  applyData(await loadData(dk));
+  renderAll();
+}
+function zurueckZuMir(){
+  if(!viewUser) return;
+  viewUser = null;
+  loadData(me.dk).then(d=>{ applyData(d); renderAll(); });
+}
+function renderTeam(){
+  const banner = document.getElementById('viewBanner');
+  if(viewUser){
+    banner.hidden = false;
+    banner.innerHTML = `Du siehst gerade die Daten von <b>${viewUser.name}</b> — Änderungen sind gesperrt.
+      <button id="backSelf">Zurück zu meinen Daten</button>`;
+    document.getElementById('backSelf').onclick = zurueckZuMir;
+  }else{
+    banner.hidden = true; banner.innerHTML = "";
+  }
+  const box = document.getElementById('tmViews');
+  if(!box) return;
+  if(!viewUser){ box.innerHTML = ""; return; }
+  box.innerHTML = `
+    <div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
+      <div class="board"><div class="scroller"><div class="grid">${document.getElementById('grid').innerHTML}</div></div></div></div>
+    <div class="tmblock"><h4>Statistik · ${viewUser.name}</h4>
+      <div class="board"><div class="scroller"><table class="stat">${document.getElementById('statTable').innerHTML}</table></div></div></div>`;
+}
+document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
+document.getElementById('addMember').onclick = ()=>{
+  simpleDialog("Mitglied hinzufügen","Der Kundenberater muss sich vorher selbst angemeldet haben",
+    `<div class="grp">${fld("tmDk","DK-Nummer des Kundenberaters","","text",'autocomplete="off" spellcheck="false"')}</div>
+     <p class="err" id="tmErr" hidden></p>`,
+    async ()=>{
+      const dk = document.getElementById('tmDk').value.trim().toUpperCase();
+      const err = document.getElementById('tmErr');
+      const zeig = m => { err.textContent = m; err.hidden = false; };
+      if(!DK_RE.test(dk)) return zeig("Die DK-Nummer muss DK und acht Ziffern haben.");
+      if(dk === me.dk)   return zeig("Das ist deine eigene DK-Nummer.");
+      const u = await userGet(dk);
+      if(!u)             return zeig("Zu dieser DK-Nummer ist noch niemand angemeldet.");
+      me.team = me.team || [];
+      if(me.team.includes(dk)) return zeig(`${u.vorname} ${u.nachname} ist schon im Team.`);
+      me.team.push(dk);
+      await userSet(me);
+      closeModal(); await fuelleMemberSelect();
+    }, "Hinzufügen");
+};
+
+/* Bestehende Sitzung fortsetzen */
+(async ()=>{
+  const s = store.get('bw-session');
+  if(s && s.dk){
+    const u = await userGet(s.dk);
+    if(u) return doLogin(u.dk, u.vorname, u.nachname);
+  }
+  loginEl.hidden = false;
+})();
+
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); }
+function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
