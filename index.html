@@ -178,7 +178,6 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1460px;font-size:.8rem}
 .stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
 .stat thead th{background:var(--surface-3);font-weight:700;color:var(--text)}
-.stat tr.sep td{padding:0;height:2px;background:rgba(255,255,255,.42);border:0;border-radius:0}
 .stat thead tr.grp th{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:6px 8px}
 .stat thead tr.grp th.empty{background:transparent;border-color:transparent}
 .stat th.vh{height:158px;padding:10px 2px;font-size:.7rem;font-weight:600;white-space:nowrap}
@@ -188,8 +187,11 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .stat .col-alt{width:120px}
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
-/* Gruppentrenner – deutlich kräftiger als das feine Zellraster */
-.stat th.gs,.stat td.gs{border-left:3px solid rgba(255,255,255,.34)}
+/* Durchgehende Trennlinien mit Abstand zu den Blöcken */
+.stat td.vsep,.stat th.vsep{width:13px;min-width:13px;padding:0;border:0;border-radius:0;background:
+  linear-gradient(to right,transparent 0 5px,rgba(255,255,255,.34) 5px 7px,transparent 7px 13px)}
+.stat tr.sep td{padding:0;height:9px;border:0;border-radius:0;background:
+  linear-gradient(to bottom,transparent 0 3px,rgba(255,255,255,.34) 3px 5px,transparent 5px 9px)}
 /* Klebende Spalten */
 .stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
 .stat thead th.sticky{z-index:4;background:var(--surface-3)}
@@ -238,6 +240,11 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .atable td:first-child{text-align:left;font-family:"Manrope",sans-serif;font-weight:600;border-radius:var(--r) 0 0 var(--r)}
 .atable td:last-child{border-radius:0 var(--r) var(--r) 0}
 .atable tr.best td{background:color-mix(in srgb,var(--accent) 22%,var(--surface-2))}
+.fazit{margin-top:18px;background:color-mix(in srgb,var(--accent) 14%,var(--surface-2));border-left:3px solid var(--accent);
+  border-radius:0 var(--r-lg) var(--r-lg) 0;padding:16px 18px;font-size:.92rem;line-height:1.55}
+.fazit b{font-weight:800}
+.fazit.leer{background:var(--surface-2);border-left-color:var(--line);color:var(--muted);font-size:.86rem}
+.fazit .warn{display:block;margin-top:8px;font-size:.76rem;color:var(--muted)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
 .aline{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.83rem}
 .aline .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -266,7 +273,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   .stat tbody tr.z1 td{background:#f5f5f5!important;color:#111!important}
   .stat tbody tr.hl td{background:#fff!important;color:#111!important;box-shadow:none!important}
   .stat td.name small{color:#666!important}
-  .stat tr.sep td{background:#444!important}
+  .stat tr.sep td{background:linear-gradient(to bottom,transparent 0 3px,#999 3px 5px,transparent 5px 9px)!important}
+  .stat td.vsep,.stat th.vsep{background:linear-gradient(to right,transparent 0 5px,#999 5px 7px,transparent 7px 13px)!important}
   .stat tr.sum td{background:#e6ede7!important;color:#111!important}
   .stat tr.dayrow span{background:#dde5de!important;color:#111!important}
   .stat td.off{background:#fbfbfb!important}
@@ -929,23 +937,25 @@ function renderStat(){
   document.getElementById('rangeText2').textContent = `${fmt(weekDays[0])} – ${fmt(weekDays[6])}`;
   document.getElementById('todayBtn2').hidden = (+monday === +mondayOf(new Date()));
 
-  const vh = (t,gs="") => `<th class="vh col-tick${gs}"><span>${t}</span></th>`;
-  const COLS = 30;
+  const vh = t => `<th class="vh col-tick"><span>${t}</span></th>`;
+  const VH = `<th class="vsep"></th>`, V = `<td class="vsep"></td>`;
+  const COLS = 37;
   let head = `<thead>
     <tr class="grp">
       <th class="empty sticky s1 col-time"><button class="pdfbtn" id="pdfBtn" title="Als PDF exportieren">PDF</button></th><th class="empty sticky s2 col-name"></th>
-      <th colspan="5" class="gs">Kontaktweg</th><th colspan="2" class="gs">Kunde</th><th colspan="2">Gebiet</th>
-      <th colspan="3" class="gs">Profi</th><th class="gs">Kunde</th><th colspan="12" class="gs">Vorgeführt</th>
-      <th colspan="3" class="gs">Einheiten und Umsätze</th>
+      ${VH}<th colspan="5">Kontaktweg</th>${VH}<th colspan="2">Kunde</th>${VH}<th colspan="2">Gebiet</th>
+      ${VH}<th colspan="3">Profi</th>${VH}<th>Kunde</th>${VH}<th colspan="12">Vorgeführt</th>
+      ${VH}<th colspan="3">Einheiten und Umsätze</th>
     </tr>
     <tr>
       <th class="sticky s1 col-time">Uhrzeit</th><th class="sticky s2 col-name">Kunde und Anschrift</th>
-      ${KONTAKT.map((k,i)=>vh(k.t,i===0?" gs":"")).join("")}
-      ${vh("Neukunde"," gs")}${vh("Kunde")}${vh("Festgebiet")}${vh("Weißgebiet")}
-      ${vh("Jobticket"," gs")}${vh("Empfehlung")}${vh("PCI vereinbart")}
-      <th class="col-alt gs">Altgeräte</th>
-      ${DEMO.map((d,i)=>vh(d,i===0?" gs":"")).join("")}${vh("Service")}${vh("Demotücher")}
-      <th class="col-num gs">Anzahl Einheiten</th><th class="col-num">Brutto Einheiten</th><th class="col-num">Brutto K70</th>
+      ${VH}${KONTAKT.map(k=>vh(k.t)).join("")}
+      ${VH}${vh("Neukunde")}${vh("Kunde")}
+      ${VH}${vh("Festgebiet")}${vh("Weißgebiet")}
+      ${VH}${vh("Jobticket")}${vh("Empfehlung")}${vh("PCI vereinbart")}
+      ${VH}<th class="col-alt">Altgeräte</th>
+      ${VH}${DEMO.map(d=>vh(d)).join("")}${vh("Service")}${vh("Demotücher")}
+      ${VH}<th class="col-num">Anzahl Einheiten</th><th class="col-num">Brutto Einheiten</th><th class="col-num">Brutto K70</th>
     </tr></thead>`;
 
   const rows = statRows();
@@ -965,17 +975,17 @@ function renderStat(){
       body += `<tr class="${zc}">
         <td class="sticky s1 num">${pad(r.h)}–${pad(r.h+2)}</td>
         <td class="name sticky s2">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
-        ${KONTAKT.map((k,i)=>tick(e.quelle===k.q,C_KONTAKT,i===0?"gs":"")).join("")}
-        ${tick(n.kundenstatus==="Neukunde",C_NEUKUNDE,"gs")}${tick(n.kundenstatus==="Bestandskunde",C_KUNDE)}
-        ${tick(n.gebiet==="Festgebiet",C_FG)}${tick(n.gebiet==="Weißgebiet",C_WG)}
-        ${n.job==="Ja" ? cnt(n.jobAnzahl||1,C_JOB,"gs") : `<td class="off gs"></td>`}
+        ${V}${KONTAKT.map(k=>tick(e.quelle===k.q,C_KONTAKT)).join("")}
+        ${V}${tick(n.kundenstatus==="Neukunde",C_NEUKUNDE)}${tick(n.kundenstatus==="Bestandskunde",C_KUNDE)}
+        ${V}${tick(n.gebiet==="Festgebiet",C_FG)}${tick(n.gebiet==="Weißgebiet",C_WG)}
+        ${V}${n.job==="Ja" ? cnt(n.jobAnzahl||1,C_JOB) : `<td class="off"></td>`}
         ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,C_EMPF) : `<td class="off"></td>`}
         ${tick(!!n.pcDatum,C_PCI)}
-        ${n.geraet ? `<td class="name alt gs">${n.geraet}</td>` : `<td class="off gs"></td>`}
-        ${DEMO.map((d,i)=>tick((n.vorgefuehrt||[]).includes(d),demoColor(d),i===0?"gs":"")).join("")}
+        ${V}${n.geraet ? `<td class="name alt">${n.geraet}</td>` : `<td class="off"></td>`}
+        ${V}${DEMO.map(d=>tick((n.vorgefuehrt||[]).includes(d),demoColor(d))).join("")}
         ${tick(n.wartung==="Ja",C_SERVICE)}
         ${cnt(n.demotuecher,C_SERVICE)}
-        ${n.einheiten ? `<td class="num strong gs">${+n.einheiten}</td>` : `<td class="off gs"></td>`}
+        ${V}${n.einheiten ? `<td class="num strong">${+n.einheiten}</td>` : `<td class="off"></td>`}
         ${money(num(n.umsatz))}
         ${money(num(n.k70betrag))}
       </tr>`;
@@ -1001,15 +1011,16 @@ function renderStat(){
     add("umsatz", num(n.umsatz));
     add("k70", num(n.k70betrag));
   });
-  const cell = (v,gs="") => `<td class="${gs}">${v||"–"}</td>`;
+  const cell = v => `<td>${v||"–"}</td>`;
   const foot = `<tr class="sum">
     <td class="lbl sticky s1">Summe</td><td class="sticky s2"></td>
-    ${KONTAKT.map((k,i)=>cell(s["k"+k.q],i===0?"gs":"")).join("")}
-    ${cell(s.neu,"gs")}${cell(s.best)}${cell(s.fg)}${cell(s.wg)}
-    ${cell(s.job,"gs")}${cell(s.empf)}${cell(s.pci)}
-    <td class="gs"></td>
-    ${DEMO.map((d,i)=>cell(s["d"+d],i===0?"gs":"")).join("")}${cell(s.service)}${cell(s.tuecher)}
-    ${cell(s.einheiten,"gs")}${cell(eur(s.umsatz))}${cell(eur(s.k70))}
+    ${V}${KONTAKT.map(k=>cell(s["k"+k.q])).join("")}
+    ${V}${cell(s.neu)}${cell(s.best)}
+    ${V}${cell(s.fg)}${cell(s.wg)}
+    ${V}${cell(s.job)}${cell(s.empf)}${cell(s.pci)}
+    ${V}<td></td>
+    ${V}${DEMO.map(d=>cell(s["d"+d])).join("")}${cell(s.service)}${cell(s.tuecher)}
+    ${V}${cell(s.einheiten)}${cell(eur(s.umsatz))}${cell(eur(s.k70))}
   </tr>`;
 
   const t = document.getElementById('statTable');
@@ -1105,35 +1116,35 @@ function quoten(weeks = rangeWeeks){
 
 const kpi = (l,v,s="",cls="") => `<div class="kpi ${cls}"><span class="kl">${l}</span><span class="kv">${v}</span>${s?`<span class="ks">${s}</span>`:""}</div>`;
 
-/* Aufschlüsselung nach Wetter, Temperatur, Wochentag, Tageszeit */
-function grpTable(list, groupFn, order, spec){
+/* Beste Ausprägung je Dimension nach Terminen pro Stunde */
+function bestOf(list, groupFn, order){
   const g = new Map();
   list.forEach(x=>{ const k = groupFn(x); if(!k) return; (g.get(k) || g.set(k,[]).get(k)).push(x); });
-  const keys = (order||[...g.keys()]).filter(k=>g.has(k));
-  if(!keys.length) return `<p class="aempty">Noch keine Daten.</p>`;
-  const rows = keys.map(k=>({k, v:spec.calc(g.get(k))}));
-  const bestVal = Math.max(...rows.map(r=>r.v.leit));
-  return `<div class="ascroll"><table class="atable">
-    <thead><tr><th>${spec.head}</th>${spec.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
-    <tbody>${rows.map(r=>`<tr class="${r.v.leit===bestVal && bestVal>0 ? "best":""}">
-      <td>${r.k}</td>${r.v.cells.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  let best = null;
+  (order||[...g.keys()]).forEach(k=>{
+    const arr = g.get(k); if(!arr) return;
+    const std = sumOf(arr,x=>dur(x.n));
+    const wert = std ? sumOf(arr,x=>x.n.termine)/std : 0;
+    if(!best || wert > best.wert) best = {k, wert, n:arr.length};
+  });
+  return best;
 }
-const fgbCalc = arr => {
-  const std = sumOf(arr,x=>dur(x.n)), t = sumOf(arr,x=>x.n.tueren), te = sumOf(arr,x=>x.n.termine);
-  return {leit: std ? te/std : 0, cells:[arr.length, dec(std), dec(std?t/std:0), dec(std?te/std:0), pct(te,t)]};
-};
-const proCalc = arr => {
-  const std = sumOf(arr,x=>dur(x.n)), a = sumOf(arr,x=>x.n.ansprachen), te = sumOf(arr,x=>x.n.termine);
-  return {leit: std ? te/std : 0, cells:[arr.length, dec(std), dec(std?a/std:0), dec(std?te/std:0), pct(te,a)]};
-};
-const FGB_COLS = ["Einsätze","Stunden","Türen/Std","Termine/Std","Termin je Tür"];
-const PRO_COLS = ["Einsätze","Stunden","Ansprachen/Std","Termine/Std","Termin je Ansprache"];
-
-function block(list, calc, cols){
-  return `<div class="ah4">Nach Wetter</div>${grpTable(list,x=>x.n.wetter,WETTER,{head:"Wetter",cols,calc})}
-    <div class="ah4">Nach Temperatur</div>${grpTable(list,x=>x.n.temp,TEMPS,{head:"Temperatur",cols,calc})}
-    <div class="ah4">Nach Wochentag</div>${grpTable(list,x=>DAYS_L[x.wd],DAYS_L,{head:"Tag",cols,calc})}
-    <div class="ah4">Nach Tageszeit</div>${grpTable(list,x=>tageszeit(x.n),TAGESZEIT,{head:"Zeit",cols,calc})}`;
+function fazit(list, was){
+  if(list.length < 2) return `<p class="fazit leer">Für eine Aussage zum besten Zeitpunkt braucht es mehr Einsätze — aktuell ${list.length===1?"ist einer":"sind keine"} erfasst.</p>`;
+  const w = bestOf(list,x=>x.n.wetter,WETTER);
+  const t = bestOf(list,x=>x.n.temp,TEMPS);
+  const d = bestOf(list,x=>DAYS_L[x.wd],DAYS_L);
+  const z = bestOf(list,x=>tageszeit(x.n),TAGESZEIT);
+  if(!w && !t && !d && !z) return `<p class="fazit leer">Noch keine auswertbaren Einsätze.</p>`;
+  const teile = [];
+  if(w) teile.push(`bei <b>${w.k.toLowerCase()}em Wetter</b>`);
+  if(t) teile.push(`bei <b>${t.k}</b>`);
+  if(d) teile.push(`am <b>${d.k}</b>`);
+  if(z) teile.push(`am <b>${z.k}</b>`);
+  const dünn = list.length < 10;
+  return `<p class="fazit">Nach deiner aktuellen Statistik bist du in der ${was} am erfolgreichsten,
+    wenn du ${teile.join(", ")} startest.
+    ${dünn?`<span class="warn">Basis sind erst ${list.length} Einsätze — die Aussage wird ab etwa 10 je Gruppe belastbar.</span>`:""}</p>`;
 }
 
 function renderAusw(){
@@ -1156,7 +1167,7 @@ function renderAusw(){
       ${kpi("Bestandskunden", `${f.best}`, pct(f.best,f.n))}
       ${kpi("Ø Dauer je Einsatz", dec(f.n?f.std/f.n:0)+" h")}
     </div>
-    ${block(f.list,fgbCalc,FGB_COLS)}</div>`;
+    ${fazit(f.list,"Festgebietsbegehung")}</div>`;
 
   const s2 = `<div class="asec"><h3>Promotion</h3>
     <p class="sub">${p.n} Einsätze · ${dec(p.std)} Stunden im gewählten Zeitraum</p>
@@ -1169,7 +1180,7 @@ function renderAusw(){
       ${kpi("Kontakte", p.kontakte||"–", `${dec(p.std?p.kontakte/p.std:0)} pro Stunde`)}
       ${kpi("Ø Dauer je Einsatz", dec(p.n?p.std/p.n:0)+" h")}
     </div>
-    ${block(p.list,proCalc,PRO_COLS)}</div>`;
+    ${fazit(p.list,"Promotion")}</div>`;
 
   const demoCount = d => t.list.filter(x=>(x.n.vorgefuehrt||[]).includes(d)).length;
   const maxDemo = Math.max(1,...DEMO.map(demoCount));
