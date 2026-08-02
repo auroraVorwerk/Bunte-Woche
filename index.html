@@ -175,9 +175,10 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .pcard .pot span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:.75rem}
 .pcard .why{margin-top:10px;font-size:.85rem;border-left:2px solid var(--line);padding-left:12px;color:var(--muted)}
 /* Statistik */
-.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1520px;font-size:.8rem}
-.stat th,.stat td{border:1px solid rgba(255,255,255,.10);border-radius:6px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
-.stat thead th{background:var(--surface-3);font-weight:700;color:var(--text);border-color:rgba(255,255,255,.16)}
+.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1460px;font-size:.8rem}
+.stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
+.stat thead th{background:var(--surface-3);font-weight:700;color:var(--text)}
+.stat tr.sep td{padding:0;height:2px;background:rgba(255,255,255,.42);border:0;border-radius:0}
 .stat thead tr.grp th{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:6px 8px}
 .stat thead tr.grp th.empty{background:transparent;border-color:transparent}
 .stat th.vh{height:158px;padding:10px 2px;font-size:.7rem;font-weight:600;white-space:nowrap}
@@ -288,7 +289,7 @@ const METRICS  = [{n:"Festgebietsumsatz",k:"fg"},{n:"Weißgebiet",k:"wg"},{n:"K7
 const QUELLEN  = ["Festgebietsbegehung","Promotion","Vertriebsadresse","Empfehlung","Premium CheckIn"];
 const MEETINGS = ["Teammeeting","Training","Schulung"];
 const DEMO = ["VK7 Grundgerät","EB7 Elektrobürste","SP7 Saugwischer","PB7 Polsterbürste","MR7 Milbenaufsatz",
-              "AC7 Düsenset","VG100+ Flächenreiniger","VM7 Handstaubsauger","VR7 Saugroboter","RB7 Saugstation","VT300 Tiger"];
+              "AC7 Düsenset","VG100+ Flächenreiniger","VM7 Handstaubsauger","VR7 Saugroboter","RB7 Saugstation"];
 const BESITZ = ["VK7","EB7","SP7","PB7","VR7","RB7","VG100+","VM7"];
 const CATS = [
   {t:"Termin FG-Kunden",c:"#A9D18E"},{t:"Termin Telefon/Vertriebsadresse",c:"#E2F0D9"},
@@ -374,7 +375,7 @@ function colorOf(e){
 function textOn(hex){
   const f = v => (v<=.03928 ? v/12.92 : Math.pow((v+.055)/1.055,2.4));
   const [r,g,b] = [1,3,5].map(i=>parseInt(hex.substr(i,2),16)/255);
-  return (.2126*f(r) + .7152*f(g) + .0722*f(b)) > .42 ? "#1d211b" : "#ffffff";
+  return (.2126*f(r) + .7152*f(g) + .0722*f(b)) > .35 ? "#1d211b" : "#ffffff";
 }
 /* Startzeiten, deren 2-Stunden-Fach sich mit von–bis überschneidet */
 const coveredHours = (von,bis) => HOURS_ASC.filter(h => h < bis && h+2 > von);
@@ -825,8 +826,17 @@ const KONTAKT = [
   {t:"Festgebietsbegehung", q:"Festgebietsbegehung"},
   {t:"Vertriebsadresse",    q:"Vertriebsadresse"}
 ];
-/* Eine gedämpfte Farbe pro Spaltengruppe statt einer pro Spalte */
-const G_KONTAKT = "#8FB0D6", G_KUNDE = "#9CC08B", G_PROFI = "#BE92C9", G_DEMO = "#C9B673";
+/* Farben je Spalte */
+const C_KONTAKT  = "#8FB0D6";                       // Kontaktweg
+const C_NEUKUNDE = "#F0A868", C_KUNDE = "#F5D98A";  // Kundenart
+const C_FG       = "#9CC08B", C_WG    = "#E4E9EC";  // Gebiet – Weißgebiet fast weiß
+const C_JOB      = "#D77BC0", C_EMPF  = "#9A6CE8", C_PCI = "#E8C4F2";
+const C_ZUBEHOER = "#C9B673", C_VG100 = "#7FB8C4", C_VM7 = "#B2A6E8", C_ROBOT = "#E39A9A";
+const C_SERVICE  = "#A9C4B0";
+const demoColor = t =>
+  t.startsWith("VG100+") ? C_VG100 :
+  t.startsWith("VM7")    ? C_VM7   :
+  (t.startsWith("VR7") || t.startsWith("RB7")) ? C_ROBOT : C_ZUBEHOER;
 const tick = (on,c,gs="") => on
   ? `<td class="tick ${gs}" style="background:${c};border-color:${c};color:${textOn(c)}">✓</td>`
   : `<td class="off ${gs}"></td>`;
@@ -853,12 +863,12 @@ function renderStat(){
   document.getElementById('todayBtn2').hidden = (+monday === +mondayOf(new Date()));
 
   const vh = (t,gs="") => `<th class="vh col-tick${gs}"><span>${t}</span></th>`;
-  const COLS = 31;
+  const COLS = 30;
   let head = `<thead>
     <tr class="grp">
       <th class="empty sticky s1 col-time"></th><th class="empty sticky s2 col-name"></th>
       <th colspan="5" class="gs">Kontaktweg</th><th colspan="2" class="gs">Kunde</th><th colspan="2">Gebiet</th>
-      <th colspan="3" class="gs">Profi</th><th class="gs">Kunde</th><th colspan="13" class="gs">Vorgeführt</th>
+      <th colspan="3" class="gs">Profi</th><th class="gs">Kunde</th><th colspan="12" class="gs">Vorgeführt</th>
       <th colspan="3" class="gs">Einheiten und Umsätze</th>
     </tr>
     <tr>
@@ -884,19 +894,20 @@ function renderStat(){
         body += `<tr class="dayrow"><td colspan="${COLS}"><span>${DAYS_L[r.i]} · ${fmtShort(weekDays[r.i])}</span></td></tr>`;
       }
       const zc = (z++ % 2) ? "z1" : "z0";
+      if(z > 1) body += `<tr class="sep"><td colspan="${COLS}"></td></tr>`;
       body += `<tr class="${zc}">
         <td class="sticky s1 num">${pad(r.h)}–${pad(r.h+2)}</td>
         <td class="name sticky s2">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
-        ${KONTAKT.map((k,i)=>tick(e.quelle===k.q,G_KONTAKT,i===0?"gs":"")).join("")}
-        ${tick(n.kundenstatus==="Neukunde",G_KUNDE,"gs")}${tick(n.kundenstatus==="Bestandskunde",G_KUNDE)}
-        ${tick(n.gebiet==="Festgebiet",G_KUNDE)}${tick(n.gebiet==="Weißgebiet",G_KUNDE)}
-        ${n.job==="Ja" ? cnt(n.jobAnzahl||1,G_PROFI,"gs") : `<td class="off gs"></td>`}
-        ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,G_PROFI) : `<td class="off"></td>`}
-        ${tick(!!n.pcDatum,G_PROFI)}
+        ${KONTAKT.map((k,i)=>tick(e.quelle===k.q,C_KONTAKT,i===0?"gs":"")).join("")}
+        ${tick(n.kundenstatus==="Neukunde",C_NEUKUNDE,"gs")}${tick(n.kundenstatus==="Bestandskunde",C_KUNDE)}
+        ${tick(n.gebiet==="Festgebiet",C_FG)}${tick(n.gebiet==="Weißgebiet",C_WG)}
+        ${n.job==="Ja" ? cnt(n.jobAnzahl||1,C_JOB,"gs") : `<td class="off gs"></td>`}
+        ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,C_EMPF) : `<td class="off"></td>`}
+        ${tick(!!n.pcDatum,C_PCI)}
         ${n.geraet ? `<td class="name alt gs">${n.geraet}</td>` : `<td class="off gs"></td>`}
-        ${DEMO.map((d,i)=>tick((n.vorgefuehrt||[]).includes(d),G_DEMO,i===0?"gs":"")).join("")}
-        ${tick(n.wartung==="Ja",G_DEMO)}
-        ${cnt(n.demotuecher,G_DEMO)}
+        ${DEMO.map((d,i)=>tick((n.vorgefuehrt||[]).includes(d),demoColor(d),i===0?"gs":"")).join("")}
+        ${tick(n.wartung==="Ja",C_SERVICE)}
+        ${cnt(n.demotuecher,C_SERVICE)}
         ${n.einheiten ? `<td class="num strong gs">${+n.einheiten}</td>` : `<td class="off gs"></td>`}
         ${money(num(n.umsatz))}
         ${money(num(n.k70betrag))}
