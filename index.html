@@ -145,6 +145,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .seg button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2))}
 .seg.danger button[aria-pressed="true"]{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--surface-2))}
 .checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks.stack{flex-direction:column;flex-wrap:nowrap;gap:7px}
+.checks.stack button{width:100%;border-radius:var(--r);padding:12px 14px;text-align:center;font-size:.84rem}
 .checks button{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:8px 13px;cursor:pointer;font-size:.8rem;transition:.15s}
 .checks button:hover{background:var(--surface-3)}
 .checks button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2));font-weight:600}
@@ -173,30 +175,43 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .pcard .pot span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:.75rem}
 .pcard .why{margin-top:10px;font-size:.85rem;border-left:2px solid var(--line);padding-left:12px;color:var(--muted)}
 /* Statistik */
-.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1560px;font-size:.8rem}
+.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1520px;font-size:.8rem}
 .stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
-.stat thead th{background:color-mix(in srgb,var(--accent) 18%,var(--surface));font-weight:700;color:var(--text)}
+.stat thead th{background:var(--surface-3);font-weight:700;color:var(--text)}
 .stat thead tr.grp th{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:6px 8px}
 .stat thead tr.grp th.empty{background:transparent;border-color:transparent}
 .stat th.vh{height:158px;padding:10px 2px;font-size:.7rem;font-weight:600;white-space:nowrap}
 .stat th.vh span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block}
-.stat .col-day{width:74px}
-.stat .col-time{width:74px}
-.stat .col-name{width:210px}
+.stat .col-time{width:78px}
+.stat .col-name{width:206px}
 .stat .col-alt{width:120px}
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
-.stat td.sticky,.stat th.sticky{position:sticky;z-index:2;background:var(--surface-2)}
-.stat thead th.sticky{z-index:4;background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
+/* Gruppentrenner */
+.stat th.gs,.stat td.gs{border-left:2px solid rgba(255,255,255,.16)}
+/* Klebende Spalten */
+.stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
+.stat thead th.sticky{z-index:4;background:var(--surface-3)}
 .stat thead tr.grp th.sticky{background:var(--surface)}
-.stat .s1{left:0}.stat .s2{left:74px}.stat .s3{left:148px}
-.stat td.day{font-weight:700;background:var(--surface-3);text-align:left;padding-left:12px}
+.stat .s1{left:0}.stat .s2{left:78px}
+/* Zeilenwechsel + Hervorhebung */
+.stat tbody tr.z0 td{background:#2e2c29}
+.stat tbody tr.z1 td{background:#35332f}
+.stat tbody tr.hl td{background:#403d36;border-color:var(--surface)}
+.stat tbody tr.hl td.sticky{box-shadow:inset 3px 0 0 var(--accent)}
+.stat tbody tr:hover td{filter:brightness(1.06)}
+/* Tagesbanner */
+.stat tr.dayrow td{background:transparent;border-color:transparent;padding:18px 0 6px;text-align:left}
+.stat tr.dayrow span{position:sticky;left:2px;display:inline-block;background:color-mix(in srgb,var(--accent) 30%,var(--surface));
+  padding:7px 16px;border-radius:999px;font-weight:700;font-size:.75rem;letter-spacing:.05em}
 .stat td.name{text-align:left;line-height:1.35}
 .stat td.name small{display:block;color:var(--muted);font-size:.72rem}
-.stat td.off{background:#302e2b;color:transparent}
+.stat td.alt{font-size:.78rem}
+.stat td.off{color:transparent}
 .stat td.tick{font-weight:800}
 .stat td.num{font-family:"JetBrains Mono",monospace}
-.stat tr.sum td{background:color-mix(in srgb,var(--accent) 16%,var(--surface));font-weight:700;font-family:"JetBrains Mono",monospace}
+.stat td.strong{font-weight:700;color:var(--text)}
+.stat tr.sum td{background:color-mix(in srgb,var(--accent) 18%,var(--surface));font-weight:700;font-family:"JetBrains Mono",monospace}
 .stat tr.sum td.lbl{text-align:left;padding-left:12px;font-family:"Manrope",sans-serif}
 .stat tr.empty td{background:transparent;border-color:transparent;color:var(--muted);padding:40px 10px}
 .statnote{font-size:.76rem;color:var(--faint);margin-top:12px;padding:0 4px}
@@ -451,7 +466,7 @@ function head(sub){
 }
 const opts = (arr,act) => arr.map(o=>`<button class="opt" data-${act}="${o}">${o}</button>`).join("");
 const seg  = (name,vals,cur,cls="") => `<div class="seg ${cls}">${vals.map(v=>`<button type="button" data-seg="${name}" data-val="${v}" aria-pressed="${cur===v}">${v}</button>`).join("")}</div>`;
-const checks = (name,vals,cur=[]) => `<div class="checks">${vals.map(v=>`<button type="button" data-chk="${name}" data-val="${v}" aria-pressed="${cur.includes(v)}">${v}</button>`).join("")}</div>`;
+const checks = (name,vals,cur=[],cls="") => `<div class="checks ${cls}">${vals.map(v=>`<button type="button" data-chk="${name}" data-val="${v}" aria-pressed="${cur.includes(v)}">${v}</button>`).join("")}</div>`;
 const fld = (id,lbl,val="",type="text",extra="") => `<div class="field"><label for="${id}">${lbl}</label><input id="${id}" type="${type}" value="${val??""}" ${extra}></div>`;
 const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option value="${h}" ${+cur===h?"selected":""}>${pad(h)}:00 – ${pad(h+2)}:00</option>`).join("")}</select>`;
 
@@ -486,7 +501,7 @@ function nbForm(){
 
     <div class="h4">Vorführung</div>
     <div class="grp">
-      <div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[])}</div>
+      <div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[],"stack")}</div>
       ${fld("demotuecher","Wie viele Demotücher gezogen?",n.demotuecher,"number",'min="0" inputmode="numeric"')}
       <div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>
     </div>
@@ -510,7 +525,7 @@ function nbForm(){
     const has = n.besitz||[];
     h += `<div class="h4">Kein Kauf – was hat der Kunde bereits?</div>
       <div class="grp">
-        <div class="sect">${checks("besitz",BESITZ,has)}</div>
+        <div class="sect">${checks("besitz",BESITZ,has,"stack")}</div>
         ${has.length < BESITZ.length
           ? `<div class="field"><label for="grund">Warum wurde nicht gekauft?</label><textarea id="grund">${n.grund||""}</textarea></div>
              <div class="hint">Der Kunde landet mit dem offenen Potenzial in der Potenzialliste.</div>`
@@ -804,16 +819,21 @@ function wireSegs(){
 
 /* ================= Statistik ================= */
 const KONTAKT = [
-  {t:"Promotion",           q:"Promotion",           c:"#F2B33D"},
-  {t:"Empfehlung",          q:"Empfehlung",          c:"#9A6CE8"},
-  {t:"Premium CheckIn",     q:"Premium CheckIn",     c:"#E8C4F2"},
-  {t:"Festgebietsbegehung", q:"Festgebietsbegehung", c:"#A9D18E"},
-  {t:"Vertriebsadresse",    q:"Vertriebsadresse",    c:"#77CDF5"}
+  {t:"Promotion",           q:"Promotion"},
+  {t:"Empfehlung",          q:"Empfehlung"},
+  {t:"Premium CheckIn",     q:"Premium CheckIn"},
+  {t:"Festgebietsbegehung", q:"Festgebietsbegehung"},
+  {t:"Vertriebsadresse",    q:"Vertriebsadresse"}
 ];
-const GRUEN = "#A9D18E", LILA = "#9A6CE8", ROSA = "#D77BC0", FLIEDER = "#E8C4F2", TEAL = "#7fa88c";
-const tick = (on,c) => on ? `<td class="tick" style="background:${c};border-color:${c};color:${textOn(c)}">✓</td>` : `<td class="off"></td>`;
-const cnt  = (v,c) => (+v>0) ? `<td class="tick num" style="background:${c};border-color:${c};color:${textOn(c)}">${+v}</td>` : `<td class="off"></td>`;
-const money = v => v ? `<td class="num">${eur(v)}</td>` : `<td class="off"></td>`;
+/* Eine gedämpfte Farbe pro Spaltengruppe statt einer pro Spalte */
+const G_KONTAKT = "#8FB0D6", G_KUNDE = "#9CC08B", G_PROFI = "#BE92C9", G_DEMO = "#C9B673";
+const tick = (on,c,gs="") => on
+  ? `<td class="tick ${gs}" style="background:${c};border-color:${c};color:${textOn(c)}">✓</td>`
+  : `<td class="off ${gs}"></td>`;
+const cnt  = (v,c,gs="") => (+v>0)
+  ? `<td class="tick num ${gs}" style="background:${c};border-color:${c};color:${textOn(c)}">${+v}</td>`
+  : `<td class="off ${gs}"></td>`;
+const money = v => v ? `<td class="num strong">${eur(v)}</td>` : `<td class="off"></td>`;
 
 function statRows(){
   const rows = [];
@@ -832,48 +852,52 @@ function renderStat(){
   document.getElementById('rangeText2').textContent = `${fmt(weekDays[0])} – ${fmt(weekDays[6])}`;
   document.getElementById('todayBtn2').hidden = (+monday === +mondayOf(new Date()));
 
-  const vh = t => `<th class="vh col-tick"><span>${t}</span></th>`;
+  const vh = (t,gs="") => `<th class="vh col-tick${gs}"><span>${t}</span></th>`;
+  const COLS = 31;
   let head = `<thead>
     <tr class="grp">
-      <th class="empty sticky s1 col-day"></th><th class="empty sticky s2 col-time"></th><th class="empty sticky s3 col-name"></th>
-      <th colspan="5">Kontaktweg</th><th colspan="2">Kunde</th><th colspan="2">Gebiet</th>
-      <th colspan="3">Profi</th><th>Kunde</th><th colspan="13">Vorgeführt</th><th colspan="3">Einheiten und Umsätze</th>
+      <th class="empty sticky s1 col-time"></th><th class="empty sticky s2 col-name"></th>
+      <th colspan="5" class="gs">Kontaktweg</th><th colspan="2" class="gs">Kunde</th><th colspan="2">Gebiet</th>
+      <th colspan="3" class="gs">Profi</th><th class="gs">Kunde</th><th colspan="13" class="gs">Vorgeführt</th>
+      <th colspan="3" class="gs">Einheiten und Umsätze</th>
     </tr>
     <tr>
-      <th class="sticky s1 col-day">Tag</th><th class="sticky s2 col-time">Uhrzeit</th><th class="sticky s3 col-name">Kunde und Anschrift</th>
-      ${KONTAKT.map(k=>vh(k.t)).join("")}
-      ${vh("Neukunde")}${vh("Kunde")}${vh("Festgebiet")}${vh("Weißgebiet")}
-      ${vh("Jobticket")}${vh("Empfehlung")}${vh("PCI vereinbart")}
-      <th class="col-alt">Altgeräte</th>
-      ${DEMO.map(d=>vh(d)).join("")}${vh("Service")}${vh("Demotücher")}
-      <th class="col-num">Anzahl Einheiten</th><th class="col-num">Brutto Einheiten</th><th class="col-num">Brutto K70</th>
+      <th class="sticky s1 col-time">Uhrzeit</th><th class="sticky s2 col-name">Kunde und Anschrift</th>
+      ${KONTAKT.map((k,i)=>vh(k.t,i===0?" gs":"")).join("")}
+      ${vh("Neukunde"," gs")}${vh("Kunde")}${vh("Festgebiet")}${vh("Weißgebiet")}
+      ${vh("Jobticket"," gs")}${vh("Empfehlung")}${vh("PCI vereinbart")}
+      <th class="col-alt gs">Altgeräte</th>
+      ${DEMO.map((d,i)=>vh(d,i===0?" gs":"")).join("")}${vh("Service")}${vh("Demotücher")}
+      <th class="col-num gs">Anzahl Einheiten</th><th class="col-num">Brutto Einheiten</th><th class="col-num">Brutto K70</th>
     </tr></thead>`;
 
   const rows = statRows();
   let body = "";
   if(!rows.length){
-    body = `<tr class="empty"><td colspan="32">In dieser Woche sind noch keine Kundentermine eingetragen.</td></tr>`;
+    body = `<tr class="empty"><td colspan="${COLS}">In dieser Woche sind noch keine Kundentermine eingetragen.</td></tr>`;
   }else{
-    let lastDay = -1;
+    let lastDay = -1, z = 0;
     rows.forEach(r=>{
       const e = r.e, n = r.n;
-      const tagCell = r.i!==lastDay ? DAYS_L[r.i] : "";
-      lastDay = r.i;
-      body += `<tr>
-        <td class="day sticky s1">${tagCell}</td>
-        <td class="sticky s2 num">${pad(r.h)}–${pad(r.h+2)}</td>
-        <td class="name sticky s3">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
-        ${KONTAKT.map(k=>tick(e.quelle===k.q,k.c)).join("")}
-        ${tick(n.kundenstatus==="Neukunde",GRUEN)}${tick(n.kundenstatus==="Bestandskunde",GRUEN)}
-        ${tick(n.gebiet==="Festgebiet",GRUEN)}${tick(n.gebiet==="Weißgebiet",GRUEN)}
-        ${n.job==="Ja" ? cnt(n.jobAnzahl||1,ROSA) : `<td class="off"></td>`}
-        ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,LILA) : `<td class="off"></td>`}
-        ${tick(!!n.pcDatum,FLIEDER)}
-        ${n.geraet ? `<td class="name">${n.geraet}</td>` : `<td class="off"></td>`}
-        ${DEMO.map(d=>tick((n.vorgefuehrt||[]).includes(d),TEAL)).join("")}
-        ${tick(n.wartung==="Ja",TEAL)}
-        ${cnt(n.demotuecher,TEAL)}
-        ${n.einheiten ? `<td class="num">${+n.einheiten}</td>` : `<td class="off"></td>`}
+      if(r.i !== lastDay){
+        lastDay = r.i; z = 0;
+        body += `<tr class="dayrow"><td colspan="${COLS}"><span>${DAYS_L[r.i]} · ${fmtShort(weekDays[r.i])}</span></td></tr>`;
+      }
+      const zc = (z++ % 2) ? "z1" : "z0";
+      body += `<tr class="${zc}">
+        <td class="sticky s1 num">${pad(r.h)}–${pad(r.h+2)}</td>
+        <td class="name sticky s2">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
+        ${KONTAKT.map((k,i)=>tick(e.quelle===k.q,G_KONTAKT,i===0?"gs":"")).join("")}
+        ${tick(n.kundenstatus==="Neukunde",G_KUNDE,"gs")}${tick(n.kundenstatus==="Bestandskunde",G_KUNDE)}
+        ${tick(n.gebiet==="Festgebiet",G_KUNDE)}${tick(n.gebiet==="Weißgebiet",G_KUNDE)}
+        ${n.job==="Ja" ? cnt(n.jobAnzahl||1,G_PROFI,"gs") : `<td class="off gs"></td>`}
+        ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,G_PROFI) : `<td class="off"></td>`}
+        ${tick(!!n.pcDatum,G_PROFI)}
+        ${n.geraet ? `<td class="name alt gs">${n.geraet}</td>` : `<td class="off gs"></td>`}
+        ${DEMO.map((d,i)=>tick((n.vorgefuehrt||[]).includes(d),G_DEMO,i===0?"gs":"")).join("")}
+        ${tick(n.wartung==="Ja",G_DEMO)}
+        ${cnt(n.demotuecher,G_DEMO)}
+        ${n.einheiten ? `<td class="num strong gs">${+n.einheiten}</td>` : `<td class="off gs"></td>`}
         ${money(num(n.umsatz))}
         ${money(num(n.k70betrag))}
       </tr>`;
@@ -899,19 +923,29 @@ function renderStat(){
     add("umsatz", num(n.umsatz));
     add("k70", num(n.k70betrag));
   });
-  const cell = v => `<td>${v||"–"}</td>`;
+  const cell = (v,gs="") => `<td class="${gs}">${v||"–"}</td>`;
   const foot = `<tr class="sum">
-    <td class="lbl sticky s1">Summe</td><td class="sticky s2"></td><td class="sticky s3"></td>
-    ${KONTAKT.map(k=>cell(s["k"+k.q])).join("")}
-    ${cell(s.neu)}${cell(s.best)}${cell(s.fg)}${cell(s.wg)}
-    ${cell(s.job)}${cell(s.empf)}${cell(s.pci)}
-    <td></td>
-    ${DEMO.map(d=>cell(s["d"+d])).join("")}${cell(s.service)}${cell(s.tuecher)}
-    ${cell(s.einheiten)}${cell(eur(s.umsatz))}${cell(eur(s.k70))}
+    <td class="lbl sticky s1">Summe</td><td class="sticky s2"></td>
+    ${KONTAKT.map((k,i)=>cell(s["k"+k.q],i===0?"gs":"")).join("")}
+    ${cell(s.neu,"gs")}${cell(s.best)}${cell(s.fg)}${cell(s.wg)}
+    ${cell(s.job,"gs")}${cell(s.empf)}${cell(s.pci)}
+    <td class="gs"></td>
+    ${DEMO.map((d,i)=>cell(s["d"+d],i===0?"gs":"")).join("")}${cell(s.service)}${cell(s.tuecher)}
+    ${cell(s.einheiten,"gs")}${cell(eur(s.umsatz))}${cell(eur(s.k70))}
   </tr>`;
 
-  document.getElementById('statTable').innerHTML = head + `<tbody>${body}${foot}</tbody>`;
+  const t = document.getElementById('statTable');
+  t.innerHTML = head + `<tbody>${body}${foot}</tbody>`;
 }
+/* Zeile antippen hebt sie hervor – hilft beim Verfolgen über die Breite */
+document.getElementById('statTable').addEventListener('click', ev=>{
+  const tr = ev.target.closest('tbody tr');
+  if(!tr || tr.classList.contains('dayrow')) return;
+  const on = tr.classList.contains('hl');
+  document.querySelectorAll('.stat tr.hl').forEach(x=>x.classList.remove('hl'));
+  if(!on) tr.classList.add('hl');
+});
+
 
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
