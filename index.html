@@ -350,7 +350,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
     </div>
     <p class="err" id="lgErr" hidden></p>
     <button class="btn primary" id="lgBtn">Anmelden</button>
-    <p class="lghint">Teamleiter melden sich mit <b>TL-DK</b> und acht Ziffern an.</p>
+    <p class="lghint">Teamleiter melden sich mit <b>TL-DK</b> und acht Ziffern an.<br>
+      Beim ersten Login legst du deinen Zugang selbst an.</p>
   </div>
 </div>
 
@@ -1591,7 +1592,7 @@ document.getElementById('rangeSeg').addEventListener('click', ev=>{
 
 /* ================= Konto, Team, Cloud ================= */
 /* ▼▼▼ Firebase: hier die Zugangsdaten aus der Firebase-Konsole eintragen ▼▼▼ */
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyBXw7zneLgdPzzA7jblwK-dzLK9rZPIwnA",
   authDomain: "bunte-woche.firebaseapp.com",
   databaseURL: "https://bunte-woche-default-rtdb.europe-west1.firebasedatabase.app",
@@ -1618,12 +1619,7 @@ const store = {
 };
 const DK_RE = /^(TL-)?DK\d{8}$/;
 const SEED_USERS = {
-  "DK00000000":   {dk:"DK00000000",   vorname:"Admin",  nachname:"admin",   rolle:"Admin",         team:["DK10000002","DK10000003"]},
-  "TL-DK10000001":{dk:"TL-DK10000001",vorname:"Test",   nachname:"Leader",  rolle:"Teamleader",    team:["DK10000002","DK10000003"]},
-  "DK10000002":   {dk:"DK10000002",   vorname:"Test",   nachname:"Berater", rolle:"Kundenberater", team:[]},
-  "DK10000003":   {dk:"DK10000003",   vorname:"Zweiter",nachname:"Berater", rolle:"Kundenberater", team:[]},
-  "DK10000004":   {dk:"DK10000004",   vorname:"Dritter",nachname:"Berater", rolle:"Kundenberater", team:[]},
-  "DK10000005":   {dk:"DK10000005",   vorname:"Vierter",nachname:"Berater", rolle:"Kundenberater", team:[]}
+  "DK00000000": {dk:"DK00000000", vorname:"Admin", nachname:"admin", rolle:"Admin", team:[]}
 };
 function localUsers(){ const u = store.get('bw-users'); return u || {...SEED_USERS}; }
 async function userGet(dk){
