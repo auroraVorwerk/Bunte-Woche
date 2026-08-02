@@ -245,6 +245,19 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .fazit b{font-weight:800}
 .fazit.leer{background:var(--surface-2);border-left-color:var(--line);color:var(--muted);font-size:.86rem}
 .fazit .warn{display:block;margin-top:8px;font-size:.76rem;color:var(--muted)}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.field.wf{background:var(--surface-2);border-radius:var(--r-lg);padding:13px 15px;margin:0}
+.field.wf label{font-size:.72rem;color:var(--muted);min-height:2.3em}
+.field.wf input{background:var(--surface);border:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:1.05rem;font-weight:600;padding:10px 12px}
+.field.wf .unit{display:block;font-size:.68rem;color:var(--faint);margin-top:5px}
+.hinweis{font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.5}
+.mini{background:var(--surface-3);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.72rem;cursor:pointer;margin-left:6px}
+.mini:hover{border-color:var(--accent)}
+.foot2{margin-top:22px;border-top:1px solid var(--line);padding-top:16px;display:grid;gap:10px;font-size:.79rem;color:var(--muted);line-height:1.5}
+.foot2 b{color:var(--text);font-family:"JetBrains Mono",monospace;font-size:.95rem}
+.mlbl{background:none;border:0;padding:0;font:inherit;color:inherit;font-weight:600;cursor:pointer;text-align:left;
+  text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
+.mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
 .aline{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.83rem}
 .aline .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -339,8 +352,15 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
     </div>
     <div id="ausw"></div>
   </section>
-  <section class="page" id="page-provision"><div class="placeholder">Provisionsrechner – bauen wir zuletzt.</div></section>
-  <section class="page" id="page-wunsch"><div class="placeholder">Provisionswunsch – noch leer.</div></section>
+  <section class="page" id="page-provision"><div id="prov"></div></section>
+  <section class="page" id="page-wunsch">
+    <div class="asec">
+      <h3>Provisionswunsch</h3>
+      <p class="sub">Trag ein, was du verdienen willst — der Rest rechnet sich. Jedes Feld lässt sich überschreiben, dann rechnet es rückwärts.</p>
+      <div id="wunschForm"></div>
+    </div>
+    <div id="wunschZiel"></div>
+  </section>
 </main>
 
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -355,7 +375,8 @@ const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
 const HOURS_ASC   = [...START_HOURS].reverse();                // 7 … 22 (Logik)
-const METRICS  = [{n:"Festgebietsumsatz",k:"fg"},{n:"Weißgebiet",k:"wg"},{n:"K70 Verkauf",k:"k70"},{n:"K70 Einkauf",k:null}];
+const METRICS  = [{n:"Festgebietsumsatz",k:"fg"},{n:"Weißgebiet",k:"wg"},
+                  {n:"K70 Verkauf",k:"k70",click:"rahmen"},{n:"K70 Einkauf",k:"k70ein",click:"einkauf"}];
 const QUELLEN  = ["Festgebietsbegehung","Promotion","Vertriebsadresse","Empfehlung","Premium CheckIn"];
 const MEETINGS = ["Teammeeting","Training","Schulung"];
 const DEMO = ["VK7 Grundgerät","EB7 Elektrobürste","SP7 Saugwischer","PB7 Polsterbürste","MR7 Milbenaufsatz",
@@ -420,7 +441,7 @@ function label(e){
 const num = s => { const v = parseFloat(String(s??"").replace(/\./g,"").replace(",",".")); return isNaN(v)?0:v; };
 const eur = v => v ? v.toLocaleString("de-DE",{maximumFractionDigits:2}) : "–";
 function dayTotals(day){
-  const t = {fg:0,wg:0,k70:0};
+  const t = {fg:0,wg:0,k70:0,k70ein:0};
   HOURS_ASC.forEach(h=>{
     const e = entries[key(day,h)];
     if(!e || !e.nb) return;
@@ -431,6 +452,7 @@ function dayTotals(day){
     }
     if(n.k70==="Ja") t.k70 += num(n.k70betrag);
   });
+  einkaeufe.forEach(e=>{ if(e.datum===day) t.k70ein += num(e.brutto); });
   return t;
 }
 /* Farben aus der Legende */
@@ -496,22 +518,60 @@ function render(){
   });
   h += `<div class="spacer"></div>`;
   const totals = weekDays.map(d=>dayTotals(dk(d)));
+  const soll = sollWerte();
   METRICS.forEach(m=>{
-    h += `<div class="cell metriclbl">${m.n}<small>ist / soll</small></div>`;
+    const lbl = m.click ? `<button class="mlbl" data-mclick="${m.click}">${m.n}</button>` : m.n;
+    h += `<div class="cell metriclbl">${lbl}<small>ist / soll</small></div>`;
     weekDays.forEach((d,i)=>{
-      const ist = m.k
-        ? `<span class="ist">${eur(totals[i][m.k])}</span>`
-        : `<input type="text" inputmode="decimal" placeholder="–" aria-label="${m.n} ist, ${DAYS_L[i]}">`;
-      h += `<div class="cell metric">${ist}<span class="sep">/</span><span class="soll">–</span></div>`;
+      h += `<div class="cell metric"><span class="ist">${eur(totals[i][m.k])}</span><span class="sep">/</span><span class="soll">${eur(soll[m.k])}</span></div>`;
     });
   });
   grid.innerHTML = h;
 }
 grid.addEventListener('click', ev=>{
+  const ml = ev.target.closest('[data-mclick]');
+  if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
   const s = ev.target.closest('.slot');
   if(!s || s.classList.contains('blocked')) return;
   openSlot(s.dataset.day, +s.dataset.hour);
 });
+
+/* Einfache Dialoge ohne Schrittkette */
+function simpleDialog(title, sub, body, onSave, saveLabel="Speichern"){
+  draft = {nb:{}}; step = "simple"; error = "";
+  modal.classList.add('open');
+  sheet.innerHTML = `<header><div><h3>${title}</h3>${sub?`<div class="when">${sub}</div>`:""}</div>
+      <button class="x" data-close aria-label="Schließen">✕</button></header>${body}
+    <div class="actions"><button class="btn" data-close>Abbrechen</button><button class="btn primary" id="okBtn">${saveLabel}</button></div>`;
+  document.getElementById('okBtn').onclick = onSave;
+}
+function dlgEinkauf(){
+  const liste = einkaeufe.slice().sort((a,b)=>b.datum.localeCompare(a.datum)).slice(0,6);
+  simpleDialog("K70 Einkauf erfassen","Bestellungen zählen als Festgebietsumsatz",
+    `<div class="grp">
+       ${fld("ekDatum","Wann wurde bestellt?",dk(new Date()),"date")}
+       ${fld("ekBetrag","Bestellt für (Brutto €)","","text",'inputmode="decimal"')}
+     </div>
+     ${liste.length?`<div class="h4">Zuletzt erfasst</div><div class="grp">${
+       liste.map((e,i)=>`<div class="aline"><span class="nm">${fmt(fromDk(e.datum))}</span>
+         <span class="vl">${eur(num(e.brutto))} €</span>
+         <button class="mini" data-del="${einkaeufe.indexOf(e)}">✕</button></div>`).join("")}</div>`:""}`,
+    ()=>{
+      const d = document.getElementById('ekDatum').value;
+      const b = num(document.getElementById('ekBetrag').value);
+      if(!d || b<=0){ return; }
+      einkaeufe.push({datum:d, brutto:String(b)});
+      closeModal(); renderAll();
+    }, "Einkauf speichern");
+  sheet.querySelectorAll('[data-del]').forEach(b=> b.onclick = ()=>{
+    einkaeufe.splice(+b.dataset.del,1); closeModal(); renderAll();
+  });
+}
+function dlgRahmen(){
+  simpleDialog("K70 Bestellrahmen","Grundlage für das Soll bei K70 Verkauf und Einkauf",
+    `<div class="grp">${fld("rhBetrag","Bestellrahmen im Vertriebsmonat (Brutto €)",settings.bestellrahmen||"","text",'inputmode="decimal"')}</div>`,
+    ()=>{ settings.bestellrahmen = num(document.getElementById('rhBetrag').value); closeModal(); renderAll(); });
+}
 
 /* ================= Dialog ================= */
 const modal = document.getElementById('modal'), sheet = document.getElementById('sheet');
@@ -1052,10 +1112,249 @@ document.addEventListener('click', ev=>{
   if(ev.target.id === 'pdfBtn'){ preparePrint(); setTimeout(()=>window.print(), 60); }
 });
 
+/* ================= Vertriebsmonat, Provision, Ziele ================= */
+const MWST = 1.19;
+const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
+const settings = {bestellrahmen:0};
+const wunsch = {einkommen:0, tage:5, proAuftrag:0, quote:0};
+const einkaeufe = [];                       // K70-Einkauf: {datum, brutto}
+const netto = v => v / MWST;
+
+function mondayOfISOWeek(year,week){
+  const m = mondayOf(new Date(year,0,4));
+  m.setDate(m.getDate() + (week-1)*7);
+  return m;
+}
+/* Vertriebsmonat: Quartal = 4 + 4 + 5 Wochen (im 53-Wochen-Jahr zuletzt 6) */
+function vertriebsmonat(date){
+  const {week,year} = isoWeek(date);
+  const total = weeksInISOYear(year);
+  const q = Math.min(Math.floor((week-1)/13), 3);
+  const r = week - 1 - q*13;
+  let startW, len, idx;
+  if(r < 4){ startW = q*13+1; len = 4; idx = 1; }
+  else if(r < 8){ startW = q*13+5; len = 4; idx = 2; }
+  else { startW = q*13+9; len = (total===53 && q===3) ? 6 : 5; idx = 3; }
+  const from = mondayOfISOWeek(year,startW);
+  const to = new Date(from); to.setDate(to.getDate()+len*7-1);
+  const qFrom = mondayOfISOWeek(year,q*13+1);
+  const jFrom = mondayOfISOWeek(year,1);
+  return {year, quartal:q+1, idx, weeks:len, startW, endW:startW+len-1, from, to,
+          fromK:dk(from), toK:dk(to), qFromK:dk(qFrom), jFromK:dk(jFrom)};
+}
+/* Bruttoumsätze eines Zeitraums */
+function umsatz(fromK,toK){
+  const u = {fg:0, wg:0, k70:0, k70ein:0};
+  Object.keys(entries).forEach(k=>{
+    const day = k.split("|")[0];
+    if(day < fromK || day > toK) return;
+    const n = entries[k].nb;
+    if(!n) return;
+    if(n.verkauft==="Ja"){
+      if(n.gebiet==="Festgebiet") u.fg += num(n.umsatz);
+      else if(n.gebiet==="Weißgebiet") u.wg += num(n.umsatz);
+    }
+    if(n.k70==="Ja") u.k70 += num(n.k70betrag);
+  });
+  einkaeufe.forEach(e=>{ if(e.datum>=fromK && e.datum<=toK) u.k70ein += num(e.brutto); });
+  return u;
+}
+/* Bonusstufe – zählt nur, was im Festgebiet passiert ist (K70-Einkauf gilt als Festgebiet) */
+function bonusStufe(fgNetto, weeks){
+  const f = weeks/4;
+  let b = 0, stufe = "keine";
+  TIERS.forEach(t=>{ if(fgNetto >= t.u*f){ b = t.b; stufe = Math.round(t.b*100)+" %"; } });
+  const next = TIERS.find(t => fgNetto < t.u*f);
+  return {b, stufe, next: next ? {pct:Math.round(next.b*100), fehlt: next.u*f - fgNetto, ziel:next.u*f} : null};
+}
+function provision(u, weeks){
+  const fgN = netto(u.fg), wgN = netto(u.wg), einN = netto(u.k70ein);
+  const basis = fgN + einN;                       // Grundlage der Bonusstufe
+  const {b, stufe, next} = bonusStufe(basis, weeks);
+  const pWG = wgN * .20;
+  const pFG = fgN * (.20 + b);
+  const pK70 = einN * (.26 + b);
+  const prov = pWG + pFG + pK70;
+  const vers = prov * .14;
+  return {fgN, wgN, einN, basis, b, stufe, next, pWG, pFG, pK70, prov, vers, gesamt: prov + vers};
+}
+/* Welcher Nettoumsatz ist nötig, um das Wunscheinkommen zu erreichen? (75 % FG / 25 % WG) */
+function zielNetto(ziel, weeks){
+  const f = weeks/4;
+  const opts = [{u:0,b:0}, ...TIERS];
+  for(const t of opts){
+    const U = ziel / (1.14 * (.20 + .75*t.b));
+    const fg = U * .75;
+    const next = TIERS.find(x => x.u*f > t.u*f);
+    if(fg >= t.u*f && (!next || fg < next.u*f)) return U;
+  }
+  return ziel / (1.14 * (.20 + .75*.12));
+}
+function restTage(vm, tagePw){
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  if(heute > vm.to || heute < vm.from) return Math.max(1, tagePw*vm.weeks);
+  const tage = Math.round((vm.to - heute)/86400000) + 1;
+  return Math.max(1, tage * tagePw / 7);
+}
+/* Soll-Werte pro Tag für die Planer-Kennzahlen */
+function sollWerte(){
+  const vm = vertriebsmonat(monday);
+  const out = {fg:0, wg:0, k70:0, k70ein:0};
+  if(wunsch.einkommen > 0){
+    const U = zielNetto(wunsch.einkommen, vm.weeks);
+    const zielFG = U * .75 * MWST, zielWG = U * .25 * MWST;
+    const ist = umsatz(vm.fromK, vm.toK);
+    const rest = restTage(vm, wunsch.tage || 5);
+    out.fg = Math.max(0, zielFG - ist.fg) / rest;
+    out.wg = Math.max(0, zielWG - ist.wg) / rest;
+  }
+  if(settings.bestellrahmen > 0){
+    const proTag = settings.bestellrahmen / Math.max(1,(wunsch.tage||5) * vm.weeks);
+    out.k70 = proTag; out.k70ein = proTag;
+  }
+  return out;
+}
+
+/* ================= Provisionsrechner ================= */
+function renderProv(){
+  const vm = vertriebsmonat(monday);
+  const u = umsatz(vm.fromK, vm.toK);
+  const p = provision(u, vm.weeks);
+
+  const d = fromDk(vm.fromK); d.setDate(d.getDate()-1);
+  const bisVormonat = dk(d);
+  const leer = {fg:0,wg:0,k70:0,k70ein:0};
+  const qU = vm.fromK > vm.qFromK ? umsatz(vm.qFromK, bisVormonat) : leer;
+  const jU = vm.fromK > vm.jFromK ? umsatz(vm.jFromK, bisVormonat) : leer;
+  const qFG = netto(qU.fg) + netto(qU.k70ein);
+  const jFG = netto(jU.fg) + netto(jU.k70ein);
+  const jahrWochen = weeksInISOYear(vm.year);
+
+  document.getElementById('prov').innerHTML = `
+    <div class="asec">
+      <h3>Provisionsrechner</h3>
+      <p class="sub">Vertriebsmonat ${vm.idx} im ${vm.quartal}. Quartal · KW ${vm.startW}–${vm.endW} · ${vm.weeks} Wochen · ${fmt(vm.from)} – ${fmt(vm.to)}</p>
+      <div class="kpis">
+        ${kpi("Provision", eur(p.prov)+" €", "ohne Versicherungsbonus","hero")}
+        ${kpi("Versicherungsbonus", eur(p.vers)+" €", "14 % auf die Provision")}
+        ${kpi("Festgebietsbonus", p.stufe, p.next ? `noch ${eur(p.next.fehlt)} € netto bis ${p.next.pct} %` : "höchste Stufe erreicht")}
+        ${kpi("Gesamte Überweisung", eur(p.gesamt)+" €", "Provision + Versicherungsbonus","hero")}
+      </div>
+
+      <div class="ah4">Woraus sich das rechnet</div>
+      <div class="ascroll"><table class="atable">
+        <thead><tr><th>Quelle</th><th>Brutto</th><th>Netto</th><th>Satz</th><th>Provision</th></tr></thead>
+        <tbody>
+          <tr><td>Festgebietsumsatz</td><td>${eur(u.fg)}</td><td>${eur(p.fgN)}</td><td>${20+Math.round(p.b*100)} %</td><td>${eur(p.pFG)}</td></tr>
+          <tr><td>Weißgebietsumsatz</td><td>${eur(u.wg)}</td><td>${eur(p.wgN)}</td><td>20 %</td><td>${eur(p.pWG)}</td></tr>
+          <tr><td>K70 Einkauf</td><td>${eur(u.k70ein)}</td><td>${eur(p.einN)}</td><td>${26+Math.round(p.b*100)} %</td><td>${eur(p.pK70)}</td></tr>
+          <tr class="best"><td>Summe</td><td>${eur(u.fg+u.wg+u.k70ein)}</td><td>${eur(p.fgN+p.wgN+p.einN)}</td><td></td><td>${eur(p.prov)}</td></tr>
+        </tbody></table></div>
+
+      <div class="ah4">Bonusstufen in diesem Vertriebsmonat</div>
+      <div class="ascroll"><table class="atable">
+        <thead><tr><th>Stufe</th><th>Festgebiet netto nötig</th><th>Status</th></tr></thead>
+        <tbody>${TIERS.map(t=>{
+          const ziel = t.u*vm.weeks/4, erreicht = p.basis >= ziel;
+          return `<tr class="${erreicht && Math.round(p.b*100)===Math.round(t.b*100) ? "best":""}">
+            <td>${Math.round(t.b*100)} %</td><td>${eur(ziel)} €</td>
+            <td>${erreicht ? "erreicht" : "fehlen "+eur(ziel-p.basis)+" €"}</td></tr>`;
+        }).join("")}</tbody></table></div>
+      <p class="hinweis">Bewertet wird der Nettoumsatz im Festgebiet einschließlich K70-Einkauf: aktuell ${eur(p.basis)} €.</p>
+
+      <div class="foot2">
+        <div><b>${eur(qFG)} €</b> Festgebietsumsatz netto aus den bisherigen Vertriebsmonaten dieses Quartals — für den Quartalsausgleich.
+          Ziele auf 13 Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*13/4)} €`).join(" · ")}</div>
+        <div><b>${eur(jFG)} €</b> aus den Vormonaten dieses Jahres — für den Jahresausgleich.
+          Ziele auf ${jahrWochen} Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*jahrWochen/4)} €`).join(" · ")}</div>
+      </div>
+    </div>`;
+}
+
+/* ================= Provisionswunsch ================= */
+const WF = [
+  {id:"einkommen",  t:"Gewünschtes Einkommen", e:"€ brutto je Vertriebsmonat"},
+  {id:"proAuftrag", t:"Einkommen pro Auftrag",  e:"€"},
+  {id:"abschluesse",t:"Erfolgreiche Abschlüsse nötig", e:"Aufträge"},
+  {id:"quote",      t:"Abschlussquote",         e:"% der Termine"},
+  {id:"tMonat",     t:"Termine pro Vertriebsmonat", e:"Termine"},
+  {id:"tWoche",     t:"Termine pro Woche",      e:"Termine"},
+  {id:"tage",       t:"Arbeitstage pro Woche",  e:"Tage"},
+  {id:"tTag",       t:"Termine pro Tag",        e:"Termine"}
+];
+function wunschWerte(){
+  const vm = vertriebsmonat(monday);
+  const w = {...wunsch, wochen:vm.weeks};
+  w.abschluesse = w.proAuftrag > 0 ? w.einkommen / w.proAuftrag : 0;
+  w.tMonat = w.quote > 0 ? w.abschluesse / (w.quote/100) : 0;
+  w.tWoche = w.tMonat / vm.weeks;
+  w.tTag   = w.tage > 0 ? w.tWoche / w.tage : 0;
+  return w;
+}
+function setzeWunsch(id, val){
+  const vm = vertriebsmonat(monday);
+  const q = wunsch.quote/100, pa = wunsch.proAuftrag, tg = wunsch.tage || 5;
+  if(["einkommen","proAuftrag","quote","tage"].includes(id)){
+    wunsch[id] = val;
+  }else{
+    let abschluesse = 0;
+    if(id==="abschluesse") abschluesse = val;
+    if(id==="tMonat")      abschluesse = val * q;
+    if(id==="tWoche")      abschluesse = val * vm.weeks * q;
+    if(id==="tTag")        abschluesse = val * tg * vm.weeks * q;
+    wunsch.einkommen = abschluesse * pa;
+  }
+  renderAll();
+}
+function renderWunsch(){
+  const w = wunschWerte();
+  const st = quoten(rangeWeeks).termine;
+  const eigene = st.stattgefunden ? Math.round(st.verkauft/st.stattgefunden*100) : 0;
+  const val = id => {
+    const v = w[id];
+    if(!v) return "";
+    return (id==="einkommen"||id==="proAuftrag") ? Math.round(v) : String(Math.round(v*10)/10).replace(".",",");
+  };
+  document.getElementById('wunschForm').innerHTML =
+    `<div class="wgrid">${WF.map(f=>`
+      <div class="field wf"><label for="w_${f.id}">${f.t}</label>
+        <input id="w_${f.id}" data-wf="${f.id}" inputmode="decimal" value="${val(f.id)}" placeholder="–">
+        <span class="unit">${f.e}</span></div>`).join("")}</div>
+     ${eigene ? `<p class="hinweis">Deine tatsächliche Abschlussquote der letzten ${rangeWeeks} Wochen liegt bei ${eigene} %.
+        <button class="mini" id="useQuote">Übernehmen</button></p>` : ""}`;
+
+  const vm = vertriebsmonat(monday);
+  const ziel = w.einkommen > 0 ? zielNetto(w.einkommen, vm.weeks) : 0;
+  const ist = umsatz(vm.fromK, vm.toK);
+  document.getElementById('wunschZiel').innerHTML = ziel ? `
+    <div class="asec">
+      <h3>Was das an Umsatz bedeutet</h3>
+      <p class="sub">Bei 75 % Festgebiet und 25 % Weißgebiet, gerechnet auf den laufenden Vertriebsmonat mit ${vm.weeks} Wochen</p>
+      <div class="kpis">
+        ${kpi("Nötiger Umsatz brutto", eur(ziel*MWST)+" €", eur(ziel)+" € netto","hero")}
+        ${kpi("davon Festgebiet (75 %)", eur(ziel*.75*MWST)+" €", `bisher ${eur(ist.fg)} €`)}
+        ${kpi("davon Weißgebiet (25 %)", eur(ziel*.25*MWST)+" €", `bisher ${eur(ist.wg)} €`)}
+        ${kpi("Termine pro Tag", String(Math.round(w.tTag*10)/10).replace(".",","), `${w.tage||5} Arbeitstage je Woche`)}
+      </div>
+      <p class="hinweis">Diese Ziele stecken den Soll-Wert auf der Planer-Seite ab. Er verteilt sich auf die verbleibenden
+        Arbeitstage des Vertriebsmonats und aktualisiert sich mit jedem neuen Umsatz.</p>
+    </div>` : `<div class="asec"><p class="aempty">Sobald Einkommen, Einkommen pro Auftrag und Abschlussquote stehen, erscheinen hier die Umsatzziele — und der Planer bekommt seine Soll-Werte.</p></div>`;
+}
+document.getElementById('wunschForm').addEventListener('change', ev=>{
+  const f = ev.target.closest('[data-wf]');
+  if(f) setzeWunsch(f.dataset.wf, num(f.value));
+});
+document.getElementById('wunschForm').addEventListener('click', ev=>{
+  if(ev.target.id === 'useQuote'){
+    const st = quoten(rangeWeeks).termine;
+    wunsch.quote = st.stattgefunden ? Math.round(st.verkauft/st.stattgefunden*100) : 0;
+    renderAll();
+  }
+});
+
 /* ================= Auswertungen ================= */
 const RANGES = [{w:1,t:"1 Woche"},{w:4,t:"4 Wochen"},{w:13,t:"13 Wochen"},{w:26,t:"26 Wochen"},{w:52,t:"52 Wochen"}];
-let rangeWeeks = 4;
-const TAGESZEIT = ["Vormittag","Nachmittag","Abend"];
+let rangeWeeks = 4;const TAGESZEIT = ["Vormittag","Nachmittag","Abend"];
 const WETTER = ["Sonnig","Wolkig","Regnerisch"];
 const TEMPS = ["unter 0°C","0–15°C","15–25°C","über 25°C"];
 
@@ -1217,7 +1516,7 @@ document.getElementById('rangeSeg').addEventListener('click', ev=>{
 
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); }
+function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
