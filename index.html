@@ -494,6 +494,7 @@ const verlauf = [];        // {datum, art:"verschoben"|"abgesagt"} für die Ausw
 let monday = mondayOf(new Date());
 const key = (day,hour) => `${day}|${hour}`;
 const toDec = t => {const [h,m]=t.split(":").map(Number); return h+m/60;};
+const plusTage = (dayKey,n) => { const d = fromDk(dayKey); d.setDate(d.getDate()+n); return dk(d); };
 const kurzName = e => `${(e.vorname||"").trim().charAt(0).toUpperCase()}. ${e.nachname||""}`;
 
 function label(e){
@@ -541,7 +542,8 @@ function textOn(hex){
   return (.2126*f(r) + .7152*f(g) + .0722*f(b)) > .35 ? "#1d211b" : "#ffffff";
 }
 /* Startzeiten, deren 2-Stunden-Fach sich mit von–bis überschneidet */
-const coveredHours = (von,bis) => HOURS_ASC.filter(h => h < bis && h+2 > von);
+/* Gesperrt sind nur Fächer, die innerhalb der Dauer starten – nicht das davorliegende */
+const coveredHours = (von,bis) => HOURS_ASC.filter(h => h >= von && h < bis);
 /* Nur zeitgebundene Einträge (Meeting, Privat) sperren Folgefächer */
 function blockedSet(day){
   const m = new Map();
@@ -723,8 +725,9 @@ function nbForm(){
   if(n.verkauft==="Ja"){
     h += `<div class="h4">Premium CheckIn vereinbaren</div>
       <div class="grp">
-        ${fld("pcDatum","Datum",n.pcDatum||draft.day,"date")}
-        <div class="field"><label for="pcZeit">Startzeit</label>${hourSelect("pcZeit",n.pcZeit??13)}</div>
+        ${fld("pcDatum","Datum",n.pcDatum||plusTage(draft.day,14),"date")}
+        <div class="field"><label for="pcZeit">Startzeit</label>${hourSelect("pcZeit",n.pcZeit??draft.hour)}</div>
+        <p class="hinweis">Vorgeschlagen ist derselbe Zeitblock in zwei Wochen.</p>
       </div>`;
   }
   if(n.verkauft==="Nein"){
@@ -739,6 +742,30 @@ function nbForm(){
       </div>`;
   }
   return h;
+}
+
+/* Nachbereitung für Premium CheckIn – nur der Nachkauf zählt */
+function nbPremiumForm(){
+  const n = draft.nb;
+  return `<div class="h4">Nachbereitung · Premium CheckIn</div>
+    <div class="grp">
+      <div class="sect"><span class="lb">Hat der Kunde etwas nachgekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
+      ${n.verkauft==="Ja" ? `
+        <div class="row2">${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}</div>
+        <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet",["Festgebiet","Weißgebiet"],n.gebiet)}</div>` : ""}
+      <div class="sect"><span class="lb">K70 abverkauft?</span>${seg("k70",["Ja","Nein"],n.k70)}
+        ${n.k70==="Ja" ? fld("k70betrag","Bruttoumsatz K70 €",n.k70betrag,"text",'inputmode="decimal"') : ""}</div>
+    </div>`;
+}
+function saveNbPremium(e){
+  collect();
+  const n = draft.nb;
+  if(!n.verkauft){ error="Bitte angeben, ob der Kunde nachgekauft hat."; repaint(); return; }
+  if(n.verkauft==="Ja" && !n.gebiet){ error="Bitte das Gebiet angeben."; repaint(); return; }
+  if(!n.k70){ error="Bitte angeben, ob K70 abverkauft wurde."; repaint(); return; }
+  e.nb = {...n, kundenstatus:"Bestandskunde"};
+  e.status = "stattgefunden";
+  closeModal(); renderAll();
 }
 
 /* Nachbereitung für Terminierungen */
@@ -841,11 +868,12 @@ function paint(){
       extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"") +
         `<div class="actions"><button class="btn danger" id="del">Löschen</button><button class="btn primary" id="saveNbT">Nachbereitung speichern</button></div>`;
     }
-    if(e.kind==="kunde"){
+    if(e.kind==="kunde" || e.kind==="premium"){
       const st = draft.nb.status || e.status || "";
       extra = `<div class="hr"></div><div class="h4">Status</div>
         ${seg("status",["Stattgefunden","Verschoben","Abgesagt"], st, st==="Abgesagt"?"danger":"")}`;
-      if(st==="Stattgefunden") extra += nbForm() + (error?`<div class="err">${error}</div>`:"") +
+      if(st==="Stattgefunden") extra += (e.kind==="premium" ? nbPremiumForm() : nbForm()) +
+        (error?`<div class="err">${error}</div>`:"") +
         `<div class="actions"><button class="btn primary" id="saveNb">Nachbereitung speichern</button></div>`;
       if(st==="Verschoben") extra += `<div class="sect boxed" style="margin-top:14px">
           ${fld("vsDatum","Neues Datum",draft.nb.vsDatum||draft.day,"date")}
@@ -855,7 +883,7 @@ function paint(){
       if(st==="Abgesagt") extra += `<div class="hint" style="margin-top:14px">Der Termin wird aus dem Kalender gelöscht.</div>
         <div class="actions"><button class="btn danger" id="doCancel">Termin löschen</button></div>`;
     }
-    const foot = (e.kind==="terminieren") || (e.kind==="kunde" && (draft.nb.status||e.status))
+    const foot = (e.kind==="terminieren") || ((e.kind==="kunde"||e.kind==="premium") && (draft.nb.status||e.status))
       ? (e.kind==="terminieren" ? `<div class="actions"><button class="btn" data-close>Schließen</button></div>`
                                 : `<div class="actions"><button class="btn" data-close>Schließen</button></div>`)
       : `<div class="actions"><button class="btn danger" id="del">Löschen</button><button class="btn primary" data-close>Schließen</button></div>`;
@@ -865,7 +893,7 @@ function paint(){
     const d1 = document.getElementById('del');
     if(d1) d1.onclick = ()=>{ delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll(); };
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
-    const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> saveNb(e);
+    const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
     const dc = document.getElementById('doCancel');
     if(dc) dc.onclick = ()=>{
       verlauf.push({datum:draft.day, art:"abgesagt"});
@@ -1063,7 +1091,10 @@ function statRows(){
     const day = dk(d);
     HOURS_ASC.forEach(h=>{
       const e = entries[key(day,h)];
-      if(e && e.kind==="kunde") rows.push({i,h,e,n:e.nb||{}});
+      if(!e) return;
+      const n = e.nb || {};
+      const pcVerkauf = n.verkauft==="Ja" || n.k70==="Ja";      // ohne Verkauf zählt ein CheckIn nicht
+      if(e.kind==="kunde" || (e.kind==="premium" && pcVerkauf)) rows.push({i,h,e,n});
     });
   });
   return rows;
@@ -1107,13 +1138,15 @@ function renderStat(){
         lastDay = r.i; z = 0;
         body += `<tr class="dayrow"><td colspan="${COLS}"><span>${DAYS_L[r.i]} · ${fmtShort(weekDays[r.i])}</span></td></tr>`;
       }
+      const weg  = e.kind==="premium" ? "Premium CheckIn" : e.quelle;
+      const kart = e.kind==="premium" ? "Bestandskunde" : n.kundenstatus;
       const zc = (z++ % 2) ? "z1" : "z0";
       if(z > 1) body += `<tr class="sep"><td colspan="${COLS}"></td></tr>`;
       body += `<tr class="${zc}">
         <td class="sticky s1 num">${pad(r.h)}–${pad(r.h+2)}</td>
         <td class="name sticky s2">${e.vorname} ${e.nachname}<small>${[e.strasse,[e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</small></td>
-        ${V}${KONTAKT.map(k=>tick(e.quelle===k.q,k.c)).join("")}
-        ${V}${tick(n.kundenstatus==="Neukunde",C_NEUKUNDE)}${tick(n.kundenstatus==="Bestandskunde",C_KUNDE)}
+        ${V}${KONTAKT.map(k=>tick(weg===k.q,k.c)).join("")}
+        ${V}${tick(kart==="Neukunde",C_NEUKUNDE)}${tick(kart==="Bestandskunde",C_KUNDE)}
         ${V}${tick(n.gebiet==="Festgebiet",C_FG)}${tick(n.gebiet==="Weißgebiet",C_WG)}
         ${V}${n.job==="Ja" ? cnt(n.jobAnzahl||1,C_JOB) : `<td class="off"></td>`}
         ${n.empf==="Ja" ? cnt(n.empfAnzahl||1,C_EMPF) : `<td class="off"></td>`}
@@ -1133,9 +1166,11 @@ function renderStat(){
   const s = {};
   const add = (k,v) => s[k] = (s[k]||0) + v;
   rows.forEach(({e,n})=>{
-    KONTAKT.forEach(k=>{ if(e.quelle===k.q) add("k"+k.q,1); });
-    if(n.kundenstatus==="Neukunde") add("neu",1);
-    if(n.kundenstatus==="Bestandskunde") add("best",1);
+    const weg  = e.kind==="premium" ? "Premium CheckIn" : e.quelle;
+    const kart = e.kind==="premium" ? "Bestandskunde" : n.kundenstatus;
+    KONTAKT.forEach(k=>{ if(weg===k.q) add("k"+k.q,1); });
+    if(kart==="Neukunde") add("neu",1);
+    if(kart==="Bestandskunde") add("best",1);
     if(n.gebiet==="Festgebiet") add("fg",1);
     if(n.gebiet==="Weißgebiet") add("wg",1);
     if(n.job==="Ja") add("job", +(n.jobAnzahl||1));
