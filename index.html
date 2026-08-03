@@ -31,6 +31,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .burger[aria-expanded="true"] span:nth-child(2){opacity:0}
 .burger[aria-expanded="true"] span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
 .topbar .mark{font-weight:800;font-size:.95rem;opacity:0;transform:translateY(4px);transition:.25s}
+.savestate{margin-left:auto;font-size:.72rem;color:var(--faint);font-family:"JetBrains Mono",monospace;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:45vw}
+.savestate.warn{color:var(--warn)}
 .topbar.scrolled .mark{opacity:1;transform:none}
 .scrim{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
 .scrim.open{opacity:1;pointer-events:auto}
@@ -306,7 +309,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   @page{size:A4 landscape;margin:8mm}
   html,body{background:#fff!important;color:#000!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
-  .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend,.login{display:none!important}
+  .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend,.login,.savestate,.viewbanner{display:none!important}
   .wrap{padding:0!important;max-width:none}
   .board{background:#fff!important;border:0!important;padding:0!important}
   .scroller{overflow:visible!important;transform:scale(var(--pscale,1));transform-origin:top left;width:max-content}
@@ -358,6 +361,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 <header class="topbar" id="topbar">
   <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
   <span class="mark">Bunte Woche</span>
+  <span class="savestate" id="saveState"></span>
 </header>
 <div class="scrim" id="scrim"></div>
 <nav class="drawer" id="drawer" aria-label="Hauptmenü">
@@ -906,7 +910,8 @@ function paint(){
       if(!nd){ error="Bitte ein Datum wählen."; repaint(); return; }
       if(nd===draft.day && nh===draft.hour){ error="Das ist der bisherige Termin."; repaint(); return; }
       if(entries[key(nd,nh)]){ error="Auf diesem Platz steht schon ein Eintrag."; repaint(); return; }
-      entries[key(nd,nh)] = {...e, status:undefined};
+      const kopie = {...e}; delete kopie.status; delete kopie.nb;
+      entries[key(nd,nh)] = kopie;
       delete entries[key(draft.day,draft.hour)];
       verlauf.push({datum:draft.day, art:"verschoben"});
       closeModal(); renderAll();
@@ -958,10 +963,12 @@ function paint(){
       const g = id => (draft.nb[id]||"").trim();
       if(!g('f_vor') || !g('f_nach')){ error="Vorname und Nachname fehlen."; repaint(); return; }
       if(!/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben."; repaint(); return; }
-      entries[key(draft.day,draft.hour)] = {
-        kind:draft.kind, quelle:draft.quelle,
+      const eintrag = {
+        kind:draft.kind,
         vorname:g('f_vor'), nachname:g('f_nach'), strasse:g('f_str'), plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
       };
+      if(draft.quelle) eintrag.quelle = draft.quelle;
+      entries[key(draft.day,draft.hour)] = eintrag;
       closeModal(); renderAll();
     };
     return;
@@ -1034,7 +1041,9 @@ function paint(){
       if(!b || bDec <= draft.hour){ error=`Die Endzeit muss nach ${von} liegen.`; paint(); return; }
       const hit = coveredHours(draft.hour,bDec);
       if(hit.some(hr => hr!==draft.hour && entries[key(draft.day,hr)])){ error="In diesem Zeitraum steht schon ein Eintrag."; paint(); return; }
-      entries[key(draft.day,draft.hour)] = {kind:draft.kind, art:draft.art, von, bis:b};
+      const eintrag = {kind:draft.kind, von, bis:b};
+      if(draft.art) eintrag.art = draft.art;
+      entries[key(draft.day,draft.hour)] = eintrag;
       closeModal(); renderAll();
     };
     return;
@@ -1683,19 +1692,64 @@ function applyData(d){
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
 }
 async function loadData(dk){
-  if(db){ const s = await db.ref('data/'+dk).once('value'); return s.val(); }
-  return store.get('bw-data-'+dk);
+  const lokal = store.get('bw-data-'+dk);
+  if(!db){ cloudOk = false; return lokal; }
+  try{
+    const s = await db.ref('data/'+dk).once('value');
+    cloudOk = true;
+    const wolke = s.val();
+    if(!wolke) return lokal;                                  // in der Cloud noch nichts
+    if(!lokal)  return wolke;
+    return (wolke.ts||0) >= (lokal.ts||0) ? wolke : lokal;    // der neuere Stand gewinnt
+  }catch(err){
+    cloudOk = false;
+    saveState("keine Verbindung – nur lokal", true);
+    return lokal;
+  }
 }
-let saveTimer = null;
+/* Firebase lehnt einen ganzen Schreibvorgang ab, sobald irgendwo undefined steht.
+   Deshalb wird das Paket vorher gesäubert. */
+function clean(v){
+  if(Array.isArray(v)) return v.map(clean).filter(x=>x!==undefined);
+  if(v && typeof v === "object"){
+    const o = {};
+    Object.keys(v).forEach(k=>{ const c = clean(v[k]); if(c !== undefined) o[k] = c; });
+    return o;
+  }
+  if(v === undefined || v === null) return undefined;
+  if(typeof v === "number" && !isFinite(v)) return undefined;
+  return v;
+}
+let saveTimer = null, dataReady = false, cloudOk = false;
+function saveState(text, warn){
+  const el = document.getElementById('saveState');
+  if(!el) return;
+  el.textContent = text;
+  el.classList.toggle('warn', !!warn);
+}
+function flushSave(){
+  if(!me || viewUser || !dataReady) return;
+  const blob = clean(dataBlob());
+  store.set('bw-data-'+me.dk, blob);
+  if(db && cloudOk){
+    saveState("speichert …");
+    db.ref('data/'+me.dk).set(blob)
+      .then(()=> saveState("gespeichert"))
+      .catch(err=>{ cloudOk = false; saveState("nur lokal: "+(err&&err.message||"Fehler"), true); });
+  }else{
+    saveState(db ? "nur lokal gespeichert" : "lokal gespeichert", !!db);
+  }
+}
 function saveData(){
-  if(!me || viewUser) return;                       // fremde Daten nie überschreiben
+  if(!me || viewUser || !dataReady) return;         // fremde oder ungeladene Daten nie überschreiben
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>{
-    const blob = dataBlob();
-    store.set('bw-data-'+me.dk, blob);
-    if(db) db.ref('data/'+me.dk).set(blob).catch(()=>{});
-  }, 500);
+  saveTimer = setTimeout(flushSave, 400);
 }
+/* Beim Verlassen der Seite sofort sichern */
+addEventListener('pagehide', ()=>{ clearTimeout(saveTimer); flushSave(); });
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === "hidden"){ clearTimeout(saveTimer); flushSave(); }
+});
 
 /* ---------- Anmeldung ---------- */
 const loginEl = document.getElementById('login');
@@ -1720,7 +1774,9 @@ async function doLogin(dkRaw, vor, nach){
   }
   me = u;
   store.set('bw-session', {dk});
+  dataReady = false;
   applyData(await loadData(dk));
+  dataReady = true;
   loginEl.hidden = true;
   document.getElementById('navTeam').hidden = !(me.rolle==="Teamleader" || me.rolle==="Admin");
   document.getElementById('drawerFoot').innerHTML =
@@ -1763,6 +1819,7 @@ async function zeigeMember(dk){
   if(!dk){ zurueckZuMir(); return; }
   const u = await userGet(dk);
   if(!u) return;
+  clearTimeout(saveTimer); flushSave();          // eigenen Stand sichern, bevor umgeschaltet wird
   viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
   applyData(await loadData(dk));
   renderAll();
