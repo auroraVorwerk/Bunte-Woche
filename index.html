@@ -22,6 +22,7 @@
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 
 /* Topbar + Menü */
@@ -304,6 +305,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   background:transparent;color:var(--muted);cursor:pointer;line-height:0;
   display:flex;align-items:center;justify-content:center}
 .eye:hover{color:var(--text);background:var(--surface-3)}
+.eye:active{background:var(--surface-3)}
+.eye:focus-visible{outline:2px solid var(--accent);outline-offset:0;border-radius:50%}
 .eye svg{display:block;margin:0}
 .pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
@@ -331,7 +334,10 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   html,body{background:var(--bg)!important;color:var(--text)!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend,.login,.savestate,.viewbanner{display:none!important}
-  .wrap{padding:7mm!important;max-width:none}
+  .wrap{padding:6mm!important;max-width:none;height:198mm;overflow:hidden;
+        page-break-inside:avoid;break-inside:avoid;page-break-after:avoid;break-after:avoid}
+  .board,.scroller,.stat,.printhead{page-break-inside:avoid;break-inside:avoid}
+  .stat tr{page-break-inside:avoid;break-inside:avoid}
   .scroller{overflow:visible!important;transform:scale(var(--pscale,1));transform-origin:top left;width:max-content}
   .printhead{display:block!important;font-weight:800;font-size:12pt;margin-bottom:5mm;color:var(--text)}
   .printhead small{display:block;font-weight:400;font-size:8.5pt;color:var(--muted);font-family:"JetBrains Mono",monospace}
@@ -1340,9 +1346,12 @@ function preparePrint(){
   const {week} = isoWeek(monday);
   document.getElementById('printhead').innerHTML =
     `Bunte Woche – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
-  const w = t.scrollWidth, h = t.scrollHeight;
-  const PW = 1070, PH = 700;                       // A4 quer abzüglich Rand und Kopfzeile
-  const k = Math.min(PW/(w||1), PH/(h||1), 1);
+  /* A4 quer bei 96 dpi: 1122 × 794 px, abzüglich 6 mm Rand ringsum */
+  const kopf = (document.getElementById('printhead').offsetHeight || 46) + 18;
+  const PW = 1122 - 2*23;
+  const PH = 794  - 2*23 - kopf;
+  const w = t.scrollWidth + 4, h = t.scrollHeight + 4;
+  const k = Math.min(PW/(w||1), PH/(h||1), 1) * 0.97;    // kleine Reserve gegen eine zweite Seite
   document.documentElement.style.setProperty('--pscale', k.toFixed(3));
 }
 addEventListener('beforeprint', preparePrint);
@@ -1792,8 +1801,8 @@ const store = {
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
 const DK_RE = /^(V-|TL-)?DK\d{8}$/;
-const istAdmin      = () => !!me && (me.rolle==="Admin" || me.dk.startsWith("V-DK"));
-const istTeamleiter = () => !!me && ((me.rolle==="Teamleader" && me.dk.startsWith("TL-DK")) || istAdmin());
+const istAdmin      = () => !!me && me.dk.startsWith("V-DK");
+const istTeamleiter = () => !!me && (me.dk.startsWith("TL-DK") || istAdmin());
 const rolleAus = dk => dk.startsWith("V-DK") ? "Admin" : (dk.startsWith("TL-DK") ? "Teamleader" : "Kundenberater");
 const SEED_USERS = {
   "V-DK00000000": {dk:"V-DK00000000", vorname:"admin", nachname:"admin", rolle:"Admin", team:[]}
@@ -2056,9 +2065,8 @@ async function lgWeiter(){
       if(await istGeloescht(dk)) throw new Error("Dieser Zugang wurde entfernt.");
       const u0 = await userGet(dk);
       if(u0 && !u0.uid) throw new Error("Für diese DK-Nummer gibt es noch kein Passwort. Bitte einmal über „Neu registrieren“ gehen — deine Daten bleiben erhalten.");
-      let cred;
-      try{ cred = await auth.signInWithEmailAndPassword((u0 && u0.mail) || mailOf(dk), pw); }
-      catch(err){ throw new Error(FALSCH); }              // niemals neu anlegen
+      const cred = await anmelden(u0, dk, pw);            // niemals neu anlegen
+      if(!cred) throw new Error(FALSCH);
       const u = u0 || await userGet(dk);
       if(!u){ await auth.signOut(); throw new Error(FALSCH); }
       await verknuepfe(cred.user.uid, dk, u);
@@ -2099,11 +2107,12 @@ async function lgWeiter(){
 
     if(lgStep === "forgot"){
       const u0 = await userGet(dk);
-      if(u0 && u0.mail){                                   // Zurücksetzen per E-Mail
+      const mailZiel = u0 && (u0.mail || u0.mailPending);
+      if(mailZiel){                                        // Zurücksetzen per E-Mail
         if(!nameGleich(u0.vorname,lg.vor) || !nameGleich(u0.nachname,lg.nach)) throw new Error(FALSCH);
-        await auth.sendPasswordResetEmail(u0.mail);
+        await auth.sendPasswordResetEmail(mailZiel);
         lgBusy = false;
-        return lgFehler("Wir haben dir einen Link an "+u0.mail+" geschickt.");
+        return lgFehler("Wir haben dir einen Link an "+mailZiel+" geschickt.");
       }
       if(!/^\d{4}$/.test(pin)) throw new Error("Der PIN besteht aus genau vier Ziffern.");
       const u = u0;
@@ -2111,8 +2120,7 @@ async function lgWeiter(){
       let altesPw;
       try{ altesPw = await pinOeffnen(pin, dk); }
       catch(err){ throw new Error(FALSCH); }
-      try{ await auth.signInWithEmailAndPassword(mailOf(dk), altesPw); }
-      catch(err){ throw new Error("Der hinterlegte Zugang passt nicht mehr. Bitte im Team melden."); }
+      if(!await anmelden(u, dk, altesPw)) throw new Error("Der hinterlegte Zugang passt nicht mehr. Bitte im Team melden.");
       lg.pin = pin; lgStep = "neuespw"; lgBusy = false; return renderLogin();
     }
 
@@ -2131,6 +2139,20 @@ async function lgWeiter(){
   }
 }
 /* Verknüpft Zugang und DK-Datensatz, auch für Nutzer aus der Zeit ohne Passwort */
+/* Der Zugang kann auf der technischen oder auf der echten Adresse laufen */
+function mailKandidaten(u, dk){
+  const liste = [];
+  if(u && u.mail) liste.push(u.mail);
+  if(u && u.mailPending) liste.push(u.mailPending);
+  liste.push(mailOf(dk));
+  return [...new Set(liste)];
+}
+async function anmelden(u, dk, pw){
+  for(const m of mailKandidaten(u, dk)){
+    try{ return await auth.signInWithEmailAndPassword(m, pw); }catch(err){}
+  }
+  return null;
+}
 async function istGeloescht(dk){
   if(!db) return false;
   try{ return !!(await db.ref('deleted/'+dk).once('value')).val(); }catch(e){ return false; }
@@ -2361,7 +2383,7 @@ function pinDialog(){
       if(!/^\d{4}$/.test(pin)) return zeig("Der PIN besteht aus genau vier Ziffern.");
       if(!pw) return zeig("Bitte dein aktuelles Passwort eingeben.");
       try{
-        await auth.signInWithEmailAndPassword(me.mail || mailOf(me.dk), pw);   // Passwort prüfen
+        if(!await anmelden(me, me.dk, pw)) throw new Error('pw');   // Passwort prüfen
         await pinSpeichern(pin, me.dk, pw);
         await db.ref('secret/'+me.dk).set({pin});
         closeModal(); renderProfil();
