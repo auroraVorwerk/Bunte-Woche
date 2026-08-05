@@ -154,6 +154,12 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .seg button:hover{background:var(--surface-3)}
 .seg button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2))}
 .seg.danger button[aria-pressed="true"]{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--surface-2))}
+.farben{display:flex;flex-wrap:wrap;gap:10px}
+.farbe{width:36px;height:36px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);transition:.15s}
+.farbe:hover{transform:scale(1.08)}
+.farbe[aria-pressed="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 0 0 3px var(--surface)}
+.btn.wide{flex:1 1 100%}
 .checks{display:flex;flex-wrap:wrap;gap:6px}
 .checks.stack{flex-direction:column;flex-wrap:nowrap;gap:7px}
 .checks.stack button{width:100%;border-radius:var(--r);padding:12px 14px;text-align:center;font-size:.84rem}
@@ -184,6 +190,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .pcard .pot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .pcard .pot span{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:.75rem}
 .pcard .why{margin-top:10px;font-size:.85rem;border-left:2px solid var(--line);padding-left:12px;color:var(--muted)}
+.pcard .pact{display:flex;gap:8px;margin-top:14px}
+.pcard .pact .btn{padding:9px 14px;font-size:.8rem}
 /* Statistik */
 .stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1460px;font-size:.8rem}
 .stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
@@ -376,7 +384,6 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 </nav>
 
 <main class="wrap">
-  <div class="viewbanner" id="viewBanner" hidden></div>
   <div class="hero">
     <h1>Bunte Woche</h1>
     <div class="pagetitle" id="pagetitle">Planer</div>
@@ -420,6 +427,11 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
       <div class="teambar">
         <button class="btn primary" id="addMember">Mitglied hinzufügen</button>
         <select id="memberSel"><option value="">— Mitglied auswählen —</option></select>
+      </div>
+      <div class="weekbar" id="tmWeekbar" hidden>
+        <button class="nav" id="tmPrev" aria-label="Vorherige Woche"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button>
+        <div class="weeklabel"><div class="kw" id="tmKw">KW –</div><div class="range" id="tmRange">–</div></div>
+        <button class="nav" id="tmNext" aria-label="Nächste Woche"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button>
       </div>
       <p class="hinweis" id="teamHint"></p>
     </div>
@@ -496,7 +508,7 @@ var viewUser = null;       // gesetzt, wenn ein Teamleiter fremde Daten ansieht
 const entries = {};        // "2026-08-03|14" -> Eintrag
 const potenzial = [];      // Potenzialliste
 const verlauf = [];        // {datum, art:"verschoben"|"abgesagt"} für die Auswertung
-let monday = mondayOf(new Date());
+var monday = mondayOf(new Date());
 const key = (day,hour) => `${day}|${hour}`;
 const toDec = t => {const [h,m]=t.split(":").map(Number); return h+m/60;};
 const plusTage = (dayKey,n) => { const d = fromDk(dayKey); d.setDate(d.getDate()+n); return dk(d); };
@@ -515,6 +527,7 @@ function label(e){
     return {t1:e.modus, t2:"Festgebietsbegehung"};
   }
   if(e.kind==="privat") return {t1:"Privat", t2:e.bis?`${e.von}–${e.bis}`:""};
+  if(e.kind==="individuell") return {t1:e.titel || "Individuell", t2:e.bis?`${e.von}–${e.bis}`:""};
   return {t1:"",t2:""};
 }
 /* Beträge: "1.250,50" -> 1250.5 */
@@ -524,7 +537,7 @@ function dayTotals(day){
   const t = {fg:0,wg:0,k70:0,k70ein:0};
   HOURS_ASC.forEach(h=>{
     const e = entries[key(day,h)];
-    if(!e || !e.nb) return;
+    if(!e || !e.nb || e.nb.fremd==="Ja") return;            // für andere geschrieben
     const n = e.nb;
     if(n.verkauft==="Ja"){
       if(n.gebiet==="Weißgebiet") t.wg += num(n.umsatz);
@@ -542,7 +555,11 @@ const COLORS = {
   kunde:"#A9D18E", eigenkauf:"#8FBF9F", premium:"#E8C4F2", meeting:"#77CDF5",
   privat:"#E0402F", promotion:"#F2B33D", terminieren:"#C9DD2C"
 };
+/* Farbtöpfe für individuelle Termine: die bekannten plus vier neue */
+const FARBEN = ["#A9D18E","#8FBF9F","#E8C4F2","#77CDF5","#E0402F","#F2B33D","#C9DD2C",
+                "#6FC3A0","#E8A2C8","#9FB4E8","#D8C48A"];
 function colorOf(e){
+  if(e.kind==="individuell") return e.farbe || "#9FB4E8";
   if(e.kind==="terminieren") return e.quelle==="Promotion" ? COLORS.promotion : COLORS.terminieren;
   return COLORS[e.kind] || null;
 }
@@ -564,15 +581,15 @@ function blockedSet(day){
   HOURS_ASC.forEach(h=>{
     const e = entries[key(day,h)];
     if(!e) return;
-    const soft = e.kind === "privat";
+    const soft = e.kind === "privat" || e.kind === "individuell";
     if(e.bis) coveredHours(h, toDec(e.bis)||24).forEach(x=>{ if(x!==h) setz(x,e,soft); });
     /* Mehrtägige Privatzeit: der Starttag ist ab der Startzeit dicht */
-    if(e.kind==="privat" && e.bisTag && e.bisTag > day) HOURS_ASC.forEach(x=>{ if(x>h) setz(x,e,true); });
+    if((e.kind==="privat"||e.kind==="individuell") && e.bisTag && e.bisTag > day) HOURS_ASC.forEach(x=>{ if(x>h) setz(x,e,true); });
   });
   /* Folgetage einer mehrtägigen Privatzeit */
   Object.keys(entries).forEach(k=>{
     const [d] = k.split("|"), e = entries[k];
-    if(!e || e.kind!=="privat" || !e.bisTag) return;
+    if(!e || !["privat","individuell"].includes(e.kind) || !e.bisTag) return;
     if(day <= d || day > e.bisTag) return;
     HOURS_ASC.forEach(x=> setz(x,e,true));
   });
@@ -630,7 +647,6 @@ function render(){
   grid.innerHTML = h;
 }
 grid.addEventListener('click', ev=>{
-  if(viewUser && !istAdmin()) return;
   const ml = ev.target.closest('[data-mclick]');
   if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
   const s = ev.target.closest('.slot');
@@ -681,7 +697,6 @@ const modal = document.getElementById('modal'), sheet = document.getElementById(
 let draft = null, step = "kind", error = "";
 
 function openSlot(day,hour){
-  if(viewUser && !istAdmin()) return;        // fremde Daten sind schreibgeschützt
   draft = {day,hour,nb:{}};
   error = "";
   const e = entries[key(day,hour)];
@@ -739,7 +754,7 @@ function nbForm(){
     <div class="grp">
       <div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[],"stack")}</div>
       ${fld("demotuecher","Wie viele Demotücher gezogen?",n.demotuecher,"number",'min="0" inputmode="numeric"')}
-      <div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>
+      ${n.kundenstatus==="Neukunde" ? "" : `<div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>`}
     </div>
 
     <div class="h4">Abschluss</div>
@@ -748,7 +763,11 @@ function nbForm(){
       ${n.verkauft==="Ja"?`<div class="row2">${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}</div>`:""}
       <div class="sect"><span class="lb">K70 aus dem Kofferraum verkauft?</span>${seg("k70",["Ja","Nein"],n.k70)}
         ${n.k70==="Ja"?fld("k70betrag","Bruttoumsatz K70 €",n.k70betrag,"text",'inputmode="decimal"'):""}</div>
-    </div>`;
+    </div>
+    ${istTeamleiter() ? `<div class="grp">
+      <div class="sect"><span class="lb">Für Kundenberater geschrieben</span>${seg("fremd",["Ja","Nein"],n.fremd||"Nein")}</div>
+      <p class="hinweis">Bei „Ja“ zählt der Termin in deine Auswertung, der Umsatz fließt aber nicht in Provision und Boni.</p>
+    </div>` : ""}`;
 
   if(n.verkauft==="Ja"){
     h += `<div class="h4">Premium CheckIn vereinbaren</div>
@@ -876,6 +895,27 @@ function addPotenzial(e,offen,grund,datum){
   const i = potenzial.findIndex(p=>p.id===id);
   if(i>=0) potenzial[i] = rec; else potenzial.push(rec);
 }
+/* Aus einem Potenzialeintrag direkt einen Kundentermin anlegen */
+function terminAusPotenzial(p){
+  simpleDialog("Termin anlegen", `${p.vorname} ${p.nachname}`,
+    `<div class="grp">
+       ${fld("ptDatum","Datum",dk(new Date()),"date")}
+       <div class="field"><label for="ptZeit">Startzeit</label>${hourSelect("ptZeit",13)}</div>
+       <div class="field"><label for="ptQuelle">Quelle</label>
+         <select id="ptQuelle">${QUELLEN.map(q=>`<option value="${q}">${q}</option>`).join("")}</select></div>
+     </div>
+     <p class="err" id="ptErr" hidden></p>`,
+    ()=>{
+      const err = document.getElementById('ptErr');
+      const tag = document.getElementById('ptDatum').value;
+      const std = +document.getElementById('ptZeit').value;
+      if(!tag){ err.textContent="Bitte ein Datum wählen."; err.hidden=false; return; }
+      if(entries[key(tag,std)]){ err.textContent="Auf diesem Platz steht schon ein Eintrag."; err.hidden=false; return; }
+      entries[key(tag,std)] = {kind:"kunde", quelle:document.getElementById('ptQuelle').value,
+        vorname:p.vorname, nachname:p.nachname, strasse:p.strasse||"", plz:p.plz||"", ort:p.ort||"", telefon:p.telefon||""};
+      closeModal(); renderAll();
+    }, "Termin eintragen");
+}
 function renderPotenzial(){
   const el = document.getElementById('plist');
   if(!potenzial.length){
@@ -889,7 +929,20 @@ function renderPotenzial(){
       <div class="meta">${p.telefon?p.telefon+" · ":""}Letzter Besuch: ${fmt(fromDk(p.letzterBesuch))}</div>
       <div class="pot">${p.potenzial.map(x=>`<span>${x}</span>`).join("")}</div>
       ${p.grund?`<div class="why">${p.grund}</div>`:""}
+      <div class="pact">
+        <button class="btn" data-ptermin="${p.id}">Termin anlegen</button>
+        <button class="btn danger" data-pdel="${p.id}">Löschen</button>
+      </div>
     </div>`).join("") + `</div>`;
+  el.querySelectorAll('[data-pdel]').forEach(b=> b.onclick = ()=>{
+    const i = potenzial.findIndex(x=>x.id===b.dataset.pdel);
+    if(i>=0) potenzial.splice(i,1);
+    renderAll();
+  });
+  el.querySelectorAll('[data-ptermin]').forEach(b=> b.onclick = ()=>{
+    const p = potenzial.find(x=>x.id===b.dataset.ptermin);
+    if(p) terminAusPotenzial(p);
+  });
 }
 
 /* ---------- Dialogschritte ---------- */
@@ -908,6 +961,7 @@ function startEdit(e){
                              f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||""});
     draft.back = "kind"; step = "kunde";
   }else if(e.kind==="eigenkauf"){ step = "eigen"; }
+  else if(e.kind==="individuell"){ draft.titel = e.titel||""; draft.farbe = e.farbe; step = "indiv"; }
   else if(e.kind==="meeting" || e.kind==="privat"){ step = "zeit"; }
   else if(e.kind==="terminieren"){
     if(e.quelle==="Promotion"){ draft.nb.f_ort = e.ort||""; step = "promo"; }
@@ -925,18 +979,19 @@ function paint(){
     else if(e.bis) body = `<div class="summary"><b>${e.art||"Privat"}</b><br><span>${e.von}–${e.bis} Uhr</span></div>`;
     else body = `<div class="summary"><b>${label(e).t1}</b><br><span>${label(e).t2}</span></div>`;
 
-    let extra = "";
+    let extra = "", saveBtn = "";
     if(e.kind==="terminieren"){
-      extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"") +
-        `<div class="actions"><button class="btn danger" id="del">Löschen</button><button class="btn primary" id="saveNbT">Nachbereitung speichern</button></div>`;
+      extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"");
+      saveBtn = `<button class="btn primary" id="saveNbT">Nachbereitung speichern</button>`;
     }
     if(e.kind==="kunde" || e.kind==="premium"){
       const st = draft.nb.status || e.status || "";
       extra = `<div class="hr"></div><div class="h4">Status</div>
         ${seg("status",["Stattgefunden","Verschoben","Abgesagt"], st, st==="Abgesagt"?"danger":"")}`;
-      if(st==="Stattgefunden") extra += (e.kind==="premium" ? nbPremiumForm() : nbForm()) +
-        (error?`<div class="err">${error}</div>`:"") +
-        `<div class="actions"><button class="btn primary" id="saveNb">Nachbereitung speichern</button></div>`;
+      if(st==="Stattgefunden"){
+        extra += (e.kind==="premium" ? nbPremiumForm() : nbForm()) + (error?`<div class="err">${error}</div>`:"");
+        saveBtn = `<button class="btn primary" id="saveNb">Nachbereitung speichern</button>`;
+      }
       if(st==="Verschoben") extra += `<div class="sect boxed" style="margin-top:14px">
           ${fld("vsDatum","Neues Datum",draft.nb.vsDatum||draft.day,"date")}
           <div class="field"><label for="vsZeit">Neue Startzeit</label>${hourSelect("vsZeit",draft.nb.vsZeit??draft.hour)}</div>
@@ -945,11 +1000,13 @@ function paint(){
       if(st==="Abgesagt") extra += `<div class="hint" style="margin-top:14px">Der Termin wird aus dem Kalender gelöscht.</div>
         <div class="actions"><button class="btn danger" id="doCancel">Termin löschen</button></div>`;
     }
+    const bearbeitbar = ["kunde","premium","eigenkauf","meeting","privat","terminieren","individuell"].includes(e.kind);
     const foot = `<div class="actions">
-        <button class="btn" id="editBtn">Bearbeiten</button>
         <button class="btn danger" id="del">Löschen</button>
+        ${saveBtn}
       </div>
-      <div class="actions"><button class="btn primary" data-close>Schließen</button></div>`;
+      ${bearbeitbar ? `<div class="actions"><button class="btn primary wide" id="editBtn">${
+        (e.kind==="kunde"||e.kind==="premium") ? "Kundendaten bearbeiten" : "Daten bearbeiten"}</button></div>` : ""}`;
 
     sheet.innerHTML = head(e.kind==="premium"?"Premium CheckIn":"Eintrag") + body + extra + foot;
     wireSegs();
@@ -986,7 +1043,8 @@ function paint(){
        <button class="opt" data-kind="premium">Premium CheckIn</button>
        <button class="opt" data-kind="meeting">Meeting<small>mit eigener Uhrzeit</small></button>
        <button class="opt" data-kind="terminieren">Terminieren</button>
-       <button class="opt" data-kind="privat">Privat<small>mit eigener Uhrzeit</small></button>`;
+       <button class="opt" data-kind="privat">Privat<small>mit eigener Uhrzeit</small></button>
+       <button class="opt" data-kind="individuell">Individuell<small>eigene Bezeichnung und Farbe</small></button>`;
     sheet.querySelectorAll('[data-kind]').forEach(b=> b.onclick = ()=>{
       draft.kind = b.dataset.kind;
       if(draft.kind==="kunde"){ step="quelle"; }
@@ -994,6 +1052,7 @@ function paint(){
       else if(draft.kind==="premium"){ draft.back="kind"; step="kunde"; }
       else if(draft.kind==="meeting"){ step="art"; }
       else if(draft.kind==="terminieren"){ step="termQuelle"; }
+      else if(draft.kind==="individuell"){ step="indiv"; }
       else { step="zeit"; }
       paint();
     });
@@ -1038,6 +1097,51 @@ function paint(){
     };
     document.getElementById('save').onclick = ()=> speichere(true);
     document.getElementById('spaeter').onclick = ()=> speichere(false);
+    return;
+  }
+
+  if(step==="indiv"){
+    const von = `${pad(draft.hour)}:00`;
+    const bis = draft.bis || (draft.hour+2>=24 ? "00:00" : `${pad(draft.hour+2)}:00`);
+    const farbe = draft.farbe || FARBEN[9];
+    sheet.innerHTML = head("Individueller Termin") +
+      `<div class="grp">
+         ${fld("ivTitel","Bezeichnung",draft.titel||"","text",'placeholder="z. B. Messe, Fortbildung"')}
+         <div class="row2">
+           <div class="field"><label>Von</label><div class="fixed">${von}</div></div>
+           <div class="field"><label for="f_bis">Bis</label><input type="time" id="f_bis" value="${bis}" step="900"></div>
+         </div>
+         ${fld("ivBisTag","Bis einschließlich Tag (optional)",draft.bisTag||"","date")}
+         <div class="sect"><span class="lb">Farbe im Planer</span>
+           <div class="farben">${FARBEN.map(c=>`<button type="button" class="farbe" data-farbe="${c}" style="--c:${c}" aria-pressed="${farbe===c}" aria-label="Farbe"></button>`).join("")}</div>
+         </div>
+       </div>
+       ${error?`<div class="err">${error}</div>`:""}
+       <div class="actions"><button class="btn" data-back="kind">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
+       <div class="hint">Keine Nachbereitung — der Block ist nur farblich gekennzeichnet und blockiert die Zeit optisch.</div>`;
+    wireBack();
+    sheet.querySelectorAll('[data-farbe]').forEach(b=> b.onclick = ()=>{
+      draft.titel = document.getElementById('ivTitel').value;
+      draft.bis = document.getElementById('f_bis').value;
+      draft.bisTag = document.getElementById('ivBisTag').value;
+      draft.farbe = b.dataset.farbe;
+      repaint();
+    });
+    document.getElementById('save').onclick = ()=>{
+      const titel = document.getElementById('ivTitel').value.trim();
+      const b = document.getElementById('f_bis').value;
+      const bisTag = document.getElementById('ivBisTag').value;
+      const bDec = toDec(b)||24;
+      draft.bis = b; draft.titel = titel; draft.bisTag = bisTag; draft.farbe = farbe;
+      if(!b || bDec <= draft.hour){ error=`Die Endzeit muss nach ${von} liegen.`; paint(); return; }
+      if(bisTag && bisTag < draft.day){ error="Das Enddatum liegt vor dem Termin."; paint(); return; }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      const eintrag = {...alt, kind:"individuell", von, bis:b, farbe};
+      if(titel) eintrag.titel = titel; else delete eintrag.titel;
+      if(bisTag && bisTag > draft.day) eintrag.bisTag = bisTag; else delete eintrag.bisTag;
+      entries[key(draft.day,draft.hour)] = eintrag;
+      closeModal(); renderAll();
+    };
     return;
   }
 
@@ -1396,7 +1500,7 @@ function umsatz(fromK,toK){
     const day = k.split("|")[0];
     if(day < fromK || day > toK) return;
     const n = entries[k].nb;
-    if(!n) return;
+    if(!n || n.fremd==="Ja") return;                       // für andere geschrieben
     if(n.verkauft==="Ja"){
       if(n.gebiet==="Festgebiet") u.fg += num(n.umsatz);
       else if(n.gebiet==="Weißgebiet") u.wg += num(n.umsatz);
@@ -1590,7 +1694,6 @@ function renderWunsch(){
     </div>` : `<div class="asec"><p class="aempty">Sobald Einkommen, Einkommen pro Auftrag und Abschlussquote stehen, erscheinen hier die Umsatzziele — und der Planer bekommt seine Soll-Werte.</p></div>`;
 }
 document.getElementById('wunschForm').addEventListener('change', ev=>{
-  if(viewUser) return;
   const f = ev.target.closest('[data-wf]');
   if(f) setzeWunsch(f.dataset.wf, num(f.value));
 });
@@ -1886,8 +1989,7 @@ function fehlerkurz(err){
 }
 function flushSave(){
   if(!me || !dataReady) return;
-  if(viewUser && !istAdmin()) return;                 // fremde Daten nur der Admin
-  const zielDk = viewUser ? viewUser.dk : me.dk;
+  const zielDk = me.dk;                               // gespeichert wird immer der eigene Stand
   const blob = clean(dataBlob());
   store.set('bw-data-'+zielDk, blob);
   if(!db){ saveState("lokal gespeichert"); return; }
@@ -1910,7 +2012,6 @@ function flushSave(){
 }
 function saveData(){
   if(!me || !dataReady) return;
-  if(viewUser && !istAdmin()) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flushSave, 400);
 }
@@ -2246,47 +2347,77 @@ async function fuelleMemberSelect(){
     ? `${namen.length} Mitglied${namen.length>1?"er":""} im Team.`
     : "Noch keine Mitglieder. Der Kundenberater muss sich zuerst selbst angemeldet haben.";
 }
+let teamBlob = null, teamMonday = null;
 async function zeigeMember(dk){
   if(!dk){ zurueckZuMir(); return; }
   const u = await userGet(dk);
   if(!u) return;
-  clearTimeout(saveTimer); flushSave();          // eigenen Stand sichern, bevor umgeschaltet wird
   viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
-  applyData(await loadData(dk, true));
-  shadow = JSON.parse(JSON.stringify(clean(dataBlob())));
-  renderAll();
+  teamBlob = await loadData(dk, true);
+  teamMonday = new Date(monday);
+  renderTeam();
 }
 function zurueckZuMir(){
-  if(!viewUser) return;
-  viewUser = null;
-  if(db) cloudOk = true;
-  saveState("");
-  loadData(me.dk).then(d=>{ applyData(d); shadow = JSON.parse(JSON.stringify(clean(dataBlob()))); renderAll(); });
+  viewUser = null; teamBlob = null;
+  renderTeam();
+}
+/* Baut Planer und Statistik des Mitglieds, ohne die eigenen Daten anzutasten */
+function fremdAnsicht(){
+  const meins = clean(dataBlob());
+  const meinMontag = new Date(monday);
+  applyData(teamBlob);
+  monday = new Date(teamMonday);
+  render(); renderStat();
+  const gridHtml = document.getElementById('grid').innerHTML;
+  const statHtml = document.getElementById('statTable').innerHTML;
+  const meld = meldungHTML(new Date(teamMonday), viewUser.name);
+  applyData(meins);
+  monday = meinMontag;
+  render(); renderStat();
+  return {gridHtml, statHtml, meld};
 }
 function renderTeam(){
-  const banner = document.getElementById('viewBanner');
-  if(viewUser){
-    banner.hidden = false;
-    banner.innerHTML = `Du siehst gerade die Daten von <b>${viewUser.name}</b> — ${istAdmin()?"als Admin mit Schreibrecht":"Änderungen sind gesperrt"}.
-      <button id="backSelf">Zurück zu meinen Daten</button>`;
-    document.getElementById('backSelf').onclick = zurueckZuMir;
-  }else{
-    banner.hidden = true; banner.innerHTML = "";
-  }
   const box = document.getElementById('tmViews');
+  const bar = document.getElementById('tmWeekbar');
   if(!box) return;
-  if(!viewUser){ box.innerHTML = ""; return; }
+  if(!viewUser || !teamBlob){
+    box.innerHTML = "";
+    if(bar) bar.hidden = true;
+    return;
+  }
+  const tage = Array.from({length:7},(_,i)=>{const d=new Date(teamMonday);d.setDate(d.getDate()+i);return d;});
+  const {week} = isoWeek(teamMonday);
+  if(bar){
+    bar.hidden = false;
+    document.getElementById('tmKw').textContent = `KW ${week}`;
+    document.getElementById('tmRange').textContent = `${fmt(tage[0])} – ${fmt(tage[6])}`;
+  }
+  const v = fremdAnsicht();
   box.innerHTML = `
     <div class="tmblock"><div class="actions"><button class="btn primary" id="tmPdf">Statistik als PDF</button></div></div>
     <div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
-      <div class="board"><div class="scroller"><div class="grid">${document.getElementById('grid').innerHTML}</div></div></div></div>
+      <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>
     <div class="tmblock"><h4>Statistik · ${viewUser.name}</h4>
-      <div class="board"><div class="scroller"><table class="stat">${document.getElementById('statTable').innerHTML}</table></div></div></div>
-    ${meldungHTML(monday, viewUser.name)}`;
+      <div class="board"><div class="scroller"><table class="stat">${v.statHtml}</table></div></div></div>
+    ${v.meld}`;
   const pdf = document.getElementById('tmPdf');
-  if(pdf) pdf.onclick = ()=>{ show('statistik'); setTimeout(()=>{ preparePrint(); window.print(); }, 120); };
+  if(pdf) pdf.onclick = ()=> fremdPdf();
+}
+/* Für den Druck kurz auf die Daten des Mitglieds umschalten */
+function fremdPdf(){
+  const meins = clean(dataBlob());
+  const meinMontag = new Date(monday);
+  applyData(teamBlob); monday = new Date(teamMonday);
+  render(); renderStat(); show('statistik'); preparePrint();
+  setTimeout(()=>{
+    window.print();
+    applyData(meins); monday = meinMontag;
+    render(); renderStat(); show('team');
+  }, 300);
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
+document.getElementById('tmPrev').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()-7); renderTeam(); } };
+document.getElementById('tmNext').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()+7); renderTeam(); } };
 document.getElementById('addMember').onclick = ()=>{
   simpleDialog("Mitglied hinzufügen","Der Kundenberater muss sich vorher selbst angemeldet haben",
     `<div class="grp">${fld("tmDk","DK-Nummer des Kundenberaters","","text",'autocomplete="off" spellcheck="false"')}</div>
@@ -2362,7 +2493,7 @@ async function renderProfil(){
         <div class="row2">
           ${fld("pfVor","Vorname",me.vorname)}${fld("pfNach","Nachname",me.nachname)}
         </div>
-        ${fld("pfMail","Kobold Mail",me.mail||me.mailPending||"","email")}
+        ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||me.mailPending||"","email")}
         ${me.mailPending && !me.mail ? `<p class="hinweis">Für ${me.mailPending} steht die Bestätigung noch aus.</p>` : ""}
         <div class="field pw"><label for="pfPin">Dein PIN</label>
           <input id="pfPin" type="password" value="${pin || ""}" placeholder="${pin ? "" : "noch nicht hinterlegt"}" readonly>
@@ -2624,7 +2755,7 @@ function meldungHTML(start, name){
       ${zeile("Promotionen vereinbart", m.nPromos)}
       ${zeile("Terminierungsblöcke", m.nTerminieren)}
     </tbody></table></div>
-    <div class="actions"><button class="btn" data-meldcopy="${dk(start)}">Als Text kopieren</button></div>
+    <div class="actions"><button class="btn" data-meldcopy="${dk(start)}" data-meldname="${name||""}">Als Text kopieren</button></div>
   </div>`;
 }
 function meldungText(start, name){
@@ -2650,7 +2781,7 @@ function meldungText(start, name){
 document.addEventListener('click', ev=>{
   const b = ev.target.closest('[data-meldcopy]');
   if(!b) return;
-  const txt = meldungText(fromDk(b.dataset.meldcopy), viewUser ? viewUser.name : (me ? me.vorname+" "+me.nachname : ""));
+  const txt = meldungText(fromDk(b.dataset.meldcopy), b.dataset.meldname || (me ? me.vorname+" "+me.nachname : ""));
   navigator.clipboard.writeText(txt)
     .then(()=>{ b.textContent = "Kopiert"; setTimeout(()=>b.textContent="Als Text kopieren",1500); })
     .catch(()=>{ b.textContent = "Kopieren nicht möglich"; });
