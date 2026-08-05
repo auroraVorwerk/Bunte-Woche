@@ -2362,7 +2362,7 @@ async function renderProfil(){
         <div class="row2">
           ${fld("pfVor","Vorname",me.vorname)}${fld("pfNach","Nachname",me.nachname)}
         </div>
-        ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||me.mailPending||"","email")}
+        ${fld("pfMail","Kobold Mail",me.mail||me.mailPending||"","email")}
         ${me.mailPending && !me.mail ? `<p class="hinweis">Für ${me.mailPending} steht die Bestätigung noch aus.</p>` : ""}
         <div class="field pw"><label for="pfPin">Dein PIN</label>
           <input id="pfPin" type="password" value="${pin || ""}" placeholder="${pin ? "" : "noch nicht hinterlegt"}" readonly>
