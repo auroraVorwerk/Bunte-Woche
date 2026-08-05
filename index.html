@@ -2189,6 +2189,10 @@ async function starteSitzung(u){
     delete me.mailPending;
     try{ await userSet(me); }catch(e){}
   }
+  /* Der eine feste Admin-Zugang trägt sich selbst als Admin ein */
+  if(db && auth && auth.currentUser && me.dk === "V-DK00000000"){
+    db.ref('admins/'+auth.currentUser.uid).set(true).catch(()=>{});
+  }
   me.lastLogin = Date.now();
   store.set('bw-lastseen', Date.now());
   if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
