@@ -299,11 +299,12 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .loginbox .zurueck:hover{color:var(--text)}
 .loginbox .linkbtn{background:none;border:0;color:var(--accent);font-size:.78rem;cursor:pointer;padding:12px 0 0;width:100%}
 .field.pw{position:relative}
-.field.pw input{padding-right:46px}
-.eye{position:absolute;right:8px;bottom:7px;width:34px;height:34px;border:0;border-radius:50%;
-  background:transparent;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
+.field.pw input{padding-right:48px;min-height:46px}
+.eye{position:absolute;right:7px;bottom:6px;width:34px;height:34px;padding:0;border:0;border-radius:50%;
+  background:transparent;color:var(--muted);cursor:pointer;line-height:0;
+  display:flex;align-items:center;justify-content:center}
 .eye:hover{color:var(--text);background:var(--surface-3)}
-.eye svg{display:block}
+.eye svg{display:block;margin:0}
 .pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
 .drawer .foot{font-size:.75rem;color:var(--muted);line-height:1.5}
@@ -2412,7 +2413,7 @@ async function renderDelete(){
   if(!box || !istTeamleiter()) return;
   let inaktiv = [];
   try{
-    const alle = await alleNutzer();
+    const alle = istAdmin() ? await alleNutzer() : [];
     const grenze = Date.now() - 365*TAG;
     inaktiv = alle.filter(u => u.dk !== me.dk && (u.lastLogin || 0) < grenze);
   }catch(e){}
@@ -2427,7 +2428,7 @@ async function renderDelete(){
       <p class="err" id="delErr" hidden></p>
       <div class="actions"><button class="btn danger" id="delGo">Löschen</button></div>
     </div>
-    <div class="asec">
+    ${istAdmin() ? `<div class="asec">
       <h3>Seit über 12 Monaten inaktiv</h3>
       ${inaktiv.length ? inaktiv.map(u=>`<div class="aline">
           <span class="nm">${u.vorname} ${u.nachname} · ${u.dk}</span>
@@ -2435,7 +2436,7 @@ async function renderDelete(){
           <button class="mini" data-inaktiv="${u.dk}">löschen</button></div>`).join("")
         : `<p class="aempty">Keine inaktiven Zugänge.</p>`}
       <p class="hinweis">Die Liste erscheint bei jedem Aufruf neu — ein automatisches Löschen im Hintergrund ist ohne kostenpflichtige Serverfunktionen nicht möglich.</p>
-    </div>`;
+    </div>` : ""}`;
   document.getElementById('delGo').onclick = ()=> loeschenStarten(
     document.getElementById('delDk').value.trim().toUpperCase(),
     document.getElementById('delVor').value.trim(),
