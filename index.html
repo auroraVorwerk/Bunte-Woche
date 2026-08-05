@@ -1974,6 +1974,7 @@ function renderLogin(){
     h = kopf + `<h2>Anmelden</h2><p class="lgsub">DK-Nummer und Passwort genügen.</p>
       ${feld("lgDk","DK-Nummer", lg.dk||"", 'placeholder="DK00000000"')}
       ${pwFeld("lgPw","Passwort")}
+      ${lg.zeigeMail ? feld("lgMail","Hinterlegte E-Mail-Adresse", lg.mail||"", 'placeholder="nur falls im Profil eingetragen"') : ""}
       ${fehler}
       <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Anmelden"}</button>
       <button class="linkbtn" data-go="forgot">Passwort vergessen?</button>
@@ -2036,6 +2037,7 @@ function merkeEingaben(){
   if(document.getElementById('lgDk'))   lg.dk   = wert('lgDk').toUpperCase().replace(/\s/g,"");
   if(document.getElementById('lgVor'))  lg.vor  = wert('lgVor');
   if(document.getElementById('lgNach')) lg.nach = wert('lgNach');
+  if(document.getElementById('lgMail')) lg.mail = wert('lgMail').toLowerCase();
 }
 const nameGleich = (a,b) => (a||"").trim().toLowerCase() === (b||"").trim().toLowerCase();
 
@@ -2066,7 +2068,16 @@ async function lgWeiter(){
       const u0 = await userGet(dk);
       if(u0 && !u0.uid) throw new Error("Für diese DK-Nummer gibt es noch kein Passwort. Bitte einmal über „Neu registrieren“ gehen — deine Daten bleiben erhalten.");
       const cred = await anmelden(u0, dk, pw);            // niemals neu anlegen
-      if(!cred) throw new Error(FALSCH);
+      if(!cred){
+        if(!lg.zeigeMail){
+          lg.zeigeMail = true;
+          throw new Error(FALSCH + " Falls du im Profil eine E-Mail hinterlegt hast, trage sie bitte zusätzlich ein.");
+        }
+        throw new Error(FALSCH);
+      }
+      if(cred.user.email && cred.user.email !== mailOf(dk) && u0 && u0.mail !== cred.user.email){
+        try{ await db.ref('users/'+dk+'/mail').set(cred.user.email); }catch(e){}
+      }
       const u = u0 || await userGet(dk);
       if(!u){ await auth.signOut(); throw new Error(FALSCH); }
       await verknuepfe(cred.user.uid, dk, u);
@@ -2142,6 +2153,7 @@ async function lgWeiter(){
 /* Der Zugang kann auf der technischen oder auf der echten Adresse laufen */
 function mailKandidaten(u, dk){
   const liste = [];
+  if(lg && lg.mail) liste.push(lg.mail);          // von Hand eingetragene Adresse
   if(u && u.mail) liste.push(u.mail);
   if(u && u.mailPending) liste.push(u.mailPending);
   liste.push(mailOf(dk));
@@ -2405,6 +2417,7 @@ async function profilSpeichern(){
     let hinweis = "";
     if(mail && mail !== (me.mail||"") && auth && auth.currentUser){
       /* Firebase verlangt eine Bestätigung, bevor die Adresse übernommen wird */
+      await db.ref('users/'+me.dk+'/mailPending').set(mail);   // zuerst merken, dann ändern
       if(auth.currentUser.verifyBeforeUpdateEmail) await auth.currentUser.verifyBeforeUpdateEmail(mail);
       else await auth.currentUser.updateEmail(mail);
       me = {...me, mailPending: mail};
@@ -2437,7 +2450,8 @@ async function renderDelete(){
   try{
     const alle = istAdmin() ? await alleNutzer() : [];
     const grenze = Date.now() - 365*TAG;
-    inaktiv = alle.filter(u => u.dk !== me.dk && (u.lastLogin || 0) < grenze);
+    inaktiv = alle.filter(u => u.dk !== me.dk && !u.dk.startsWith("V-DK") && !u.dk.startsWith("TL-DK")
+                               && (u.lastLogin || 0) < grenze);
   }catch(e){}
   box.innerHTML = `
     <div class="asec">
@@ -2485,15 +2499,21 @@ async function loeschenStarten(dk, vor, nach){
        <b>${u.dk}</b> unwiderruflich aus dem System löschen wollen?</div>
      <p class="hinweis">Alle Termine, Kundendaten, Auswertungen und der Zugang werden entfernt.</p>`,
     async ()=>{
+      const schritte = [
+        ['deleted/'+dk, {am:Date.now(), von:me.dk}],
+        ['data/'+dk, null],
+        ['recovery/'+dk, null],
+        ['secret/'+dk, null],
+        ['users/'+dk, null]
+      ];
+      if(u.uid) schritte.push(['uids/'+u.uid, null]);
+      const gescheitert = [];
       try{
-        const updates = {};
-        updates['users/'+dk] = null;
-        updates['data/'+dk] = null;
-        updates['recovery/'+dk] = null;
-        updates['secret/'+dk] = null;
-        updates['deleted/'+dk] = {am:Date.now(), von:me.dk};
-        if(u.uid) updates['uids/'+u.uid] = null;
-        await db.ref().update(updates);
+        for(const [pfad, wert] of schritte){
+          try{ await db.ref(pfad).set(wert); }
+          catch(e){ gescheitert.push(pfad.split("/")[0]); }
+        }
+        if(gescheitert.length) throw new Error("Nicht gelöscht: "+[...new Set(gescheitert)].join(", "));
         if(me.team && me.team.includes(dk)){
           me.team = me.team.filter(x=>x!==dk);
           await userSet(me);
