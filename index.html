@@ -7,6 +7,7 @@
 <title>Bunte Woche</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -92,6 +93,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .slot.blocked{cursor:not-allowed;color:var(--faint);border-color:transparent;
   background:repeating-linear-gradient(135deg,rgba(0,0,0,.16) 0 8px,rgba(0,0,0,0) 8px 16px),var(--bc,#302e2b)}
 .slot.blocked:hover{filter:none}
+.slot.blocked.soft{cursor:pointer}
+.slot.blocked.soft:hover{filter:brightness(1.12)}
 .spacer{grid-column:1/-1;height:10px}
 .metriclbl{display:flex;flex-direction:column;justify-content:center;font-size:.78rem;font-weight:600;line-height:1.25;padding:8px 14px}
 .metriclbl small{font-weight:400;color:var(--faint);font-size:.68rem;font-family:"JetBrains Mono",monospace}
@@ -265,6 +268,11 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
 .mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+.atable.meld{min-width:0}
+.atable.meld td:first-child{width:44%}
+.atable.meld td.v{font-weight:700;color:var(--text);width:22%}
+.atable.meld td.x{font-family:"Manrope",sans-serif;color:var(--muted);font-size:.76rem;text-align:right}
+.meldung{border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
 .aline{display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:.83rem}
 .aline .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .aline .bar{flex:0 0 42%;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden;position:relative}
@@ -284,7 +292,17 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .loginbox h2{font-size:1.05rem;font-weight:700;margin-bottom:3px}
 .loginbox .lgsub{font-size:.8rem;color:var(--muted);margin-bottom:18px}
 .loginbox .btn{width:100%;margin-top:6px}
-.loginbox .lghint{font-size:.74rem;color:var(--faint);margin-top:14px;text-align:center}
+.loginbox .lghint{font-size:.74rem;color:var(--faint);margin-top:14px;text-align:center;line-height:1.5}
+.loginbox .opt{margin-bottom:10px}
+.loginbox .zurueck{background:none;border:0;color:var(--muted);font-size:.78rem;cursor:pointer;padding:10px 0 0;width:100%}
+.loginbox .zurueck:hover{color:var(--text)}
+.loginbox .linkbtn{background:none;border:0;color:var(--accent);font-size:.78rem;cursor:pointer;padding:12px 0 0;width:100%}
+.field.pw{position:relative}
+.field.pw input{padding-right:46px}
+.eye{position:absolute;right:8px;bottom:7px;width:34px;height:34px;border:0;border-radius:50%;
+  background:transparent;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
+.eye:hover{color:var(--text);background:var(--surface-3)}
+.pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
 .drawer .foot{font-size:.75rem;color:var(--muted);line-height:1.5}
 .drawer .foot b{color:var(--text);display:block}
@@ -306,31 +324,15 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .tmblock h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px 4px}
 
 @media print{
-  @page{size:A4 landscape;margin:8mm}
-  html,body{background:#fff!important;color:#000!important}
+  @page{size:A4 landscape;margin:0}
+  html,body{background:var(--bg)!important;color:var(--text)!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.drawer,.scrim,.hero,.weekbar,.todaybtn,.statnote,.modal,.pdfbtn,.legend,.login,.savestate,.viewbanner{display:none!important}
-  .wrap{padding:0!important;max-width:none}
-  .board{background:#fff!important;border:0!important;padding:0!important}
+  .wrap{padding:7mm!important;max-width:none}
   .scroller{overflow:visible!important;transform:scale(var(--pscale,1));transform-origin:top left;width:max-content}
-  .printhead{display:block!important;color:#000;font-weight:800;font-size:12pt;margin-bottom:4mm}
-  .printhead small{display:block;font-weight:400;font-size:8pt;color:#555}
+  .printhead{display:block!important;font-weight:800;font-size:12pt;margin-bottom:5mm;color:var(--text)}
+  .printhead small{display:block;font-weight:400;font-size:8.5pt;color:var(--muted);font-family:"JetBrains Mono",monospace}
   .stat{min-width:0!important}
-  .stat th,.stat td{background:#fff!important;color:#000!important;border:.4pt solid #b9b9b9!important;
-    border-radius:0!important;padding:3px 5px!important;box-shadow:none!important;font-weight:500!important}
-  .stat thead th{background:#f2f2f2!important;font-weight:700!important}
-  .stat th.vh{height:135px}
-  .stat td.tick{font-size:13pt!important;font-weight:700!important;line-height:1}
-  .stat td.off{background:#fff!important}
-  .stat td.name{color:#000!important}
-  .stat td.name small{color:#555!important}
-  .stat tr.sum td{background:#f2f2f2!important;font-weight:700!important}
-  .stat tr.dayrow td{border:0!important;padding:6px 0 2px!important}
-  .stat tr.dayrow span{background:#fff!important;color:#000!important;border:.4pt solid #999;font-size:8pt}
-  .stat td.vsep,.stat th.vsep{width:7px!important;min-width:7px!important;border:0!important;
-    background:linear-gradient(to right,transparent 0 3px,#555 3px 3.6px,transparent 3.6px 7px)!important}
-  .stat tr.sep td{height:5px!important;border:0!important;
-    background:linear-gradient(to bottom,transparent 0 2px,#555 2px 2.6px,transparent 2.6px 5px)!important}
 }
 .page{display:none}
 .page.active{display:block}
@@ -341,21 +343,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 <body>
 
 <div class="login" id="login">
-  <div class="loginbox">
-    <div class="lgmark">Bunte Woche</div>
-    <h2>Anmelden</h2>
-    <p class="lgsub">Beim ersten Mal wirst du automatisch registriert.</p>
-    <div class="field"><label for="lgDk">DK-Nummer</label>
-      <input id="lgDk" placeholder="DK00000000" autocomplete="off" spellcheck="false"></div>
-    <div class="row2">
-      <div class="field"><label for="lgVor">Vorname</label><input id="lgVor" autocomplete="off"></div>
-      <div class="field"><label for="lgNach">Nachname</label><input id="lgNach" autocomplete="off"></div>
-    </div>
-    <p class="err" id="lgErr" hidden></p>
-    <button class="btn primary" id="lgBtn">Anmelden</button>
-    <p class="lghint">Teamleiter melden sich mit <b>TL-DK</b> und acht Ziffern an.<br>
-      Beim ersten Login legst du deinen Zugang selbst an.</p>
-  </div>
+  <div class="loginbox" id="loginBox"></div>
 </div>
 
 <header class="topbar" id="topbar">
@@ -373,6 +361,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   <a class="navlink" href="#provision" data-page="provision">Provisionsrechner</a>
   <a class="navlink" href="#wunsch" data-page="wunsch">Provisionswunsch</a>
   <a class="navlink" href="#team" data-page="team" id="navTeam" hidden>Teammitglieder</a>
+  <a class="navlink" href="#kbdelete" data-page="kbdelete" id="navDelete" hidden>KB Delete</a>
+  <a class="navlink" href="#profil" data-page="profil">Profil</a>
   <div class="foot" id="drawerFoot"></div>
 </nav>
 
@@ -426,6 +416,8 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
     </div>
     <div id="tmViews"></div>
   </section>
+  <section class="page" id="page-profil"><div id="profil"></div></section>
+  <section class="page" id="page-kbdelete"><div id="kbdel"></div></section>
   <section class="page" id="page-wunsch">
     <div class="asec">
       <h3>Provisionswunsch</h3>
@@ -443,7 +435,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder"};
+const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", profil:"Profil"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -451,7 +443,7 @@ const HOURS_ASC   = [...START_HOURS].reverse();                // 7 … 22 (Logi
 const METRICS  = [{n:"Festgebietsumsatz",k:"fg"},{n:"Weißgebiet",k:"wg"},
                   {n:"K70 Verkauf",k:"k70",click:"rahmen"},{n:"K70 Einkauf",k:"k70ein",click:"einkauf",noSoll:true}];
 const QUELLEN  = ["Festgebietsbegehung","Promotion","Vertriebsadresse","Empfehlung","Premium CheckIn"];
-const MEETINGS = ["Teammeeting","Training","Schulung"];
+const MEETINGS = ["Teammeeting","Training","Schulung","Event"];
 const DEMO = ["VK7 Grundgerät","EB7 Elektrobürste","SP7 Saugwischer","PB7 Polsterbürste","MR7 Milbenaufsatz",
               "AC7 Düsenset","VG100+ Flächenreiniger","VM7 Handstaubsauger","VR7 Saugroboter","RB7 Saugstation"];
 const BESITZ = ["VK7","EB7","SP7","PB7","VR7","RB7","VG100+","VM7"];
@@ -504,6 +496,10 @@ const kurzName = e => `${(e.vorname||"").trim().charAt(0).toUpperCase()}. ${e.na
 function label(e){
   if(e.kind==="kunde")   return {t1:kurzName(e), t2:""};
   if(e.kind==="premium") return {t1:kurzName(e), t2:"Premium CheckIn"};
+  if(e.kind==="eigenkauf"){
+    const n = e.nb || {};
+    return {t1:"Eigenkauf", t2: n.umsatz ? eur(num(n.umsatz))+" €" : ""};
+  }
   if(e.kind==="meeting") return {t1:e.art, t2:`${e.von}–${e.bis}`};
   if(e.kind==="terminieren"){
     if(e.quelle==="Promotion") return {t1:e.ort||"Promotion", t2:`Promotion, ${e.gebiet}`};
@@ -526,13 +522,15 @@ function dayTotals(day){
       else if(n.gebiet==="Festgebiet") t.fg += num(n.umsatz);
     }
     if(n.k70==="Ja") t.k70 += num(n.k70betrag);
+    t.fg += num(n.umsatzFG);                 // Verkauf während einer Promotion
+    t.wg += num(n.umsatzWG);
   });
   einkaeufe.forEach(e=>{ if(e.datum===day) t.k70ein += num(e.brutto); });
   return t;
 }
 /* Farben aus der Legende */
 const COLORS = {
-  kunde:"#A9D18E", premium:"#E8C4F2", meeting:"#77CDF5",
+  kunde:"#A9D18E", eigenkauf:"#8FBF9F", premium:"#E8C4F2", meeting:"#77CDF5",
   privat:"#E0402F", promotion:"#F2B33D", terminieren:"#C9DD2C"
 };
 function colorOf(e){
@@ -548,12 +546,26 @@ function textOn(hex){
 /* Startzeiten, deren 2-Stunden-Fach sich mit von–bis überschneidet */
 /* Gesperrt sind nur Fächer, die innerhalb der Dauer starten – nicht das davorliegende */
 const coveredHours = (von,bis) => HOURS_ASC.filter(h => h >= von && h < bis);
-/* Nur zeitgebundene Einträge (Meeting, Privat) sperren Folgefächer */
+/* Gesperrte Startzeiten eines Tages.
+   soft = nur optisch belegt (Privat) – dort lässt sich trotzdem ein Termin eintragen. */
 function blockedSet(day){
   const m = new Map();
+  const setz = (h,e,soft) => { if(!entries[key(day,h)]) m.set(h,{c:colorOf(e), soft}); };
+
   HOURS_ASC.forEach(h=>{
     const e = entries[key(day,h)];
-    if(e && e.bis) coveredHours(h, toDec(e.bis)||24).forEach(x=>{ if(x!==h) m.set(x, colorOf(e)); });
+    if(!e) return;
+    const soft = e.kind === "privat";
+    if(e.bis) coveredHours(h, toDec(e.bis)||24).forEach(x=>{ if(x!==h) setz(x,e,soft); });
+    /* Mehrtägige Privatzeit: der Starttag ist ab der Startzeit dicht */
+    if(e.kind==="privat" && e.bisTag && e.bisTag > day) HOURS_ASC.forEach(x=>{ if(x>h) setz(x,e,true); });
+  });
+  /* Folgetage einer mehrtägigen Privatzeit */
+  Object.keys(entries).forEach(k=>{
+    const [d] = k.split("|"), e = entries[k];
+    if(!e || e.kind!=="privat" || !e.bisTag) return;
+    if(day <= d || day > e.bisTag) return;
+    HOURS_ASC.forEach(x=> setz(x,e,true));
   });
   return m;
 }
@@ -581,8 +593,10 @@ function render(){
     weekDays.forEach((d,i)=>{
       const day = dk(d), e = entries[key(day,hr)];
       if(!e && blocked[i].has(hr)){
-        const c = blocked[i].get(hr);
-        h += `<div class="cell slot blocked${alt}" style="--bc:${c}" title="durch einen laufenden Termin belegt"></div>`;
+        const bk = blocked[i].get(hr);
+        h += bk.soft
+          ? `<button class="cell slot blocked soft${alt}" style="--bc:${bk.c}" data-day="${day}" data-hour="${hr}" title="privat belegt – Termin trotzdem möglich"></button>`
+          : `<div class="cell slot blocked${alt}" style="--bc:${bk.c}" title="durch einen laufenden Termin belegt"></div>`;
       }else if(e){
         const l = label(e), done = e.status ? " done" : "", c = colorOf(e);
         const st = c ? ` style="background:${c};border-color:${c};color:${textOn(c)}"` : "";
@@ -607,11 +621,12 @@ function render(){
   grid.innerHTML = h;
 }
 grid.addEventListener('click', ev=>{
-  if(viewUser) return;
+  if(viewUser && !istAdmin()) return;
   const ml = ev.target.closest('[data-mclick]');
   if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
   const s = ev.target.closest('.slot');
-  if(!s || s.classList.contains('blocked')) return;
+  if(!s) return;
+  if(s.classList.contains('blocked') && !s.classList.contains('soft')) return;
   openSlot(s.dataset.day, +s.dataset.hour);
 });
 
@@ -657,7 +672,7 @@ const modal = document.getElementById('modal'), sheet = document.getElementById(
 let draft = null, step = "kind", error = "";
 
 function openSlot(day,hour){
-  if(viewUser) return;                      // fremde Daten sind schreibgeschützt
+  if(viewUser && !istAdmin()) return;        // fremde Daten sind schreibgeschützt
   draft = {day,hour,nb:{}};
   error = "";
   const e = entries[key(day,hour)];
@@ -684,7 +699,7 @@ const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option v
 
 const FIELD_IDS = ["empfAnzahl","jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum",
                    "f_vor","f_nach","f_str","f_plz","f_ort","f_tel","vsDatum",
-                   "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde"];
+                   "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG"];
 function collect(){
   FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) draft.nb[id]=el.value;});
   const sel = document.getElementById('pcZeit'); if(sel) draft.nb.pcZeit = sel.value;
@@ -794,7 +809,19 @@ function nbTermForm(e){
     <div class="grp">
       <div class="sect"><span class="lb">Bedingungen</span>${seg("wetter",["Sonnig","Wolkig","Regnerisch"],n.wetter)}</div>
       <div class="sect"><span class="lb">Temperatur</span>${seg("temp",["unter 0°C","0–15°C","15–25°C","über 25°C"],n.temp)}</div>
-    </div>`;
+    </div>
+    ${e.quelle==="Promotion" ? `
+    <div class="h4">Verkauf vor Ort</div>
+    <div class="grp">
+      <div class="sect"><span class="lb">Haben Kunden gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
+      ${n.verkauft==="Ja" ? `
+        ${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}
+        <div class="row2">
+          ${fld("umsatzFG","Bruttoumsatz Festgebiet €",n.umsatzFG,"text",'inputmode="decimal"')}
+          ${fld("umsatzWG","Bruttoumsatz Weißgebiet €",n.umsatzWG,"text",'inputmode="decimal"')}
+        </div>
+        <p class="hinweis">Getrennt eintragen — die Gebiete werden unterschiedlich vergütet.</p>` : ""}
+    </div>` : ""}`;
 }
 function saveNbTerm(e){
   collect();
@@ -857,6 +884,28 @@ function renderPotenzial(){
 }
 
 /* ---------- Dialogschritte ---------- */
+/* Vorhandenen Eintrag zum Ändern öffnen – vorhandene Nachbereitung bleibt erhalten */
+function startEdit(e){
+  error = "";
+  draft.kind = e.kind;
+  draft.quelle = e.quelle;
+  draft.art = e.art;
+  draft.gebiet = e.gebiet;
+  draft.bis = e.bis;
+  draft.bisTag = e.bisTag;
+  draft.nb = {...(e.nb||{})};
+  if(e.kind==="kunde" || e.kind==="premium"){
+    Object.assign(draft.nb, {f_vor:e.vorname||"", f_nach:e.nachname||"", f_str:e.strasse||"",
+                             f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||""});
+    draft.back = "kind"; step = "kunde";
+  }else if(e.kind==="eigenkauf"){ step = "eigen"; }
+  else if(e.kind==="meeting" || e.kind==="privat"){ step = "zeit"; }
+  else if(e.kind==="terminieren"){
+    if(e.quelle==="Promotion"){ draft.nb.f_ort = e.ort||""; step = "promo"; }
+    else step = "fgModus";
+  }else{ return; }
+  paint();
+}
 function paint(){
   const e = draft ? entries[key(draft.day,draft.hour)] : null;
 
@@ -887,16 +936,18 @@ function paint(){
       if(st==="Abgesagt") extra += `<div class="hint" style="margin-top:14px">Der Termin wird aus dem Kalender gelöscht.</div>
         <div class="actions"><button class="btn danger" id="doCancel">Termin löschen</button></div>`;
     }
-    const foot = (e.kind==="terminieren") || ((e.kind==="kunde"||e.kind==="premium") && (draft.nb.status||e.status))
-      ? (e.kind==="terminieren" ? `<div class="actions"><button class="btn" data-close>Schließen</button></div>`
-                                : `<div class="actions"><button class="btn" data-close>Schließen</button></div>`)
-      : `<div class="actions"><button class="btn danger" id="del">Löschen</button><button class="btn primary" data-close>Schließen</button></div>`;
+    const foot = `<div class="actions">
+        <button class="btn" id="editBtn">Bearbeiten</button>
+        <button class="btn danger" id="del">Löschen</button>
+      </div>
+      <div class="actions"><button class="btn primary" data-close>Schließen</button></div>`;
 
     sheet.innerHTML = head(e.kind==="premium"?"Premium CheckIn":"Eintrag") + body + extra + foot;
     wireSegs();
     const d1 = document.getElementById('del');
     if(d1) d1.onclick = ()=>{ delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll(); };
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
+    const eb = document.getElementById('editBtn'); if(eb) eb.onclick = ()=> startEdit(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
     const dc = document.getElementById('doCancel');
     if(dc) dc.onclick = ()=>{
@@ -922,6 +973,7 @@ function paint(){
   if(step==="kind"){
     sheet.innerHTML = head("Was ist das für ein Termin?") +
       `<button class="opt" data-kind="kunde">Kundentermin</button>
+       <button class="opt" data-kind="eigenkauf">Eigenkauf<small>ohne Kundendaten</small></button>
        <button class="opt" data-kind="premium">Premium CheckIn</button>
        <button class="opt" data-kind="meeting">Meeting<small>mit eigener Uhrzeit</small></button>
        <button class="opt" data-kind="terminieren">Terminieren</button>
@@ -929,6 +981,7 @@ function paint(){
     sheet.querySelectorAll('[data-kind]').forEach(b=> b.onclick = ()=>{
       draft.kind = b.dataset.kind;
       if(draft.kind==="kunde"){ step="quelle"; }
+      else if(draft.kind==="eigenkauf"){ step="eigen"; }
       else if(draft.kind==="premium"){ draft.back="kind"; step="kunde"; }
       else if(draft.kind==="meeting"){ step="art"; }
       else if(draft.kind==="terminieren"){ step="termQuelle"; }
@@ -956,19 +1009,49 @@ function paint(){
        ${fld("f_tel","Telefonnummer (freiwillig)",n.f_tel,"tel")}
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="${draft.back||'quelle'}">Zurück</button><button class="btn primary" id="save">Termin speichern</button></div>
-       <div class="hint">Im Planer erscheint nur der erste Buchstabe des Vornamens und der Nachname.</div>`;
+       <div class="actions"><button class="btn" id="spaeter">Später nachtragen</button></div>
+       <div class="hint">Später nachtragen speichert nur die Namen — Adresse und Telefonnummer kannst du jederzeit über „Bearbeiten“ ergänzen.</div>`;
     wireBack();
-    document.getElementById('save').onclick = ()=>{
+    const speichere = (streng) => {
       collect();
       const g = id => (draft.nb[id]||"").trim();
       if(!g('f_vor') || !g('f_nach')){ error="Vorname und Nachname fehlen."; repaint(); return; }
-      if(!/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben."; repaint(); return; }
-      const eintrag = {
+      if(streng && !/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben."; repaint(); return; }
+      if(!streng && g('f_plz') && !/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben oder leer bleiben."; repaint(); return; }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      const eintrag = {...alt,
         kind:draft.kind,
         vorname:g('f_vor'), nachname:g('f_nach'), strasse:g('f_str'), plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
       };
       if(draft.quelle) eintrag.quelle = draft.quelle;
       entries[key(draft.day,draft.hour)] = eintrag;
+      closeModal(); renderAll();
+    };
+    document.getElementById('save').onclick = ()=> speichere(true);
+    document.getElementById('spaeter').onclick = ()=> speichere(false);
+    return;
+  }
+
+  if(step==="eigen"){
+    const n = draft.nb;
+    sheet.innerHTML = head("Eigenkauf") +
+      `<div class="grp"><div class="row2">
+         ${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}
+         ${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}
+       </div></div>
+       ${error?`<div class="err">${error}</div>`:""}
+       <div class="actions"><button class="btn" data-back="kind">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
+       <div class="hint">Wird als Festgebietsumsatz gewertet und fließt mit Bonus in die Provision ein.</div>`;
+    wireBack();
+    document.getElementById('save').onclick = ()=>{
+      collect();
+      if(num(draft.nb.umsatz) <= 0 && !(+draft.nb.einheiten > 0)){
+        error="Bitte Einheiten oder Bruttoumsatz eintragen."; repaint(); return;
+      }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      entries[key(draft.day,draft.hour)] = {...alt, kind:"eigenkauf", status:"stattgefunden",
+        nb:{verkauft:"Ja", gebiet:"Festgebiet", kundenstatus:"Bestandskunde",
+            einheiten:draft.nb.einheiten||"", umsatz:draft.nb.umsatz||""}};
       closeModal(); renderAll();
     };
     return;
@@ -993,7 +1076,8 @@ function paint(){
        <button class="opt" data-fg="Door to Door">Door to Door</button>` + backBtn("termQuelle");
     wireBack();
     sheet.querySelectorAll('[data-fg]').forEach(b=> b.onclick = ()=>{
-      entries[key(draft.day,draft.hour)] = {kind:"terminieren", quelle:"Festgebietsbegehung", modus:b.dataset.fg};
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      entries[key(draft.day,draft.hour)] = {...alt, kind:"terminieren", quelle:"Festgebietsbegehung", modus:b.dataset.fg};
       closeModal(); renderAll();
     });
     return;
@@ -1001,19 +1085,37 @@ function paint(){
 
   if(step==="promo"){
     const geb = draft.gebiet || "Festgebiet";
+    const von = `${pad(draft.hour)}:00`;
+    const bis = draft.bis || (draft.hour+2>=24 ? "00:00" : `${pad(draft.hour+2)}:00`);
     sheet.innerHTML = head("Promotion") +
       `${fld("f_ort","Ort",draft.nb.f_ort)}
+       <div class="row2">
+         <div class="field"><label>Von</label><div class="fixed">${von}</div></div>
+         <div class="field"><label for="f_bis">Bis</label><input type="time" id="f_bis" value="${bis}" step="900"></div>
+       </div>
        <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet2",["Festgebiet","Weißgebiet"],geb)}</div>
-       <div class="actions"><button class="btn" data-back="termQuelle">Zurück</button><button class="btn primary" id="save">Speichern</button></div>`;
+       ${error?`<div class="err">${error}</div>`:""}
+       <div class="actions"><button class="btn" data-back="termQuelle">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
+       <div class="hint">Für Messen und Events: die ganze Dauer wird im Planer gesperrt.</div>`;
     wireBack();
-    sheet.querySelectorAll('[data-seg]').forEach(b=> b.onclick = ()=>{ collect(); draft.gebiet=b.dataset.val; repaint(); });
+    sheet.querySelectorAll('[data-seg]').forEach(b=> b.onclick = ()=>{ collect(); draft.bis=document.getElementById('f_bis').value; draft.gebiet=b.dataset.val; repaint(); });
     document.getElementById('save').onclick = ()=>{
       collect();
-      entries[key(draft.day,draft.hour)] = {kind:"terminieren", quelle:"Promotion", ort:(draft.nb.f_ort||"").trim(), gebiet:geb};
+      const b = document.getElementById('f_bis').value;
+      const bDec = toDec(b)||24;
+      draft.bis = b;
+      if(!b || bDec <= draft.hour){ error=`Die Endzeit muss nach ${von} liegen.`; draft.gebiet=geb; paint(); return; }
+      if(coveredHours(draft.hour,bDec).some(hr => hr!==draft.hour && entries[key(draft.day,hr)])){
+        error="In diesem Zeitraum steht schon ein Eintrag."; draft.gebiet=geb; paint(); return;
+      }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      entries[key(draft.day,draft.hour)] = {...alt, kind:"terminieren", quelle:"Promotion",
+        ort:(draft.nb.f_ort||"").trim(), gebiet:geb, von, bis:b};
       closeModal(); renderAll();
     };
     return;
   }
+
 
   if(step==="art"){
     sheet.innerHTML = head("Art des Meetings") + opts(MEETINGS,"art") + backBtn("kind");
@@ -1025,29 +1127,41 @@ function paint(){
   if(step==="zeit"){
     const von = `${pad(draft.hour)}:00`;
     const bis = draft.bis || (draft.hour+2>=24 ? "00:00" : `${pad(draft.hour+2)}:00`);
-    sheet.innerHTML = head(draft.kind==="privat"?"Privat":draft.art) +
+    const privat = draft.kind==="privat";
+    sheet.innerHTML = head(privat ? "Privat" : draft.art) +
       `<div class="row2">
          <div class="field"><label>Von</label><div class="fixed">${von}</div></div>
          <div class="field"><label for="f_bis">Bis</label><input type="time" id="f_bis" value="${bis}" step="900"></div>
        </div>
+       ${privat ? `${fld("prBisTag","Bis einschließlich Tag (für Urlaub, sonst leer lassen)",draft.bisTag||"","date")}` : ""}
        ${error?`<div class="err">${error}</div>`:""}
-       <div class="actions"><button class="btn" data-back="${draft.kind==="privat"?"kind":"art"}">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
-       <div class="hint">Startzeit ist das angeklickte Feld. Überschneidende Fächertermine werden gesperrt.</div>`;
+       <div class="actions"><button class="btn" data-back="${privat?"kind":"art"}">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
+       <div class="hint">${privat
+         ? "Privat blockiert die Zeit nur optisch – ein Termin lässt sich trotzdem eintragen."
+         : "Startzeit ist das angeklickte Feld. Überschneidende Fächertermine werden gesperrt."}</div>`;
     wireBack();
     document.getElementById('save').onclick = ()=>{
       const b = document.getElementById('f_bis').value;
       draft.bis = b;
       const bDec = toDec(b)||24;
       if(!b || bDec <= draft.hour){ error=`Die Endzeit muss nach ${von} liegen.`; paint(); return; }
+      const bisTagEl = document.getElementById('prBisTag');
+      const bisTag = bisTagEl ? bisTagEl.value : "";
+      if(bisTag && bisTag < draft.day){ error="Das Enddatum liegt vor dem Termin."; draft.bisTag=bisTag; paint(); return; }
       const hit = coveredHours(draft.hour,bDec);
-      if(hit.some(hr => hr!==draft.hour && entries[key(draft.day,hr)])){ error="In diesem Zeitraum steht schon ein Eintrag."; paint(); return; }
-      const eintrag = {kind:draft.kind, von, bis:b};
-      if(draft.art) eintrag.art = draft.art;
+      if(hit.some(hr => hr!==draft.hour && entries[key(draft.day,hr)] && !privat)){
+        error="In diesem Zeitraum steht schon ein Eintrag."; paint(); return;
+      }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      const eintrag = {...alt, kind:draft.kind, von, bis:b};
+      if(draft.art) eintrag.art = draft.art; else delete eintrag.art;
+      if(bisTag && bisTag > draft.day) eintrag.bisTag = bisTag; else delete eintrag.bisTag;
       entries[key(draft.day,draft.hour)] = eintrag;
       closeModal(); renderAll();
     };
     return;
   }
+
 }
 const backBtn = to => `<div class="actions"><button class="btn" data-back="${to}">Zurück</button></div>`;
 function wireBack(){ sheet.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=>{ error=""; step=b.dataset.back; paint(); }); }
@@ -1224,7 +1338,7 @@ function preparePrint(){
   document.getElementById('printhead').innerHTML =
     `Bunte Woche – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
   const w = t.scrollWidth, h = t.scrollHeight;
-  const PW = 1062, PH = 700;                       // A4 quer, 8 mm Rand, abzüglich Kopfzeile
+  const PW = 1070, PH = 700;                       // A4 quer abzüglich Rand und Kopfzeile
   const k = Math.min(PW/(w||1), PH/(h||1), 1);
   document.documentElement.style.setProperty('--pscale', k.toFixed(3));
 }
@@ -1276,6 +1390,8 @@ function umsatz(fromK,toK){
       else if(n.gebiet==="Weißgebiet") u.wg += num(n.umsatz);
     }
     if(n.k70==="Ja") u.k70 += num(n.k70betrag);
+    u.fg += num(n.umsatzFG);                 // Verkauf während einer Promotion
+    u.wg += num(n.umsatzWG);
   });
   einkaeufe.forEach(e=>{ if(e.datum>=fromK && e.datum<=toK) u.k70ein += num(e.brutto); });
   return u;
@@ -1519,7 +1635,10 @@ function quoten(weeks = rangeWeeks){
           termine:sumOf(fgb,x=>x.n.termine), rueck:sumOf(fgb,x=>x.n.rueck),
           d2d:fgb.filter(x=>x.e.modus==="Door to Door").length, best:fgb.filter(x=>x.e.modus==="Bestandskunde").length, list:fgb },
     promo:{ n:pro.length, std:std(pro), ansprachen:sumOf(pro,x=>x.n.ansprachen), gespraeche:sumOf(pro,x=>x.n.gespraeche),
-            termine:sumOf(pro,x=>x.n.termine), kontakte:sumOf(pro,x=>x.n.kontakte), list:pro },
+            termine:sumOf(pro,x=>x.n.termine), kontakte:sumOf(pro,x=>x.n.kontakte),
+            einheiten:sumOf(pro,x=>x.n.einheiten),
+            umsatzFG:sumOf(pro,x=>num(x.n.umsatzFG)), umsatzWG:sumOf(pro,x=>num(x.n.umsatzWG)),
+            verkaeufe:pro.filter(x=>x.n.verkauft==="Ja").length, list:pro },
     termine:{ gesamt:kt.length+bewegt.length, stattgefunden:gem.length,
               verschoben:bewegt.filter(v=>v.art==="verschoben").length,
               abgesagt:bewegt.filter(v=>v.art==="abgesagt").length,
@@ -1600,6 +1719,8 @@ function renderAusw(){
       ${kpi("Termin je Ansprache", pct(p.termine,p.ansprachen))}
       ${kpi("Kontakte", p.kontakte||"–", `${dec(p.std?p.kontakte/p.std:0)} pro Stunde`)}
       ${kpi("Ø Dauer je Einsatz", dec(p.n?p.std/p.n:0)+" h")}
+      ${kpi("Einheiten vor Ort", p.einheiten||"–", `bei ${p.verkaeufe} von ${p.n} Einsätzen`)}
+      ${kpi("Umsatz vor Ort", eur(p.umsatzFG+p.umsatzWG)+" €", `FG ${eur(p.umsatzFG)} € · WG ${eur(p.umsatzWG)} €`)}
     </div>
     ${fazit(p.list,"Promotion")}</div>`;
 
@@ -1627,7 +1748,7 @@ function renderAusw(){
         <span class="vl">${c} · ${pct(c,t.stattgefunden)}</span></div>`;
     }).join("") : `<p class="aempty">Noch keine nachbereiteten Termine.</p>`}</div>`;
 
-  document.getElementById('ausw').innerHTML = s1 + s2 + s3;
+  document.getElementById('ausw').innerHTML = s1 + s2 + s3 + meldungHTML(monday);
 }
 document.getElementById('rangeSeg').addEventListener('click', ev=>{
   const b = ev.target.closest('[data-rw]');
@@ -1650,13 +1771,16 @@ const FIREBASE_CONFIG = {
 };
 /* ▲▲▲ Bleibt das leer, läuft alles nur lokal im Browser ▲▲▲ */
 
-let db = null, me = null;
+let db = null, auth = null, me = null;
 try{
   if(FIREBASE_CONFIG.databaseURL && typeof firebase !== "undefined"){
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.database();
+    auth = firebase.auth();
   }
-}catch(err){ db = null; }
+}catch(err){ db = null; auth = null; }
+/* Aus der DK-Nummer wird eine technische Mailadresse für Firebase Auth */
+const mailOf = dk => dk.toLowerCase().replace(/[^a-z0-9]/g,"") + "@bunte-woche.app";
 
 /* Lokaler Speicher – schlägt er fehl, läuft die App trotzdem */
 const store = {
@@ -1664,17 +1788,23 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
   del(k){ try{ localStorage.removeItem(k); }catch(e){} }
 };
-const DK_RE = /^(TL-)?DK\d{8}$/;
+const DK_RE = /^(V-|TL-)?DK\d{8}$/;
+const istAdmin      = () => !!me && (me.rolle==="Admin" || me.dk.startsWith("V-DK"));
+const istTeamleiter = () => !!me && ((me.rolle==="Teamleader" && me.dk.startsWith("TL-DK")) || istAdmin());
+const rolleAus = dk => dk.startsWith("V-DK") ? "Admin" : (dk.startsWith("TL-DK") ? "Teamleader" : "Kundenberater");
 const SEED_USERS = {
-  "DK00000000": {dk:"DK00000000", vorname:"Admin", nachname:"admin", rolle:"Admin", team:[]}
+  "V-DK00000000": {dk:"V-DK00000000", vorname:"admin", nachname:"admin", rolle:"Admin", team:[]}
 };
 function localUsers(){ const u = store.get('bw-users'); return u || {...SEED_USERS}; }
 async function userGet(dk){
-  if(db){ const s = await db.ref('users/'+dk).once('value'); return s.val(); }
+  if(db){
+    const s = await db.ref('users/'+dk).once('value');   // Fehler bewusst weiterreichen
+    return s.val();
+  }
   return localUsers()[dk] || null;
 }
 async function userSet(u){
-  if(db){ await db.ref('users/'+u.dk).set(u); return; }
+  if(db){ await db.ref('users/'+u.dk).set(clean(u)); return; }
   const all = localUsers(); all[u.dk] = u; store.set('bw-users', all);
 }
 
@@ -1720,65 +1850,294 @@ function clean(v){
   if(typeof v === "number" && !isFinite(v)) return undefined;
   return v;
 }
-let saveTimer = null, dataReady = false, cloudOk = false;
+let saveTimer = null, dataReady = false, cloudOk = false, shadow = {};
 function saveState(text, warn){
   const el = document.getElementById('saveState');
   if(!el) return;
   el.textContent = text;
   el.classList.toggle('warn', !!warn);
 }
+const gleich = (a,b) => JSON.stringify(a) === JSON.stringify(b);
+/* Schreibt nur, was sich seit dem letzten Speichern geändert hat */
 function flushSave(){
-  if(!me || viewUser || !dataReady) return;
+  if(!me || !dataReady) return;
+  if(viewUser && !istAdmin()) return;                 // fremde Daten nur der Admin
+  const zielDk = viewUser ? viewUser.dk : me.dk;
   const blob = clean(dataBlob());
-  store.set('bw-data-'+me.dk, blob);
-  if(db && cloudOk){
-    saveState("speichert …");
-    db.ref('data/'+me.dk).set(blob)
-      .then(()=> saveState("gespeichert"))
-      .catch(err=>{ cloudOk = false; saveState("nur lokal: "+(err&&err.message||"Fehler"), true); });
-  }else{
-    saveState(db ? "nur lokal gespeichert" : "lokal gespeichert", !!db);
-  }
+  store.set('bw-data-'+zielDk, blob);
+  if(!db || !cloudOk){ saveState(db ? "nur lokal gespeichert" : "lokal gespeichert", !!db); return; }
+
+  const basis = 'data/'+zielDk+'/';
+  const updates = {};
+  const neuE = blob.entries || {}, altE = shadow.entries || {};
+  Object.keys(neuE).forEach(k=>{ if(!gleich(neuE[k], altE[k])) updates[basis+'entries/'+k] = neuE[k]; });
+  Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
+  ["potenzial","verlauf","einkaeufe","settings","wunsch"].forEach(f=>{
+    if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
+  });
+  if(!Object.keys(updates).length){ saveState("gespeichert"); return; }
+  updates[basis+'ts'] = blob.ts;
+
+  saveState("speichert …");
+  db.ref().update(updates)
+    .then(()=>{ shadow = JSON.parse(JSON.stringify(blob)); saveState("gespeichert"); })
+    .catch(err=>{ cloudOk = false; saveState("nur lokal: "+(err&&err.message||"Fehler"), true); });
 }
 function saveData(){
-  if(!me || viewUser || !dataReady) return;         // fremde oder ungeladene Daten nie überschreiben
+  if(!me || !dataReady) return;
+  if(viewUser && !istAdmin()) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flushSave, 400);
 }
 /* Beim Verlassen der Seite sofort sichern */
-addEventListener('pagehide', ()=>{ clearTimeout(saveTimer); flushSave(); });
+addEventListener('pagehide', ()=>{ clearTimeout(saveTimer); flushSave(); if(me) store.set('bw-lastseen', Date.now()); });
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === "hidden"){ clearTimeout(saveTimer); flushSave(); }
 });
 
 /* ---------- Anmeldung ---------- */
-const loginEl = document.getElementById('login');
-function lgError(msg){
-  const e = document.getElementById('lgErr');
-  e.textContent = msg; e.hidden = !msg;
+const loginEl = document.getElementById('login'), loginBox = document.getElementById('loginBox');
+let lgStep = "start", lg = {}, lgErrText = "", lgBusy = false;
+const FALSCH = "Passwort oder Daten falsch, bitte überprüfen.";
+
+/* PIN-Wiederherstellung: das Passwort liegt mit dem PIN verschlüsselt in der Datenbank */
+const b64  = u8 => btoa(String.fromCharCode(...u8));
+const ub64 = t => Uint8Array.from(atob(t), c=>c.charCodeAt(0));
+async function pinKey(pin, dk){
+  const enc = new TextEncoder();
+  const basis = await crypto.subtle.importKey("raw", enc.encode(pin+"|"+dk), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    {name:"PBKDF2", salt:enc.encode("bunte-woche|"+dk), iterations:150000, hash:"SHA-256"},
+    basis, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
-async function doLogin(dkRaw, vor, nach){
-  const dk = (dkRaw||"").trim().toUpperCase().replace(/\s/g,"");
-  vor = (vor||"").trim(); nach = (nach||"").trim();
-  if(!DK_RE.test(dk)) return lgError("Die DK-Nummer muss DK und acht Ziffern haben, Teamleiter TL-DK und acht Ziffern.");
-  if(!vor || !nach)   return lgError("Bitte Vor- und Nachnamen eintragen.");
-  let u = await userGet(dk);
-  if(u){
-    const passt = u.vorname.toLowerCase()===vor.toLowerCase() && u.nachname.toLowerCase()===nach.toLowerCase();
-    if(!passt) return lgError("Zu dieser DK-Nummer ist ein anderer Name registriert.");
-  }else{
-    u = {dk, vorname:vor, nachname:nach,
-         rolle: dk==="DK00000000" ? "Admin" : (dk.startsWith("TL-") ? "Teamleader" : "Kundenberater"),
-         team: []};
-    await userSet(u);
+async function pinSpeichern(pin, dk, passwort){
+  const key = await pinKey(pin, dk);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:"AES-GCM", iv}, key, new TextEncoder().encode(passwort));
+  await db.ref('recovery/'+dk).set({iv:b64(iv), ct:b64(new Uint8Array(ct))});
+}
+async function pinOeffnen(pin, dk){
+  const rec = (await db.ref('recovery/'+dk).once('value')).val();
+  if(!rec) throw new Error("Für diese DK-Nummer ist kein PIN hinterlegt.");
+  const key = await pinKey(pin, dk);
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:ub64(rec.iv)}, key, ub64(rec.ct));
+  return new TextDecoder().decode(pt);
+}
+
+const feld  = (id,l,v="",extra="") => `<div class="field"><label for="${id}">${l}</label><input id="${id}" value="${v}" autocomplete="off" spellcheck="false" ${extra}></div>`;
+const pwFeld = (id,l) => `<div class="field pw"><label for="${id}">${l}</label>
+  <input id="${id}" type="password" autocomplete="new-password" placeholder="••••••••">
+  <button type="button" class="eye" data-eye="${id}" aria-label="Passwort anzeigen">👁</button></div>`;
+const pinFeld = (id,l) => `<div class="field pinput"><label for="${id}">${l}</label>
+  <input id="${id}" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>`;
+const wert = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
+function lgFehler(t){ lgErrText = t; renderLogin(); }
+
+function renderLogin(){
+  const kopf = `<div class="lgmark">Bunte Woche</div>`;
+  const fehler = lgErrText ? `<p class="err">${lgErrText}</p>` : "";
+  const laden = lgBusy ? ` disabled` : "";
+  let h = "";
+  if(lgStep === "start"){
+    h = kopf + `<h2>Willkommen</h2><p class="lgsub">Melde dich an oder lege deinen Zugang an.</p>
+      <button class="opt" data-go="login">Anmelden</button>
+      <button class="opt" data-go="reg1">Neu registrieren</button>`;
   }
+  if(lgStep === "login"){
+    h = kopf + `<h2>Anmelden</h2><p class="lgsub">DK-Nummer und Passwort genügen.</p>
+      ${feld("lgDk","DK-Nummer", lg.dk||"", 'placeholder="DK00000000"')}
+      ${pwFeld("lgPw","Passwort")}
+      ${fehler}
+      <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Anmelden"}</button>
+      <button class="linkbtn" data-go="forgot">Passwort vergessen?</button>
+      <button class="zurueck" data-go="start">Zurück</button>`;
+  }
+  if(lgStep === "reg1"){
+    h = kopf + `<h2>Neu registrieren</h2><p class="lgsub">Deine Daten und ein selbst gewähltes Passwort.</p>
+      ${feld("lgDk","DK-Nummer", lg.dk||"", 'placeholder="DK00000000"')}
+      <div class="row2">${feld("lgVor","Vorname", lg.vor||"")}${feld("lgNach","Nachname", lg.nach||"")}</div>
+      ${pwFeld("lgPw","Passwort")}
+      ${pwFeld("lgPw2","Passwort wiederholen")}
+      ${fehler}
+      <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Weiter"}</button>
+      <button class="zurueck" data-go="start">Zurück</button>`;
+  }
+  if(lgStep === "reg2"){
+    h = kopf + `<h2>Dein PIN</h2>
+      <p class="lgsub">Der vierstellige PIN, den du intern bekommen hast. Er ist deine Absicherung, falls du dein Passwort vergisst.</p>
+      ${pinFeld("lgPin","PIN")}
+      ${fehler}
+      <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Registrieren"}</button>
+      <button class="zurueck" data-go="reg1">Zurück</button>`;
+  }
+  if(lgStep === "forgot"){
+    h = kopf + `<h2>Passwort vergessen</h2><p class="lgsub">Mit hinterlegter E-Mail schicken wir dir einen Link, sonst prüfen wir deinen PIN.</p>
+      ${feld("lgDk","DK-Nummer", lg.dk||"", 'placeholder="DK00000000"')}
+      <div class="row2">${feld("lgVor","Vorname", lg.vor||"")}${feld("lgNach","Nachname", lg.nach||"")}</div>
+      ${pinFeld("lgPin","PIN")}
+      ${fehler}
+      <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Weiter"}</button>
+      <button class="zurueck" data-go="login">Zurück</button>`;
+  }
+  if(lgStep === "neuespw"){
+    h = kopf + `<h2>Neues Passwort</h2><p class="lgsub">PIN erkannt. Vergib jetzt ein neues Passwort.</p>
+      ${pwFeld("lgPw","Neues Passwort")}
+      ${pwFeld("lgPw2","Neues Passwort wiederholen")}
+      ${fehler}
+      <button class="btn primary" id="lgGo"${laden}>${lgBusy?"einen Moment …":"Passwort speichern"}</button>`;
+  }
+  loginBox.innerHTML = h + `<p class="lghint">DK-Nummer: DK und acht Ziffern ohne Leerzeichen.<br>Teamleiter: TL-DK und acht Ziffern.</p>`;
+  const go = document.getElementById('lgGo');
+  if(go) go.onclick = lgWeiter;
+}
+loginBox.addEventListener('click', ev=>{
+  const nav = ev.target.closest('[data-go]');
+  if(nav){ merkeEingaben(); lgErrText=""; lgStep = nav.dataset.go; renderLogin(); return; }
+  const eye = ev.target.closest('[data-eye]');
+  if(eye){
+    const inp = document.getElementById(eye.dataset.eye);
+    inp.type = inp.type === "password" ? "text" : "password";
+    eye.textContent = inp.type === "password" ? "👁" : "🙈";
+  }
+});
+loginBox.addEventListener('keydown', e=>{ if(e.key === "Enter") lgWeiter(); });
+function merkeEingaben(){
+  if(document.getElementById('lgDk'))   lg.dk   = wert('lgDk').toUpperCase().replace(/\s/g,"");
+  if(document.getElementById('lgVor'))  lg.vor  = wert('lgVor');
+  if(document.getElementById('lgNach')) lg.nach = wert('lgNach');
+}
+const nameGleich = (a,b) => (a||"").trim().toLowerCase() === (b||"").trim().toLowerCase();
+
+async function lgWeiter(){
+  if(lgBusy) return;
+  merkeEingaben();
+  lgErrText = "";
+  const dk = lg.dk || "";
+  const pw = wert('lgPw'), pw2 = wert('lgPw2'), pin = wert('lgPin');
+
+  if(["login","reg1","forgot"].includes(lgStep) && !DK_RE.test(dk))
+    return lgFehler("Die DK-Nummer muss DK und acht Ziffern haben, Teamleiter TL-DK und acht Ziffern.");
+
+  if(!auth || !db){                                   // Notbetrieb ohne Firebase
+    if(lgStep !== "reg1" && lgStep !== "login") return lgFehler("Ohne Verbindung nicht möglich.");
+    let u = localUsers()[dk];
+    if(!u) u = {dk, vorname:lg.vor||"?", nachname:lg.nach||"?",
+                rolle: dk.startsWith("TL-") ? "Teamleader" : "Kundenberater", team:[]};
+    await userSet(u); store.set('bw-session',{dk});
+    return starteSitzung(u);
+  }
+
+  lgBusy = true; renderLogin();
+  try{
+    if(lgStep === "login"){
+      if(!pw) throw new Error(FALSCH);
+      if(await istGeloescht(dk)) throw new Error("Dieser Zugang wurde entfernt.");
+      const u0 = await userGet(dk);
+      if(u0 && !u0.uid) throw new Error("Für diese DK-Nummer gibt es noch kein Passwort. Bitte einmal über „Neu registrieren“ gehen — deine Daten bleiben erhalten.");
+      let cred;
+      try{ cred = await auth.signInWithEmailAndPassword((u0 && u0.mail) || mailOf(dk), pw); }
+      catch(err){ throw new Error(FALSCH); }              // niemals neu anlegen
+      const u = u0 || await userGet(dk);
+      if(!u){ await auth.signOut(); throw new Error(FALSCH); }
+      await verknuepfe(cred.user.uid, dk, u);
+      return starteSitzung(u);
+    }
+
+    if(lgStep === "reg1"){
+      if(!lg.vor || !lg.nach) throw new Error("Bitte Vor- und Nachnamen eintragen.");
+      if(pw.length < 6)  throw new Error("Das Passwort braucht mindestens 6 Zeichen.");
+      if(pw !== pw2)     throw new Error("Die beiden Passwörter stimmen nicht überein.");
+      if(await istGeloescht(dk)) throw new Error("Diese DK-Nummer wurde gelöscht. Bitte im Team melden.");
+      const u = await userGet(dk);
+      if(u && u.uid) throw new Error("Diese DK-Nummer ist bereits registriert. Bitte anmelden.");
+      if(u && !nameGleich(u.vorname,lg.vor)) throw new Error("Zu dieser DK-Nummer ist ein anderer Name hinterlegt.");
+      if(u && !nameGleich(u.nachname,lg.nach)) throw new Error("Zu dieser DK-Nummer ist ein anderer Name hinterlegt.");
+      lg.pw = pw; lgStep = "reg2"; lgBusy = false; return renderLogin();
+    }
+
+    if(lgStep === "reg2"){
+      if(!/^\d{4}$/.test(pin)) throw new Error("Der PIN besteht aus genau vier Ziffern.");
+      let cred;
+      try{ cred = await auth.createUserWithEmailAndPassword(mailOf(dk), lg.pw); }
+      catch(err){
+        if(err.code === "auth/email-already-in-use") throw new Error("Diese DK-Nummer ist bereits registriert. Bitte anmelden.");
+        throw new Error(fehlertext(err));
+      }
+      const vorhanden = await userGet(dk);
+      const u = vorhanden
+        ? {...vorhanden, uid:cred.user.uid, vorname:lg.vor, nachname:lg.nach}
+        : {dk, uid:cred.user.uid, vorname:lg.vor, nachname:lg.nach,
+           rolle: rolleAus(dk), team:[]};
+      await db.ref('uids/'+cred.user.uid).set(dk);
+      await userSet(u);
+      await pinSpeichern(pin, dk, lg.pw);
+      try{ await db.ref('secret/'+dk).set({pin}); }catch(e){}   // im Profil einsehbar
+      return starteSitzung(u);
+    }
+
+    if(lgStep === "forgot"){
+      const u0 = await userGet(dk);
+      if(u0 && u0.mail){                                   // Zurücksetzen per E-Mail
+        if(!nameGleich(u0.vorname,lg.vor) || !nameGleich(u0.nachname,lg.nach)) throw new Error(FALSCH);
+        await auth.sendPasswordResetEmail(u0.mail);
+        lgBusy = false;
+        return lgFehler("Wir haben dir einen Link an "+u0.mail+" geschickt.");
+      }
+      if(!/^\d{4}$/.test(pin)) throw new Error("Der PIN besteht aus genau vier Ziffern.");
+      const u = u0;
+      if(!u || !nameGleich(u.vorname,lg.vor) || !nameGleich(u.nachname,lg.nach)) throw new Error(FALSCH);
+      let altesPw;
+      try{ altesPw = await pinOeffnen(pin, dk); }
+      catch(err){ throw new Error(FALSCH); }
+      try{ await auth.signInWithEmailAndPassword(mailOf(dk), altesPw); }
+      catch(err){ throw new Error("Der hinterlegte Zugang passt nicht mehr. Bitte im Team melden."); }
+      lg.pin = pin; lgStep = "neuespw"; lgBusy = false; return renderLogin();
+    }
+
+    if(lgStep === "neuespw"){
+      if(pw.length < 6) throw new Error("Das Passwort braucht mindestens 6 Zeichen.");
+      if(pw !== pw2)    throw new Error("Die beiden Passwörter stimmen nicht überein.");
+      await auth.currentUser.updatePassword(pw);
+      await pinSpeichern(lg.pin, dk, pw);
+      const u = await userGet(dk);
+      await verknuepfe(auth.currentUser.uid, dk, u);
+      return starteSitzung(u);
+    }
+  }catch(err){
+    lgBusy = false;
+    return lgFehler(err.message || FALSCH);
+  }
+}
+/* Verknüpft Zugang und DK-Datensatz, auch für Nutzer aus der Zeit ohne Passwort */
+async function istGeloescht(dk){
+  if(!db) return false;
+  try{ return !!(await db.ref('deleted/'+dk).once('value')).val(); }catch(e){ return false; }
+}
+async function verknuepfe(uid, dk, u){
+  const map = (await db.ref('uids/'+uid).once('value')).val();
+  if(!map) await db.ref('uids/'+uid).set(dk);
+  if(u && !u.uid){ u.uid = uid; await userSet(u); }
+}
+function fehlertext(err){
+  const c = (err && err.code) || "";
+  if(c==="auth/weak-password") return "Das Passwort braucht mindestens 6 Zeichen.";
+  if(c==="auth/network-request-failed") return "Keine Verbindung. Bitte Internet prüfen.";
+  if(c==="auth/too-many-requests") return "Zu viele Versuche. Bitte kurz warten.";
+  return (err && err.message) || "Anmeldung fehlgeschlagen.";
+}
+async function starteSitzung(u){
   me = u;
-  store.set('bw-session', {dk});
+  me.lastLogin = Date.now();
+  store.set('bw-lastseen', Date.now());
+  if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
   dataReady = false;
-  applyData(await loadData(dk));
+  applyData(await loadData(u.dk));
+  shadow = JSON.parse(JSON.stringify(clean(dataBlob())));
   dataReady = true;
+  lgBusy = false; lg = {}; lgStep = "start"; lgErrText = "";
   loginEl.hidden = true;
-  document.getElementById('navTeam').hidden = !(me.rolle==="Teamleader" || me.rolle==="Admin");
+  document.getElementById('navTeam').hidden = !istTeamleiter();
+  document.getElementById('navDelete').hidden = !istTeamleiter();
   document.getElementById('drawerFoot').innerHTML =
     `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
   document.getElementById('logoutBtn').onclick = logout;
@@ -1786,28 +2145,34 @@ async function doLogin(dkRaw, vor, nach){
   renderAll();
 }
 function logout(){
+  clearTimeout(saveTimer); flushSave();
   store.del('bw-session');
   me = null; viewUser = null;
-  applyData(null);
+  applyData(null); shadow = {};
+  lgStep = "start"; lg = {}; lgErrText = "";
+  renderLogin();
   loginEl.hidden = false;
   location.hash = "#planer";
   setMenu(false);
+  if(auth) auth.signOut();
 }
-document.getElementById('lgBtn').onclick = ()=> doLogin(
-  document.getElementById('lgDk').value,
-  document.getElementById('lgVor').value,
-  document.getElementById('lgNach').value);
-document.getElementById('login').addEventListener('keydown', e=>{ if(e.key==="Enter") document.getElementById('lgBtn').click(); });
 
 /* ---------- Teamansicht ---------- */
 async function fuelleMemberSelect(){
   const sel = document.getElementById('memberSel');
   if(!me || !sel) return;
-  const team = me.team || [];
-  const namen = [];
-  for(const dk of team){
-    const u = await userGet(dk);
-    if(u) namen.push({dk, name:`${u.vorname} ${u.nachname}`});
+  let namen = [];
+  if(istAdmin()){
+    try{
+      namen = (await alleNutzer()).filter(u=>u.dk!==me.dk)
+        .map(u=>({dk:u.dk, name:`${u.vorname} ${u.nachname} · ${u.rolle}`}))
+        .sort((a,b)=>a.name.localeCompare(b.name));
+    }catch(e){}
+  }else{
+    for(const dk of (me.team || [])){
+      const u = await userGet(dk);
+      if(u) namen.push({dk, name:`${u.vorname} ${u.nachname}`});
+    }
   }
   sel.innerHTML = `<option value="">— Mitglied auswählen —</option>` +
     namen.map(n=>`<option value="${n.dk}" ${viewUser&&viewUser.dk===n.dk?"selected":""}>${n.name}</option>`).join("");
@@ -1822,12 +2187,13 @@ async function zeigeMember(dk){
   clearTimeout(saveTimer); flushSave();          // eigenen Stand sichern, bevor umgeschaltet wird
   viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
   applyData(await loadData(dk));
+  shadow = JSON.parse(JSON.stringify(clean(dataBlob())));
   renderAll();
 }
 function zurueckZuMir(){
   if(!viewUser) return;
   viewUser = null;
-  loadData(me.dk).then(d=>{ applyData(d); renderAll(); });
+  loadData(me.dk).then(d=>{ applyData(d); shadow = JSON.parse(JSON.stringify(clean(dataBlob()))); renderAll(); });
 }
 function renderTeam(){
   const banner = document.getElementById('viewBanner');
@@ -1843,10 +2209,14 @@ function renderTeam(){
   if(!box) return;
   if(!viewUser){ box.innerHTML = ""; return; }
   box.innerHTML = `
+    <div class="tmblock"><div class="actions"><button class="btn primary" id="tmPdf">Statistik als PDF</button></div></div>
     <div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
       <div class="board"><div class="scroller"><div class="grid">${document.getElementById('grid').innerHTML}</div></div></div></div>
     <div class="tmblock"><h4>Statistik · ${viewUser.name}</h4>
-      <div class="board"><div class="scroller"><table class="stat">${document.getElementById('statTable').innerHTML}</table></div></div></div>`;
+      <div class="board"><div class="scroller"><table class="stat">${document.getElementById('statTable').innerHTML}</table></div></div></div>
+    ${meldungHTML(monday, viewUser.name)}`;
+  const pdf = document.getElementById('tmPdf');
+  if(pdf) pdf.onclick = ()=>{ show('statistik'); setTimeout(()=>{ preparePrint(); window.print(); }, 120); };
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
 document.getElementById('addMember').onclick = ()=>{
@@ -1865,23 +2235,199 @@ document.getElementById('addMember').onclick = ()=>{
       if(me.team.includes(dk)) return zeig(`${u.vorname} ${u.nachname} ist schon im Team.`);
       me.team.push(dk);
       await userSet(me);
+      try{ await db.ref('users/'+dk+'/leader').set(me.dk); }catch(e){}   // gibt dem Teamleiter Leserecht
       closeModal(); await fuelleMemberSelect();
     }, "Hinzufügen");
 };
 
 /* Bestehende Sitzung fortsetzen */
-(async ()=>{
-  const s = store.get('bw-session');
-  if(s && s.dk){
-    const u = await userGet(s.dk);
-    if(u) return doLogin(u.dk, u.vorname, u.nachname);
+renderLogin();
+if(auth){
+  auth.onAuthStateChanged(async user=>{
+    if(!user){
+      loginEl.hidden = false;
+      try{ await auth.signInAnonymously(); }catch(err){}   // erlaubt die Prüfungen im Anmeldefenster
+      return;
+    }
+    if(user.isAnonymous){ loginEl.hidden = false; return; }
+    try{
+      const dk = (await db.ref('uids/'+user.uid).once('value')).val();
+      const u  = dk ? await userGet(dk) : null;
+      if(u && await istGeloescht(dk)){ await auth.signOut(); lgFehler("Dieser Zugang wurde entfernt."); return; }
+      if(u){
+        const grund = sitzungAbgelaufen(u);
+        if(grund){ await auth.signOut(); lgStep = "login"; lg = {dk}; lgFehler(grund); return; }
+        return starteSitzung(u);
+      }
+    }catch(err){ /* offline */ }
+    loginEl.hidden = false;
+  });
+}else{
+  (async ()=>{
+    const s = store.get('bw-session');
+    if(s && s.dk){
+      const u = localUsers()[s.dk];
+      if(u) return starteSitzung(u);
+    }
+    loginEl.hidden = false;
+  })();
+}
+
+
+/* ================= Profil, Löschen, Sitzungspflege ================= */
+const TAG = 86400000;
+async function pinLesen(dk){
+  if(!db) return "";
+  try{ return (await db.ref('secret/'+dk+'/pin').once('value')).val() || ""; }catch(e){ return ""; }
+}
+async function renderProfil(){
+  const box = document.getElementById('profil');
+  if(!box || !me) return;
+  const pin = await pinLesen(me.dk);
+  const letzter = me.lastLogin ? fmt(new Date(me.lastLogin)) : "–";
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Profil</h3>
+      <p class="sub">${me.rolle} · letzte Anmeldung ${letzter}</p>
+      <div class="grp">
+        <div class="field"><label>DK-Nummer</label><div class="fixed">${me.dk}</div></div>
+        <div class="row2">
+          ${fld("pfVor","Vorname",me.vorname)}${fld("pfNach","Nachname",me.nachname)}
+        </div>
+        ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||"","email")}
+        <div class="field pw"><label for="pfPin">Dein PIN</label>
+          <input id="pfPin" type="password" value="${pin}" readonly>
+          <button type="button" class="eye" data-eye="pfPin">👁</button></div>
+      </div>
+      <p class="err" id="pfErr" hidden></p>
+      <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
+      <p class="hinweis">${me.mail
+        ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
+        : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
+    </div>`;
+  document.getElementById('pfSave').onclick = profilSpeichern;
+}
+async function profilSpeichern(){
+  const err = document.getElementById('pfErr');
+  const zeig = m => { err.textContent = m; err.hidden = !m; };
+  zeig("");
+  const vor = document.getElementById('pfVor').value.trim();
+  const nach = document.getElementById('pfNach').value.trim();
+  const mail = document.getElementById('pfMail').value.trim().toLowerCase();
+  if(!vor || !nach) return zeig("Vor- und Nachname dürfen nicht leer sein.");
+  if(mail && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(mail)) return zeig("Diese E-Mail-Adresse sieht nicht gültig aus.");
+  try{
+    if(mail && mail !== (me.mail||"") && auth && auth.currentUser){
+      await auth.currentUser.updateEmail(mail);          // ab jetzt läuft der Login darüber
+    }
+    me = {...me, vorname:vor, nachname:nach, mail: mail || null};
+    if(!mail) delete me.mail;
+    await userSet(me);
+    document.getElementById('drawerFoot').innerHTML =
+      `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
+    document.getElementById('logoutBtn').onclick = logout;
+    zeig("");
+    renderProfil();
+  }catch(e2){
+    if(e2.code === "auth/requires-recent-login") return zeig("Bitte melde dich einmal neu an, dann lässt sich die E-Mail ändern.");
+    zeig(e2.message || "Speichern fehlgeschlagen.");
   }
-  loginEl.hidden = false;
-})();
+}
+
+/* ---------- Kundenberater löschen (nur Teamleiter und Admin) ---------- */
+async function alleNutzer(){
+  if(!db) return Object.values(localUsers());
+  const snap = await db.ref('users').once('value');
+  return Object.values(snap.val() || {});
+}
+async function renderDelete(){
+  const box = document.getElementById('kbdel');
+  if(!box || !istTeamleiter()) return;
+  let inaktiv = [];
+  try{
+    const alle = await alleNutzer();
+    const grenze = Date.now() - 365*TAG;
+    inaktiv = alle.filter(u => u.dk !== me.dk && (u.lastLogin || 0) < grenze);
+  }catch(e){}
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Kundenberater löschen</h3>
+      <p class="sub">Entfernt Zugang, Termine, Potenzialliste und alle Auswertungen. Das lässt sich nicht rückgängig machen.</p>
+      <div class="grp">
+        ${fld("delDk","DK-Nummer","","text",'placeholder="DK00000000"')}
+        <div class="row2">${fld("delVor","Vorname")}${fld("delNach","Nachname")}</div>
+      </div>
+      <p class="err" id="delErr" hidden></p>
+      <div class="actions"><button class="btn danger" id="delGo">Löschen</button></div>
+    </div>
+    <div class="asec">
+      <h3>Seit über 12 Monaten inaktiv</h3>
+      ${inaktiv.length ? inaktiv.map(u=>`<div class="aline">
+          <span class="nm">${u.vorname} ${u.nachname} · ${u.dk}</span>
+          <span class="vl">${u.lastLogin ? fmt(new Date(u.lastLogin)) : "nie"}</span>
+          <button class="mini" data-inaktiv="${u.dk}">löschen</button></div>`).join("")
+        : `<p class="aempty">Keine inaktiven Zugänge.</p>`}
+      <p class="hinweis">Die Liste erscheint bei jedem Aufruf neu — ein automatisches Löschen im Hintergrund ist ohne kostenpflichtige Serverfunktionen nicht möglich.</p>
+    </div>`;
+  document.getElementById('delGo').onclick = ()=> loeschenStarten(
+    document.getElementById('delDk').value.trim().toUpperCase(),
+    document.getElementById('delVor').value.trim(),
+    document.getElementById('delNach').value.trim());
+  box.querySelectorAll('[data-inaktiv]').forEach(b=> b.onclick = async ()=>{
+    const u = await userGet(b.dataset.inaktiv);
+    if(u) loeschenStarten(u.dk, u.vorname, u.nachname);
+  });
+}
+async function loeschenStarten(dk, vor, nach){
+  const err = document.getElementById('delErr');
+  const zeig = m => { if(err){ err.textContent = m; err.hidden = !m; } };
+  zeig("");
+  if(!DK_RE.test(dk)) return zeig("Die DK-Nummer muss DK und acht Ziffern haben.");
+  if(dk === me.dk) return zeig("Den eigenen Zugang kannst du hier nicht löschen.");
+  let u;
+  try{ u = await userGet(dk); }catch(e){ return zeig("Keine Verbindung zur Datenbank."); }
+  if(!u) return zeig("Zu dieser DK-Nummer ist niemand registriert.");
+  if(!nameGleich(u.vorname,vor) || !nameGleich(u.nachname,nach)) return zeig("Name und DK-Nummer passen nicht zusammen.");
+  if(u.rolle !== "Kundenberater" && !istAdmin()) return zeig("Nur Kundenberater lassen sich hier löschen.");
+
+  simpleDialog("Wirklich löschen?", "", 
+    `<div class="summary">Sind Sie sicher, dass Sie Kundenberater <b>${u.vorname} ${u.nachname}</b> mit der DK-Nummer
+       <b>${u.dk}</b> unwiderruflich aus dem System löschen wollen?</div>
+     <p class="hinweis">Alle Termine, Kundendaten, Auswertungen und der Zugang werden entfernt.</p>`,
+    async ()=>{
+      try{
+        const updates = {};
+        updates['users/'+dk] = null;
+        updates['data/'+dk] = null;
+        updates['recovery/'+dk] = null;
+        updates['secret/'+dk] = null;
+        updates['deleted/'+dk] = {am:Date.now(), von:me.dk};
+        if(u.uid) updates['uids/'+u.uid] = null;
+        await db.ref().update(updates);
+        if(me.team && me.team.includes(dk)){
+          me.team = me.team.filter(x=>x!==dk);
+          await userSet(me);
+        }
+        closeModal();
+        await fuelleMemberSelect();
+        renderDelete();
+      }catch(e2){ closeModal(); zeig("Löschen fehlgeschlagen: "+(e2.message||"")); }
+    }, "Endgültig löschen");
+}
+
+/* ---------- Sitzungspflege ---------- */
+const NEUANMELDUNG_NACH = 60*TAG, PAUSE_MAX = 14*TAG;
+function sitzungAbgelaufen(u){
+  const jetzt = Date.now();
+  const gesehen = store.get('bw-lastseen') || 0;
+  if(u.lastLogin && jetzt - u.lastLogin > NEUANMELDUNG_NACH) return "Aus Sicherheitsgründen bitte alle 60 Tage neu anmelden.";
+  if(gesehen && jetzt - gesehen > PAUSE_MAX) return "Du warst länger als zwei Wochen nicht da — bitte einmal neu anmelden.";
+  return "";
+}
 
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); saveData(); }
+function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
@@ -1902,6 +2448,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') setMenu(false); }
 
 function show(k){
   if(!PAGES[k]) k='planer';
+  if((k==='team'||k==='kbdelete') && !istTeamleiter()) k='planer';
   document.getElementById('pagetitle').textContent = PAGES[k];
   document.title = 'Bunte Woche – '+PAGES[k];
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+k));
