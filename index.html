@@ -1821,19 +1821,24 @@ function applyData(d){
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
 }
-async function loadData(dk){
-  const lokal = store.get('bw-data-'+dk);
-  if(!db){ cloudOk = false; return lokal; }
+async function loadData(dk, fremd){
+  const lokal = fremd ? null : store.get('bw-data-'+dk);
+  if(!db){ if(!fremd) cloudOk = false; return lokal; }
   try{
     const s = await db.ref('data/'+dk).once('value');
-    cloudOk = true;
+    if(!fremd) cloudOk = true;
     const wolke = s.val();
     if(!wolke) return lokal;                                  // in der Cloud noch nichts
     if(!lokal)  return wolke;
     return (wolke.ts||0) >= (lokal.ts||0) ? wolke : lokal;    // der neuere Stand gewinnt
   }catch(err){
+    if(fremd){                                                // fremde Daten: eigener Stand bleibt unberührt
+      const kein = (err && err.code === "PERMISSION_DENIED") || /permission/i.test(err&&err.message||"");
+      saveState(kein ? "kein Zugriff auf diese Daten" : "Daten nicht geladen", true);
+      return null;
+    }
     cloudOk = false;
-    saveState("keine Verbindung – nur lokal", true);
+    saveState("Laden fehlgeschlagen · "+fehlerkurz(err), true);
     return lokal;
   }
 }
@@ -1851,21 +1856,29 @@ function clean(v){
   return v;
 }
 let saveTimer = null, dataReady = false, cloudOk = false, shadow = {};
+let letzterFehler = "";
 function saveState(text, warn){
   const el = document.getElementById('saveState');
   if(!el) return;
   el.textContent = text;
   el.classList.toggle('warn', !!warn);
+  el.title = letzterFehler || text;
 }
 const gleich = (a,b) => JSON.stringify(a) === JSON.stringify(b);
 /* Schreibt nur, was sich seit dem letzten Speichern geändert hat */
+function fehlerkurz(err){
+  const c = (err && (err.code || err.message)) || "";
+  if(/PERMISSION_DENIED|permission/i.test(c)) return "kein Schreibrecht – Firebase-Regeln prüfen";
+  if(/network|offline|unavailable/i.test(c))  return "offline";
+  return String(c).slice(0,60);
+}
 function flushSave(){
   if(!me || !dataReady) return;
   if(viewUser && !istAdmin()) return;                 // fremde Daten nur der Admin
   const zielDk = viewUser ? viewUser.dk : me.dk;
   const blob = clean(dataBlob());
   store.set('bw-data-'+zielDk, blob);
-  if(!db || !cloudOk){ saveState(db ? "nur lokal gespeichert" : "lokal gespeichert", !!db); return; }
+  if(!db){ saveState("lokal gespeichert"); return; }
 
   const basis = 'data/'+zielDk+'/';
   const updates = {};
@@ -1880,8 +1893,8 @@ function flushSave(){
 
   saveState("speichert …");
   db.ref().update(updates)
-    .then(()=>{ shadow = JSON.parse(JSON.stringify(blob)); saveState("gespeichert"); })
-    .catch(err=>{ cloudOk = false; saveState("nur lokal: "+(err&&err.message||"Fehler"), true); });
+    .then(()=>{ shadow = JSON.parse(JSON.stringify(blob)); cloudOk = true; saveState("gespeichert"); })
+    .catch(err=>{ cloudOk = false; letzterFehler = (err&&err.message)||""; saveState("nur lokal · "+fehlerkurz(err), true); });   // nächster Versuch läuft wieder
 }
 function saveData(){
   if(!me || !dataReady) return;
@@ -2186,20 +2199,22 @@ async function zeigeMember(dk){
   if(!u) return;
   clearTimeout(saveTimer); flushSave();          // eigenen Stand sichern, bevor umgeschaltet wird
   viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
-  applyData(await loadData(dk));
+  applyData(await loadData(dk, true));
   shadow = JSON.parse(JSON.stringify(clean(dataBlob())));
   renderAll();
 }
 function zurueckZuMir(){
   if(!viewUser) return;
   viewUser = null;
+  if(db) cloudOk = true;
+  saveState("");
   loadData(me.dk).then(d=>{ applyData(d); shadow = JSON.parse(JSON.stringify(clean(dataBlob()))); renderAll(); });
 }
 function renderTeam(){
   const banner = document.getElementById('viewBanner');
   if(viewUser){
     banner.hidden = false;
-    banner.innerHTML = `Du siehst gerade die Daten von <b>${viewUser.name}</b> — Änderungen sind gesperrt.
+    banner.innerHTML = `Du siehst gerade die Daten von <b>${viewUser.name}</b> — ${istAdmin()?"als Admin mit Schreibrecht":"Änderungen sind gesperrt"}.
       <button id="backSelf">Zurück zu meinen Daten</button>`;
     document.getElementById('backSelf').onclick = zurueckZuMir;
   }else{
@@ -2424,6 +2439,123 @@ function sitzungAbgelaufen(u){
   if(gesehen && jetzt - gesehen > PAUSE_MAX) return "Du warst länger als zwei Wochen nicht da — bitte einmal neu anmelden.";
   return "";
 }
+
+
+/* ================= Wochenmeldung ================= */
+function meldungDaten(start){
+  const tage = Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return dk(d);});
+  const von = tage[0], bis = tage[6];
+  const naechste = new Date(start); naechste.setDate(naechste.getDate()+7);
+  const nTage = Array.from({length:7},(_,i)=>{const d=new Date(naechste);d.setDate(d.getDate()+i);return dk(d);});
+  const nVon = nTage[0], nBis = nTage[6];
+
+  const m = {termine:0, einheiten:0, einheitenFG:0, einheitenPromo:0,
+             umsatzFG:0, umsatzWG:0, umsatzPromo:0, k70ein:0, pci:0,
+             promoFG:0, promoWG:0, kontakteFG:0, kontakteWG:0,
+             empfehlungen:0, jobtickets:0,
+             nTermine:0, nPromos:0, nTerminieren:0};
+
+  Object.keys(entries).forEach(k=>{
+    const [tag] = k.split("|");
+    const e = entries[k], n = e.nb || {};
+    if(tag >= nVon && tag <= nBis){
+      if(e.kind==="kunde") m.nTermine++;
+      if(e.kind==="terminieren"){ e.quelle==="Promotion" ? m.nPromos++ : m.nTerminieren++; }
+      return;
+    }
+    if(tag < von || tag > bis) return;
+
+    if(e.kind==="kunde") m.termine++;
+    if(e.kind==="premium") m.pci++;
+    if(["kunde","premium","eigenkauf"].includes(e.kind) && n.verkauft==="Ja"){
+      const eh = +n.einheiten || 0;
+      m.einheiten += eh;
+      if(n.gebiet==="Festgebiet"){ m.einheitenFG += eh; m.umsatzFG += num(n.umsatz); }
+      else if(n.gebiet==="Weißgebiet") m.umsatzWG += num(n.umsatz);
+    }
+    if(e.kind==="terminieren" && e.quelle==="Promotion"){
+      if(e.gebiet==="Weißgebiet"){ m.promoWG++; m.kontakteWG += +n.kontakte||0; }
+      else { m.promoFG++; m.kontakteFG += +n.kontakte||0; }
+      if(n.verkauft==="Ja"){
+        const eh = +n.einheiten || 0;
+        m.einheiten += eh; m.einheitenPromo += eh;
+        m.umsatzPromo += num(n.umsatzFG) + num(n.umsatzWG);
+        m.umsatzFG += num(n.umsatzFG);
+        m.umsatzWG += num(n.umsatzWG);
+      }
+    }
+    if(n.empf==="Ja") m.empfehlungen += +n.empfAnzahl || 0;
+    if(n.job==="Ja")  m.jobtickets   += +n.jobAnzahl  || 0;
+  });
+  einkaeufe.forEach(e=>{ if(e.datum>=von && e.datum<=bis) m.k70ein += num(e.brutto); });
+
+  const q = quoten(13).termine;
+  const quote  = q.stattgefunden ? q.verkauft/q.stattgefunden : 0;
+  const proAbs = q.verkauft ? q.umsatz/q.verkauft : 0;
+  const ehAbs  = q.verkauft ? q.einheiten/q.verkauft : 0;
+  m.erwarteterUmsatz = m.nTermine * quote * proAbs;
+  m.erwarteteEinheiten = m.nTermine * quote * ehAbs;
+  m.quote = quote; m.von = von; m.bis = bis;
+  return m;
+}
+function meldungHTML(start, name){
+  const m = meldungDaten(start);
+  const n = v => eur(netto(v));
+  const zeile = (l,w,extra="") => `<tr><td>${l}</td><td class="v">${w}</td><td class="x">${extra}</td></tr>`;
+  const {week} = isoWeek(start);
+  return `<div class="asec meldung">
+    <h3>Wochenmeldung${name?" · "+name:""}</h3>
+    <p class="sub">KW ${week} · ${fmt(fromDk(m.von))} – ${fmt(fromDk(m.bis))} · Beträge netto</p>
+    <div class="ascroll"><table class="atable meld"><tbody>
+      ${zeile("Kundentermine", m.termine)}
+      ${zeile("Einheiten geschrieben", m.einheiten, `davon Festgebiet ${m.einheitenFG} · Promotion ${m.einheitenPromo}`)}
+      ${zeile("Umsatz netto", n(m.umsatzFG+m.umsatzWG)+" €", `Festgebiet ${n(m.umsatzFG)} € · Promotion ${n(m.umsatzPromo)} €`)}
+      ${zeile("K70 eingekauft", n(m.k70ein)+" €")}
+      ${zeile("Premium CheckIns", m.pci)}
+      ${zeile("Promotionen", m.promoFG+m.promoWG, `Festgebiet ${m.promoFG} · Weißgebiet ${m.promoWG}`)}
+      ${zeile("Kontakte aus Promotion", m.kontakteFG+m.kontakteWG, `Festgebiet ${m.kontakteFG} · Weißgebiet ${m.kontakteWG}`)}
+      ${zeile("Empfehlungen gesammelt", m.empfehlungen)}
+      ${zeile("Jobtickets gesammelt", m.jobtickets)}
+    </tbody></table></div>
+    <div class="ah4">Kommende Woche</div>
+    <div class="ascroll"><table class="atable meld"><tbody>
+      ${zeile("Kundentermine eingetragen", m.nTermine)}
+      ${zeile("Erwarteter Bruttoumsatz", eur(m.erwarteterUmsatz)+" €", `bei ${Math.round(m.quote*100)} % Abschlussquote`)}
+      ${zeile("Erwartete Einheiten", dec(m.erwarteteEinheiten,1))}
+      ${zeile("Promotionen vereinbart", m.nPromos)}
+      ${zeile("Terminierungsblöcke", m.nTerminieren)}
+    </tbody></table></div>
+    <div class="actions"><button class="btn" data-meldcopy="${dk(start)}">Als Text kopieren</button></div>
+  </div>`;
+}
+function meldungText(start, name){
+  const m = meldungDaten(start);
+  const n = v => eur(netto(v))+" €";
+  const {week} = isoWeek(start);
+  return [
+    `Wochenmeldung KW ${week}${name?" – "+name:""} (${fmt(fromDk(m.von))} – ${fmt(fromDk(m.bis))})`,
+    `Kundentermine: ${m.termine}`,
+    `Einheiten: ${m.einheiten} (Festgebiet ${m.einheitenFG}, Promotion ${m.einheitenPromo})`,
+    `Umsatz netto: ${n(m.umsatzFG+m.umsatzWG)} (Festgebiet ${n(m.umsatzFG)}, Promotion ${n(m.umsatzPromo)})`,
+    `K70 eingekauft: ${n(m.k70ein)}`,
+    `Premium CheckIns: ${m.pci}`,
+    `Promotionen: ${m.promoFG+m.promoWG} (FG ${m.promoFG}, WG ${m.promoWG})`,
+    `Kontakte: FG ${m.kontakteFG}, WG ${m.kontakteWG}`,
+    `Empfehlungen: ${m.empfehlungen} · Jobtickets: ${m.jobtickets}`,
+    ``,
+    `Kommende Woche:`,
+    `Termine: ${m.nTermine} · erwarteter Bruttoumsatz: ${eur(m.erwarteterUmsatz)} € · erwartete Einheiten: ${dec(m.erwarteteEinheiten,1)}`,
+    `Promotionen: ${m.nPromos} · Terminierungsblöcke: ${m.nTerminieren}`
+  ].join("\n");
+}
+document.addEventListener('click', ev=>{
+  const b = ev.target.closest('[data-meldcopy]');
+  if(!b) return;
+  const txt = meldungText(fromDk(b.dataset.meldcopy), viewUser ? viewUser.name : (me ? me.vorname+" "+me.nachname : ""));
+  navigator.clipboard.writeText(txt)
+    .then(()=>{ b.textContent = "Kopiert"; setTimeout(()=>b.textContent="Als Text kopieren",1500); })
+    .catch(()=>{ b.textContent = "Kopieren nicht möglich"; });
+});
 
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
