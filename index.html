@@ -254,6 +254,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .fazit b{font-weight:800}
 .fazit.leer{background:var(--surface-2);border-left-color:var(--line);color:var(--muted);font-size:.86rem}
 .fazit .warn{display:block;margin-top:8px;font-size:.76rem;color:var(--muted)}
+.err.ok{color:var(--accent)}
 .wgrid{display:grid;grid-template-columns:1fr;gap:10px;max-width:430px;margin:0 auto}
 .field.wf{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin:0;text-align:center}
 .field.wf label{font-size:.74rem;color:var(--muted);min-height:0;margin-bottom:7px}
@@ -302,6 +303,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .eye{position:absolute;right:8px;bottom:7px;width:34px;height:34px;border:0;border-radius:50%;
   background:transparent;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1}
 .eye:hover{color:var(--text);background:var(--surface-3)}
+.eye svg{display:block}
 .pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
 .drawer .foot{font-size:.75rem;color:var(--muted);line-height:1.5}
@@ -1938,9 +1940,11 @@ async function pinOeffnen(pin, dk){
 }
 
 const feld  = (id,l,v="",extra="") => `<div class="field"><label for="${id}">${l}</label><input id="${id}" value="${v}" autocomplete="off" spellcheck="false" ${extra}></div>`;
+const EYE_AN = `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>`;
+const EYE_AUS = `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-6 10-6c2.1 0 3.9.6 5.4 1.5M22 12s-3.6 6-10 6c-2.1 0-3.9-.6-5.4-1.5"/><line x1="4" y1="20" x2="20" y2="4"/></svg>`;
 const pwFeld = (id,l) => `<div class="field pw"><label for="${id}">${l}</label>
   <input id="${id}" type="password" autocomplete="new-password" placeholder="••••••••">
-  <button type="button" class="eye" data-eye="${id}" aria-label="Passwort anzeigen">👁</button></div>`;
+  <button type="button" class="eye" data-eye="${id}" aria-label="Passwort anzeigen">${EYE_AN}</button></div>`;
 const pinFeld = (id,l) => `<div class="field pinput"><label for="${id}">${l}</label>
   <input id="${id}" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>`;
 const wert = id => { const e = document.getElementById(id); return e ? e.value.trim() : ""; };
@@ -2006,12 +2010,16 @@ function renderLogin(){
 loginBox.addEventListener('click', ev=>{
   const nav = ev.target.closest('[data-go]');
   if(nav){ merkeEingaben(); lgErrText=""; lgStep = nav.dataset.go; renderLogin(); return; }
+});
+/* Auge-Umschalter überall auf der Seite */
+document.addEventListener('click', ev=>{
   const eye = ev.target.closest('[data-eye]');
-  if(eye){
-    const inp = document.getElementById(eye.dataset.eye);
-    inp.type = inp.type === "password" ? "text" : "password";
-    eye.textContent = inp.type === "password" ? "👁" : "🙈";
-  }
+  if(!eye) return;
+  const inp = document.getElementById(eye.dataset.eye);
+  if(!inp) return;
+  inp.type = inp.type === "password" ? "text" : "password";
+  eye.innerHTML = inp.type === "password" ? EYE_AN : EYE_AUS;
+  eye.setAttribute('aria-label', inp.type === "password" ? "Passwort anzeigen" : "Passwort verbergen");
 });
 loginBox.addEventListener('keydown', e=>{ if(e.key === "Enter") lgWeiter(); });
 function merkeEingaben(){
@@ -2140,6 +2148,12 @@ function fehlertext(err){
 }
 async function starteSitzung(u){
   me = u;
+  /* Wurde eine neue E-Mail bestätigt, gilt ab jetzt sie als Zugang */
+  if(auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email !== mailOf(u.dk) && me.mail !== auth.currentUser.email){
+    me.mail = auth.currentUser.email;
+    delete me.mailPending;
+    try{ await userSet(me); }catch(e){}
+  }
   me.lastLogin = Date.now();
   store.set('bw-lastseen', Date.now());
   if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
@@ -2309,22 +2323,55 @@ async function renderProfil(){
         <div class="row2">
           ${fld("pfVor","Vorname",me.vorname)}${fld("pfNach","Nachname",me.nachname)}
         </div>
-        ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||"","email")}
+        ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||me.mailPending||"","email")}
+        ${me.mailPending && !me.mail ? `<p class="hinweis">Für ${me.mailPending} steht die Bestätigung noch aus.</p>` : ""}
         <div class="field pw"><label for="pfPin">Dein PIN</label>
-          <input id="pfPin" type="password" value="${pin}" readonly>
-          <button type="button" class="eye" data-eye="pfPin">👁</button></div>
+          <input id="pfPin" type="password" value="${pin || ""}" placeholder="${pin ? "" : "noch nicht hinterlegt"}" readonly>
+          <button type="button" class="eye" data-eye="pfPin" aria-label="PIN anzeigen">${EYE_AN}</button></div>
       </div>
       <p class="err" id="pfErr" hidden></p>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
+      <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
     </div>`;
   document.getElementById('pfSave').onclick = profilSpeichern;
+  document.getElementById('pfPinNeu').onclick = pinDialog;
+}
+/* PIN setzen oder ändern – braucht das aktuelle Passwort, weil es damit verschlüsselt hinterlegt wird */
+function pinDialog(){
+  simpleDialog("PIN festlegen", "Vier Ziffern, dazu dein aktuelles Passwort",
+    `<div class="grp">
+       <div class="field pinput"><label for="pdPin">Neuer PIN</label>
+         <input id="pdPin" inputmode="numeric" maxlength="4" placeholder="0000" autocomplete="off"></div>
+       <div class="field pw"><label for="pdPw">Aktuelles Passwort</label>
+         <input id="pdPw" type="password" autocomplete="current-password" placeholder="••••••••">
+         <button type="button" class="eye" data-eye="pdPw" aria-label="Passwort anzeigen">${EYE_AN}</button></div>
+     </div>
+     <p class="err" id="pdErr" hidden></p>
+     <p class="hinweis">Der PIN öffnet dein Passwort, falls du es vergisst. Er wird nur bei dir und beim Admin angezeigt.</p>`,
+    async ()=>{
+      const err = document.getElementById('pdErr');
+      const zeig = m => { err.textContent = m; err.hidden = !m; };
+      const pin = document.getElementById('pdPin').value.trim();
+      const pw  = document.getElementById('pdPw').value;
+      zeig("");
+      if(!/^\d{4}$/.test(pin)) return zeig("Der PIN besteht aus genau vier Ziffern.");
+      if(!pw) return zeig("Bitte dein aktuelles Passwort eingeben.");
+      try{
+        await auth.signInWithEmailAndPassword(me.mail || mailOf(me.dk), pw);   // Passwort prüfen
+        await pinSpeichern(pin, me.dk, pw);
+        await db.ref('secret/'+me.dk).set({pin});
+        closeModal(); renderProfil();
+      }catch(e2){ zeig(fehlerkurz(e2) === "kein Schreibrecht – Firebase-Regeln prüfen"
+        ? "Kein Schreibrecht — bitte die Firebase-Regeln prüfen."
+        : "Das Passwort stimmt nicht."); }
+    }, "PIN speichern");
 }
 async function profilSpeichern(){
   const err = document.getElementById('pfErr');
-  const zeig = m => { err.textContent = m; err.hidden = !m; };
+  const zeig = m => { err.textContent = m; err.hidden = !m; err.classList.remove('ok'); };
   zeig("");
   const vor = document.getElementById('pfVor').value.trim();
   const nach = document.getElementById('pfNach').value.trim();
@@ -2332,12 +2379,17 @@ async function profilSpeichern(){
   if(!vor || !nach) return zeig("Vor- und Nachname dürfen nicht leer sein.");
   if(mail && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(mail)) return zeig("Diese E-Mail-Adresse sieht nicht gültig aus.");
   try{
+    let hinweis = "";
     if(mail && mail !== (me.mail||"") && auth && auth.currentUser){
-      await auth.currentUser.updateEmail(mail);          // ab jetzt läuft der Login darüber
+      /* Firebase verlangt eine Bestätigung, bevor die Adresse übernommen wird */
+      if(auth.currentUser.verifyBeforeUpdateEmail) await auth.currentUser.verifyBeforeUpdateEmail(mail);
+      else await auth.currentUser.updateEmail(mail);
+      me = {...me, mailPending: mail};
+      hinweis = "Wir haben eine Bestätigungsmail an "+mail+" geschickt. Sobald du den Link angeklickt hast, gilt die neue Adresse — melde dich danach einmal neu an.";
     }
-    me = {...me, vorname:vor, nachname:nach, mail: mail || null};
-    if(!mail) delete me.mail;
+    me = {...me, vorname:vor, nachname:nach};
     await userSet(me);
+    if(hinweis){ err.textContent = hinweis; err.hidden = false; err.classList.add('ok'); return renderProfil(); }
     document.getElementById('drawerFoot').innerHTML =
       `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
     document.getElementById('logoutBtn').onclick = logout;
