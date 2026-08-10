@@ -19,6 +19,7 @@
   --r-xl:26px;--r-lg:20px;--r:14px;--r-sm:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -278,6 +279,22 @@ a.btn{text-decoration:none;text-align:center;display:block}
   text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
 .mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+/* Inventur */
+.invkat{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+  margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.invkat:first-child{margin-top:0}
+.invzeile{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft)}
+.invzeile .nm{flex:1;min-width:0;font-size:.86rem;display:flex;align-items:center;gap:8px}
+.invzeile .pr{flex:none;width:82px;text-align:right;font-family:"JetBrains Mono",monospace;font-size:.82rem;color:var(--muted)}
+.invzeile .menge{flex:none;width:64px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+  padding:8px;text-align:center;font-family:"JetBrains Mono",monospace}
+.invzeile .menge:focus{border-color:var(--accent);outline:none}
+.invzeile.top .nm{font-weight:600}
+.marke{flex:none;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.invsumme{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 16px;
+  background:color-mix(in srgb,var(--accent) 16%,var(--surface-2));border-radius:var(--r-lg);font-size:.9rem}
+.invsumme b{font-family:"JetBrains Mono",monospace;font-size:1.15rem}
+.invliste{padding-top:14px}
 .atable.meld{min-width:0}
 .atable.meld td:first-child{width:44%}
 .atable.meld td.v{font-weight:700;color:var(--text);width:22%}
@@ -389,6 +406,7 @@ a.btn{text-decoration:none;text-align:center;display:block}
   <a class="navlink" href="#wunsch" data-page="wunsch">Provisionswunsch</a>
   <a class="navlink" href="#team" data-page="team" id="navTeam" hidden>Teammitglieder</a>
   <a class="navlink" href="#kbdelete" data-page="kbdelete" id="navDelete" hidden>KB Delete</a>
+  <a class="navlink" href="#inventur" data-page="inventur">K70 Inventur</a>
   <a class="navlink" href="#profil" data-page="profil">Profil</a>
   <div class="foot" id="drawerFoot"></div>
 </nav>
@@ -447,6 +465,7 @@ a.btn{text-decoration:none;text-align:center;display:block}
     </div>
     <div id="tmViews"></div>
   </section>
+  <section class="page" id="page-inventur"><div id="inventur"></div></section>
   <section class="page" id="page-profil"><div id="profil"></div></section>
   <section class="page" id="page-kbdelete"><div id="kbdel"></div></section>
   <section class="page" id="page-wunsch">
@@ -466,7 +485,7 @@ a.btn{text-decoration:none;text-align:center;display:block}
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", profil:"Profil"};
+const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -1480,6 +1499,40 @@ const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const wunsch = {einkommen:0, tage:5, proAuftrag:0, quote:0};
 const einkaeufe = [];                       // K70-Einkauf: {datum, brutto}
+const inventur = {};                        // Artikelnummer -> Stückzahl
+const K70_KATALOG = [
+  {kat:"airumo",artikel:[{n:"airumo happy place Set",p:69.0},{n:"airumo summer delight Set",p:69.0},{n:"airumo wild heart Set",p:69.0},{n:"KOBOLD airumo dovina classic 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Duftkerze golden hour (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze happy (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze happy (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze summer delight (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze wild heart (360 g)",p:29.9},{n:"KOBOLD airumo golden hour 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo happy (220 ml)",p:34.9},{n:"KOBOLD airumo happy place 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Mix Set",p:11.9,top:1},{n:"KOBOLD airumo mystic woods 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Raumduft mystic woods (220 ml)",p:34.9},{n:"KOBOLD airumo Raumduft summer (220 ml)",p:34.9},{n:"KOBOLD airumo Raumduft wild heart (220 ml)",p:34.9},{n:"KOBOLD airumo summer delight 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo wild heart 2x3 Stk.",p:11.9,top:1}]},
+  {kat:"Elektro-Saugschläuche / -Saugrohre",artikel:[{n:"Elektrosaugrohr VT260/265",p:79.0},{n:"ESR300 Elektrosaugrohr",p:79.0},{n:"ESS 260/265 CC",p:99.0},{n:"ESS140 Elektrosaugschlauch (1 Stück)",p:58.0},{n:"ESS150/200 Elektrosaugschlauch",p:59.0},{n:"ESS270 Elektrosaugschlauch (1 Stück)",p:99.0},{n:"ESS300 Elektrosaugschlauch",p:99.0},{n:"Kobold ESR270 Elektrosaugrohr (1 Stück)",p:79.0}]},
+  {kat:"Fensterreinigung",artikel:[{n:"GD15 Glasdüse (1 Stück)",p:28.0},{n:"GT15 Glastuch (1 Stück)",p:12.0},{n:"Koboclear Glasreiniger, 750ml (1 Stück)",p:9.9}]},
+  {kat:"MP100",artikel:[{n:"Kobold MP100 Matratzen-Frischeraufsatz",p:59.0}]},
+  {kat:"PB420 / 430 Polsterboy",artikel:[{n:"PB420 Ersatzschuh inkl. Bürsten (1 Stück)",p:39.0},{n:"PB430 Ersatzschuh inkl. Bürsten (1 Stück)",p:35.0}]},
+  {kat:"PBB100",artikel:[{n:"Kobold MP Noppenscheibe",p:15.0},{n:"Kobold MR100 Matratzen-Saugaufsatz",p:39.0},{n:"Kobold PB(B) Ersatzschuh inkl. Bürsten",p:39.0}]},
+  {kat:"SB100 Saugschlauch",artikel:[{n:"Kobold SB100 Saugschlauch",p:49.0}]},
+  {kat:"Serviceartikel",artikel:[{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12.0},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9},{n:"Bodenplatte EB400",p:29.0},{n:"EB360 Frontdichtlippen Set",p:9.0},{n:"EB360 Revisionsklappe",p:6.0},{n:"EB370 Frontdichtlippen Set",p:9.0},{n:"EB370 Revisionsklappe",p:6.0},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9.0},{n:"EB400 Revisionsklappe",p:6.0},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"HD50 Borstenträger (eco)",p:12.0},{n:"HD50 Revisionsklappe",p:6.0},{n:"HD60 Revisionsklappe",p:4.0},{n:"Kobold HD60 Borstenträgerplatte (1 Stück)",p:19.0},{n:"KOBOLD VA7 Groß Set 3 (2 x)",p:15.0},{n:"KOBOLD VA7 Medium Set 2 (3 x)",p:12.0},{n:"KOBOLD VA7 Universal Set 1 (3 x Mix)",p:15.0},{n:"Kobold VG100/VG100+ Tankverschluss",p:8.0},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15.0},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35.0},{n:"Radiatorbürste (1 Stück)",p:10.0},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Set Tankverschlüsse VG100",p:8.0},{n:"SG15 Schultergurt (1 Stück)",p:20.0},{n:"SP520 Dichtlippenrahmen Set",p:12.0},{n:"SP520 Seitenklappe",p:12.0},{n:"SP530 Dichtlippenrahmen Set",p:12.0},{n:"SP530 Seitenklappe",p:12.0},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33.0},{n:"VC100 Staubkammer",p:19.0},{n:"VF200 Dosiereinheit",p:39.0},{n:"VF200 Rundbürste",p:19.0},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18.0},{n:"VK200 Kabelhaken (unten)",p:5.0},{n:"VR200 Anschlussleitung (1 Stück)",p:15.0},{n:"VR200 Staubfachdeckel",p:12.0},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VT270 Griff (einteilig)",p:9.0}]},
+  {kat:"SP520 / 530 Hartbodenreiniger",artikel:[{n:"MF Dry (2 Stück)",p:29.9},{n:"MF Parkett (3 Stück)",p:39.9},{n:"MF Universal (3 Stück)",p:39.9},{n:"MF Universal Soft (3 Stück)",p:39.9},{n:"SP Dosierflasche (1 Stück)",p:20.0},{n:"SP Zubehörtasche (1 Stück)",p:29.0},{n:"SP520/530 Tuchträger (1 Stück)",p:25.0}]},
+  {kat:"SP600 Hartbodenreiniger",artikel:[{n:"Dichtlippen-Set SP600",p:19.0},{n:"Kobold SP600 Wassertank",p:30.0},{n:"Tuchträgerplatte kpl SP600, verp.",p:25.0}]},
+  {kat:"SP7",artikel:[{n:"KOBOLD SP7 TUCHTRÄGERRAHMEN",p:22.0},{n:"KOBOLD SP7 WASSERTANK (kompl.)",p:30.0},{n:"Kobold SPB100/7 Dichtlippenset",p:19.0}]},
+  {kat:"SPB100",artikel:[{n:"Kobold SPB100 Wassertank komplett",p:30.0}]},
+  {kat:"SPB100/SP600/SP7",artikel:[{n:"Koboclean Holzbodenseife 500ml",p:15.9,top:1},{n:"Koboclean Parkett 500ml",p:9.9,top:1},{n:"Koboclean Universal 500ml",p:9.9,top:1},{n:"KOBOLD MF Reinigungstuch Universal (3x)",p:39.9,top:1},{n:"MF600/601 Dry Set (2 Stk.)",p:29.9},{n:"Parkett Set (3 Stk.)",p:39.9,top:1},{n:"Universal Soft Set (3 Stk.)",p:39.9,top:1}]},
+  {kat:"VB100 Akkusauger",artikel:[{n:"EBB Bürste",p:19.9,top:1},{n:"FP 100 Filtertüte",p:23.0,top:1},{n:"VB100 2-1 Zubehördüse",p:25.0},{n:"VB100 Akku",p:99.0},{n:"VB100 Ladegerät",p:25.0},{n:"VB100 Motorschutzfilter",p:9.9}]},
+  {kat:"VC100 Akkusauger",artikel:[{n:"NC100 Zubehördüsen (1 Stück)",p:15.0},{n:"VC100 Filtereinheit(1 Stück)",p:9.9},{n:"VC100 Ladestation (1 Stück)",p:15.0}]},
+  {kat:"VG100 Fensterreiniger",artikel:[{n:"MF100 Reinigungstuch (2 Stück)",p:25.0},{n:"VG 100 Abstellschale",p:15.0},{n:"VG100 Abziehlippe (1 Stück)",p:9.0},{n:"VG100 Teleskop (1 Stück)",p:60.0},{n:"VG100 Wassertrank (1 Stück)",p:30.0},{n:"VG100/VC100 Ladegerät (1 Stück)",p:15.0}]},
+  {kat:"VG100+ Flächenreiniger",artikel:[{n:"Kobold DA100 Kalkreiniger",p:9.0},{n:"Kobold GC100 Glasreiniger Konzentrat 200",p:9.0},{n:"Kobold MF100 Softfasertuch (2x)",p:25.0},{n:"Kobold VG100+ Teleskopstiel",p:60.0}]},
+  {kat:"VK130 / 131 Handstaubsauger",artikel:[{n:"Aktiv-Geruchsfilter (1 Stück)",p:12.9,top:1},{n:"Filterset 130/131 (6 FP, 2 AGF, 1 HMF)",p:59.0},{n:"FP130/131 Filtertüte (6 Stück)",p:23.0,top:1},{n:"HMF 130/131 Hygiene-Mikrofilter (1 Stück)",p:19.9,top:1},{n:"VK130/131 Anschlussleitung lang",p:19.0}]},
+  {kat:"VK135 / 136 Handstaubsauger",artikel:[{n:"Anschlusskabel lang zum VK135/136 (1 Stück)",p:19.0},{n:"Anschlusskabel Standard zum VK135/136 (1 Stück)",p:15.0},{n:"Filterset 135/136 (6 FP, 1 HMF)",p:35.0},{n:"FP135/136 Filtertüten (6 Stück)",p:23.0,top:1},{n:"HMF135/136 Hygiene-Mikrofilter (1 Stück)",p:16.9,top:1}]},
+  {kat:"VK140 / 150 Handstaubsauger",artikel:[{n:"Premium Filtertüte FP140/150 (6 Stück)",p:23.0,top:1},{n:"VK140 Filterdeckel",p:29.0},{n:"VK150 Anschlusskabel, 10 m (1 Stück)",p:19.0},{n:"VK150 Filterdeckel",p:29.0}]},
+  {kat:"VK200 Handstaubsauger",artikel:[{n:"Anschlusskabel lang zum VK200 (1 Stück)",p:19.0},{n:"FL-M200 Motorschutzfilter",p:9.9},{n:"KOBOLD FP200 Filtertüte (RB7/VK200) (6x)",p:23.0,top:1},{n:"VK200 Filterdeckel",p:49.0}]},
+  {kat:"VK7",artikel:[{n:"Filtertüte FP7",p:23.0,top:1},{n:"KOBOLD AC7 Zubehör Set Box (inkl. SB7, FD7, VD7)",p:89.0,top:1},{n:"KOBOLD AD7 Anschlussadapter",p:20.0},{n:"KOBOLD BY7 Akku",p:159.0,top:1},{n:"KOBOLD CA7 LADESCHALE",p:20.0,top:1},{n:"KOBOLD CD7 Autodüse",p:25.0,top:1},{n:"KOBOLD DS7 DISPLAYSCHUTZFOLIE (3 Stk.)",p:9.0},{n:"KOBOLD EB7 DICHTLIPPE (hi.)",p:8.0},{n:"KOBOLD EB7 REVISIONSKLAPPE",p:6.0},{n:"KOBOLD EB7 RUNDBÜRSTEN",p:15.0,top:1},{n:"Kobold EB7 Seitenklappen Set (li.,re.)",p:10.0},{n:"KOBOLD FD7 Bürstenkranz inkl. Transportschutz",p:12.0},{n:"KOBOLD FD7 Flächendüse",p:25.0},{n:"Kobold FK7 SET",p:143.0},{n:"KOBOLD HD7 Borstenträgerplatte",p:25.0},{n:"KOBOLD HD7 Hardbodendüse",p:89.0},{n:"KOBOLD HD7 Revisionsklappe",p:6.0},{n:"KOBOLD MF7 MOTORSCHUTZFILTER",p:9.0},{n:"KOBOLD MP Noppenscheibe",p:15.0},{n:"KOBOLD MP7 Matratzenfrischer Aufsatz",p:59.0},{n:"KOBOLD MR7 Matratzenreinigungs Aufsatz",p:39.0,top:1},{n:"KOBOLD PB7 Saugschuh (black, inkl. Bürsten)",p:35.0},{n:"KOBOLD PC7 MONTAGEPLATTE",p:9.0},{n:"Kobold PC7 Premium Ladegerät",p:119.0},{n:"KOBOLD SB7 Flexschlauch",p:39.0,top:1},{n:"KOBOLD SC7 LADEGERÄT",p:29.0},{n:"KOBOLD SG7 Schultergurt",p:20.0,top:1},{n:"KOBOLD TD7 Textildüse",p:25.0},{n:"KOBOLD TR7 Teleskoprohr",p:25.0},{n:"KOBOLD VD7 Variodüse (inkl. BA7, MB7)",p:25.0},{n:"KOBOLD VK7 FILTERDECKEL (exkl. Akku)",p:25.0},{n:"KOBOLD WM7 Wandhalterung",p:15.0},{n:"KOBOLD Zubehörtasche (Kunden)",p:69.0}]},
+  {kat:"VM7",artikel:[{n:"BM7 Akku",p:89.0},{n:"CM7 Wandhalterung (solo)",p:16.0},{n:"USB-C-Kabel",p:10.0},{n:"USB-C-Ladegerät (20 Watt)",p:20.0,top:1},{n:"VM7 2-in-1-Düse",p:25.0},{n:"VM7 Filter Set",p:19.9},{n:"VM7 Staubbehälter",p:25.0}]},
+  {kat:"VR 300 Saugroboter",artikel:[{n:"VR300 Basisstation mit Anschlussleitung",p:95.0},{n:"VR300 Staubfachdeckel",p:12.0}]},
+  {kat:"VR100 Saugroboter",artikel:[{n:"VR100 Filter (1 Stück)",p:19.9,top:1},{n:"VR100 Rundbürste (1 Stück)",p:29.9,top:1},{n:"VR100 Staubbehälter (1 Stück)",p:15.0}]},
+  {kat:"VR200 Saugroboter",artikel:[{n:"Bürste VR200",p:29.9},{n:"VR200 Basisstation Set (inkl. Netzkabel)",p:95.0},{n:"VR200 Begrenzungsstreifen (1 Stück)",p:19.0},{n:"VR200 Fernbedienungung inkl. Batterie (1 Stück)",p:25.0},{n:"VR200 Staubbehälter (1 Stück)",p:15.0}]},
+  {kat:"VR7",artikel:[{n:"KOBOLD CB7 Ladestation (inkl. Netzteil)",p:49.0},{n:"KOBOLD CB7 Netzteil",p:25.0},{n:"KOBOLD RB7 Abdeckplatte PC7",p:4.0},{n:"KOBOLD RB7 Abdeckplatte ST7",p:1.0},{n:"KOBOLD RB7 Anschlussleitung 230V (EU)",p:5.0},{n:"Kobold RB7 Deckel Filterraum",p:25.0},{n:"KOBOLD RB7 Motorschutzfilter",p:9.9,top:1},{n:"Kobold ST7 & WM7",p:39.0},{n:"KOBOLD ST7 Stick (VK7 Halterung für RB7)",p:24.0},{n:"KOBOLD VR200/VR300VR7 Seitenbürste",p:9.9,top:1},{n:"KOBOLD VR7 Akku",p:129.0},{n:"KOBOLD VR7 Filter",p:19.9,top:1},{n:"Kobold VR7 Motorschutzfilter",p:9.0,top:1},{n:"KOBOLD VR7 Rundbürste",p:29.9,top:1},{n:"KOBOLD VR7 Staubbehälter (ohne Filter)",p:20.0}]},
+  {kat:"VT250 / 251 / 252 Bodenstaubsauger",artikel:[{n:"VT251/252 Geruchsfilter (1 Stück)",p:19.9}]},
+  {kat:"VT260 / 265 / 270 Bodenstaubsauger",artikel:[{n:"Aktiv-Geruchsfilter (1 Stück)",p:12.9,top:1},{n:"FP 260 Filtertüten",p:23.0,top:1},{n:"Hygiene-Mikrofilter (1 Stück)",p:16.9,top:1},{n:"VT260 Filterset (FP260, 1 HMF, 1 AGF)",p:48.0},{n:"VT265/270/300 Motorschutzfilter (1 Stück)",p:9.9,top:1}]},
+  {kat:"VT300 Bodenstaubsauger",artikel:[{n:"FP300 Premium Filtertüte (5 Stück)",p:23.0,top:1}]}
+];
+const katalog = {liste: K70_KATALOG};       // Shop-Katalog, überschreibbar über die Datenbank
 const netto = v => v / MWST;
 
 function mondayOfISOWeek(year,week){
@@ -1540,7 +1593,9 @@ function provision(u, weeks){
   const pK70 = einN * (.26 + b);
   const prov = pWG + pFG + pK70;
   const vers = prov * .14;
-  return {fgN, wgN, einN, basis, b, stufe, next, pWG, pFG, pK70, prov, vers, gesamt: prov + vers};
+  const warenkredit = u.k70ein;                    // Bestellung wird mit der Provision verrechnet
+  return {fgN, wgN, einN, basis, b, stufe, next, pWG, pFG, pK70, prov, vers,
+          warenkredit, gesamt: prov + vers - warenkredit};
 }
 /* Welcher Nettoumsatz ist nötig, um das Wunscheinkommen zu erreichen? (75 % FG / 25 % WG) */
 function zielNetto(ziel, weeks){
@@ -1602,7 +1657,10 @@ function renderProv(){
         ${kpi("Provision", eur(p.prov)+" €", "ohne Versicherungsbonus","hero")}
         ${kpi("Versicherungsbonus", eur(p.vers)+" €", "14 % auf die Provision")}
         ${kpi("Festgebietsbonus", p.stufe, p.next ? `noch ${eur(p.next.fehlt)} € netto bis ${p.next.pct} %` : "höchste Stufe erreicht")}
-        ${kpi("Gesamte Überweisung", eur(p.gesamt)+" €", "Provision + Versicherungsbonus","hero")}
+        ${kpi("K70 Warenkredit", "−"+eur(p.warenkredit)+" €", "Einkauf wird verrechnet")}
+        ${kpi("Gesamte Überweisung", eur(p.gesamt)+" €", "Provision + Bonus − Warenkredit","hero")}
+        ${kpi("K70 Warenbestand", eur(bestandWert())+" €", "laut Inventur")}
+        ${kpi("K70 Abverkauf", eur(u.k70)+" €", "im Vertriebsmonat verdient")}
       </div>
 
       <div class="ah4">Woraus sich das rechnet</div>
@@ -1940,7 +1998,7 @@ async function userSet(u){
 
 /* Alle Daten eines Benutzers als ein Paket */
 function dataBlob(){
-  return {entries, potenzial, verlauf, einkaeufe, settings, wunsch, ts:Date.now()};
+  return {entries, potenzial, verlauf, einkaeufe, inventur, settings, wunsch, ts:Date.now()};
 }
 function applyData(d){
   Object.keys(entries).forEach(k=>delete entries[k]);
@@ -1948,6 +2006,8 @@ function applyData(d){
   potenzial.length = 0; ((d && d.potenzial) || []).forEach(x=>potenzial.push(x));
   verlauf.length = 0;   ((d && d.verlauf)   || []).forEach(x=>verlauf.push(x));
   einkaeufe.length = 0; ((d && d.einkaeufe) || []).forEach(x=>einkaeufe.push(x));
+  Object.keys(inventur).forEach(k=>delete inventur[k]);
+  Object.assign(inventur, (d && d.inventur) || {});
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
 }
@@ -2014,7 +2074,7 @@ function flushSave(){
   const neuE = blob.entries || {}, altE = shadow.entries || {};
   Object.keys(neuE).forEach(k=>{ if(!gleich(neuE[k], altE[k])) updates[basis+'entries/'+k] = neuE[k]; });
   Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
-  ["potenzial","verlauf","einkaeufe","settings","wunsch"].forEach(f=>{
+  ["potenzial","verlauf","einkaeufe","inventur","settings","wunsch"].forEach(f=>{
     if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
   });
   if(!Object.keys(updates).length){ saveState("gespeichert"); return; }
@@ -2314,6 +2374,9 @@ async function starteSitzung(u){
     me.feedToken = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()) + String(Math.random())).replace(/[^a-z0-9]/gi,"");
     try{ await db.ref('users/'+me.dk+'/feedToken').set(me.feedToken); }catch(e){}
   }
+  if(db){
+    try{ const k = (await db.ref('katalog').once('value')).val(); if(k && k.length) katalog.liste = k; }catch(e){}
+  }
   me.lastLogin = Date.now();
   store.set('bw-lastseen', Date.now());
   if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
@@ -2530,7 +2593,12 @@ async function renderProfil(){
         <div class="actions">
           <a class="btn primary wide" id="pfAbo" href="webcal://${KALENDER_BASIS.replace(/^https?:\/\//,"")}/kalender/${me.feedToken}.ics">Im Apple Kalender abonnieren</a>
         </div>
+        <div class="actions">
+          <a class="btn wide" id="pfAboG" target="_blank" rel="noopener"
+             href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(KALENDER_BASIS + "/kalender/" + me.feedToken + ".ics")}">Im Google Kalender abonnieren</a>
+        </div>
         <div class="actions"><button class="btn" id="pfFeedCopy">Adresse kopieren</button></div>
+        <p class="hinweis">Google aktualisiert abonnierte Kalender nur alle paar Stunden — Apple lässt sich auf fünf Minuten stellen.</p>
       </div>` : ""}
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
@@ -2884,9 +2952,105 @@ document.addEventListener('click', ev=>{
   if(!ev.target.closest('.vorschlagfeld')) adrSchliessen();
 });
 
+
+/* ================= K70 Inventur ================= */
+const artKey = n => n.replace(/[.#$\[\]\/]/g,"_").slice(0,120);
+function bestandWert(){
+  let summe = 0;
+  (katalog.liste||[]).forEach(k => (k.artikel||[]).forEach(a=>{
+    summe += (+inventur[artKey(k.kat+'|'+a.n)] || 0) * (+a.p || 0);
+  }));
+  return summe;
+}
+function katalogParsen(text){
+  const kats = []; let aktuell = null;
+  text.split(/\r?\n/).forEach(z=>{
+    const zeile = z.trim();
+    if(!zeile) return;
+    if(zeile.startsWith("#")){ aktuell = {kat: zeile.replace(/^#+\s*/,""), artikel:[]}; kats.push(aktuell); return; }
+    const teile = zeile.split(/\s*[|;\t]\s*/);
+    if(teile.length < 2) return;
+    if(!aktuell){ aktuell = {kat:"Ohne Kategorie", artikel:[]}; kats.push(aktuell); }
+    const eintrag = {n: teile[0].trim(), p: num(teile[1])};
+    if(/top|gut/i.test(teile[2]||"")) eintrag.top = true;
+    aktuell.artikel.push(eintrag);
+  });
+  return kats;
+}
+let invSuche = "";
+function renderInventur(){
+  const box = document.getElementById('inventur');
+  if(!box || !me) return;
+  const q = invSuche.trim().toLowerCase();
+  const passt = a => !q || a.n.toLowerCase().includes(q)
+    || eur(a.p).toLowerCase().includes(q.replace(".",","))
+    || String(a.p).includes(q.replace(",","."));
+
+  let liste = "";
+  let treffer = 0;
+  (katalog.liste||[]).forEach(k=>{
+    const artikel = (k.artikel||[]).filter(passt);
+    if(!artikel.length) return;
+    treffer += artikel.length;
+    liste += `<div class="invkat">${k.kat}</div>` + artikel.map(a=>{
+      const id = artKey(k.kat+'|'+a.n);
+      return `<div class="invzeile${a.top?" top":""}">
+        <span class="nm">${a.top?`<i class="marke" title="verkauft sich gut"></i>`:""}${a.n}</span>
+        <span class="pr">${eur(a.p)} €</span>
+        <input class="menge" type="number" min="0" inputmode="numeric" value="${inventur[id]||""}" placeholder="0" data-art="${id}" aria-label="Bestand ${a.n}">
+      </div>`;
+    }).join("");
+  });
+
+  box.innerHTML = `
+    <div class="asec">
+      <h3>K70 Inventur</h3>
+      <p class="sub">Warenbestand nach Kategorien des Shops — Reihenfolge wie im Original.</p>
+      <div class="field"><input id="invSuche" value="${invSuche}" placeholder="Artikel oder Preis suchen" autocomplete="off"></div>
+      ${katalog.liste && katalog.liste.length ? "" :
+        `<p class="aempty">Noch kein Katalog hinterlegt.${istAdmin()?" Über den Knopf unten einfügen.":" Der Admin muss ihn einmal einpflegen."}</p>`}
+      <div class="invsumme"><span>Warenbestand gesamt</span><b>${eur(bestandWert())} €</b></div>
+      ${q ? `<p class="hinweis">${treffer} Treffer</p>` : ""}
+    </div>
+    <div class="asec invliste">${liste || (q ? `<p class="aempty">Nichts gefunden.</p>` : "")}</div>
+    ${istAdmin() ? `<div class="asec"><div class="actions"><button class="btn" id="invImport">Katalog einfügen oder aktualisieren</button></div></div>` : ""}`;
+
+  const suche = document.getElementById('invSuche');
+  suche.oninput = ev => { invSuche = ev.target.value; const pos = ev.target.selectionStart; renderInventur();
+    const neu = document.getElementById('invSuche'); neu.focus(); neu.setSelectionRange(pos,pos); };
+  box.querySelectorAll('[data-art]').forEach(i=> i.onchange = ()=>{
+    const wert = Math.max(0, Math.round(+i.value || 0));
+    if(wert > 0) inventur[i.dataset.art] = wert; else delete inventur[i.dataset.art];
+    saveData();
+    document.querySelector('.invsumme b').textContent = eur(bestandWert()) + " €";
+    renderProv();
+  });
+  const imp = document.getElementById('invImport');
+  if(imp) imp.onclick = katalogDialog;
+}
+function katalogDialog(){
+  const jetzt = (katalog.liste||[]).map(k =>
+    "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${eur(a.p)}${a.top?" | top":""}`).join("\n")
+  ).join("\n\n");
+  simpleDialog("Katalog einfügen", "Kategorien mit #, dann Artikel | Preis | top",
+    `<div class="grp"><div class="field"><label for="katText">Katalog</label>
+       <textarea id="katText" style="min-height:240px;font-family:'JetBrains Mono',monospace;font-size:.78rem">${jetzt}</textarea></div></div>
+     <p class="hinweis">Beispiel:<br># airumo<br>airumo happy place Set | 69,00<br>KOBOLD airumo Mix Set | 11,90 | top</p>
+     <p class="err" id="katErr" hidden></p>`,
+    async ()=>{
+      const err = document.getElementById('katErr');
+      const neu = katalogParsen(document.getElementById('katText').value);
+      if(!neu.length){ err.textContent = "Es wurde keine Zeile erkannt."; err.hidden = false; return; }
+      katalog.liste = neu;
+      try{ await db.ref('katalog').set(neu); }
+      catch(e){ err.textContent = "Nicht gespeichert: "+(e.message||""); err.hidden = false; return; }
+      closeModal(); renderInventur(); renderProv();
+    }, "Katalog speichern");
+}
+
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); saveData(); }
+function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
