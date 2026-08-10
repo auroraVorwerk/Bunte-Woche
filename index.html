@@ -45,7 +45,6 @@ button{-webkit-tap-highlight-color:transparent}
 .navlink{display:block;padding:13px 16px;border-radius:var(--r);color:var(--text);text-decoration:none;font-weight:500}
 .navlink:hover{background:rgba(255,255,255,.04)}
 .navlink[aria-current="page"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
-.drawer .foot{margin-top:auto;font-size:.75rem;color:var(--faint);padding:10px 8px}
 
 /* Kopf */
 .wrap{max-width:1320px;margin:0 auto;padding:0 16px 72px}
@@ -160,6 +159,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .farbe:hover{transform:scale(1.08)}
 .farbe[aria-pressed="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 0 0 3px var(--surface)}
 .btn.wide{flex:1 1 100%}
+a.btn{text-decoration:none;text-align:center;display:block}
 .checks{display:flex;flex-wrap:wrap;gap:6px}
 .checks.stack{flex-direction:column;flex-wrap:nowrap;gap:7px}
 .checks.stack button{width:100%;border-radius:var(--r);padding:12px 14px;text-align:center;font-size:.84rem}
@@ -308,6 +308,16 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .loginbox .zurueck:hover{color:var(--text)}
 .loginbox .linkbtn{background:none;border:0;color:var(--accent);font-size:.78rem;cursor:pointer;padding:12px 0 0;width:100%}
 .field.pw{position:relative}
+.vorschlagfeld{position:relative}
+.vorschlaege{position:absolute;left:0;right:0;top:100%;z-index:5;margin-top:4px;background:var(--surface-3);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+.vorschlaege[hidden]{display:none}
+.vorschlag{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);
+  padding:11px 14px;cursor:pointer;color:var(--text)}
+.vorschlag:last-child{border-bottom:0}
+.vorschlag:hover{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.vorschlag b{display:block;font-size:.88rem;font-weight:600}
+.vorschlag span{display:block;font-size:.76rem;color:var(--muted);margin-top:1px}
 .field.pw input{padding-right:48px;min-height:46px}
 .eye{position:absolute;right:7px;bottom:6px;width:34px;height:34px;padding:0;border:0;border-radius:50%;
   background:transparent;color:var(--muted);cursor:pointer;line-height:0;
@@ -318,7 +328,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .eye svg{display:block;margin:0}
 .pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
-.drawer .foot{font-size:.75rem;color:var(--muted);line-height:1.5}
+.drawer .foot{margin-top:auto;padding:10px 8px;font-size:.75rem;color:var(--muted);line-height:1.5}
 .drawer .foot b{color:var(--text);display:block}
 .drawer .foot button{margin-top:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
   border-radius:999px;padding:6px 14px;font-size:.74rem;cursor:pointer}
@@ -1070,7 +1080,9 @@ function paint(){
     const n = draft.nb;
     sheet.innerHTML = head(draft.kind==="premium"?"Premium CheckIn":"Kundendaten") +
       `<div class="row2">${fld("f_vor","Vorname",n.f_vor)}${fld("f_nach","Nachname",n.f_nach)}</div>
-       ${fld("f_str","Straße und Hausnummer",n.f_str)}
+       <div class="field vorschlagfeld"><label for="f_str">Straße und Hausnummer</label>
+         <input id="f_str" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
+         <div class="vorschlaege" id="strVorschlaege" hidden></div></div>
        <div class="row2"><div class="field" style="flex:0 0 42%"><label for="f_plz">PLZ</label>
          <input id="f_plz" value="${n.f_plz||""}" inputmode="numeric" maxlength="5" pattern="\\d{5}"></div>
          ${fld("f_ort","Ort",n.f_ort)}</div>
@@ -1303,7 +1315,6 @@ const KONTAKT = [
   {t:"Vertriebsadresse",    q:"Vertriebsadresse",    c:"#77CDF5"}
 ];
 /* Farben je Spalte */
-const C_KONTAKT  = "#8FB0D6";                       // Kontaktweg
 const C_NEUKUNDE = "#F0A868", C_KUNDE = "#F5D98A";  // Kundenart
 const C_FG       = "#9CC08B", C_WG    = "#E4E9EC";  // Gebiet – Weißgebiet fast weiß
 const C_JOB      = "#D77BC0", C_EMPF  = "#9A6CE8", C_PCI = "#E8C4F2";
@@ -1886,6 +1897,10 @@ const FIREBASE_CONFIG = {
 };
 /* ▲▲▲ Bleibt das leer, läuft alles nur lokal im Browser ▲▲▲ */
 
+/* Adresse des Kalender-Workers – einmal eintragen, ohne Schrägstrich am Ende */
+const KALENDER_BASIS = "https://bunte-woche-kalender.aurorabrosen.workers.dev";
+
+
 let db = null, auth = null, me = null;
 try{
   if(FIREBASE_CONFIG.databaseURL && typeof firebase !== "undefined"){
@@ -2294,6 +2309,11 @@ async function starteSitzung(u){
   if(db && auth && auth.currentUser && me.dk === "V-DK00000000"){
     db.ref('admins/'+auth.currentUser.uid).set(true).catch(()=>{});
   }
+  /* Kennung fürs Kalenderabo einmalig im Hintergrund vergeben */
+  if(db && !me.feedToken){
+    me.feedToken = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()) + String(Math.random())).replace(/[^a-z0-9]/gi,"");
+    try{ await db.ref('users/'+me.dk+'/feedToken').set(me.feedToken); }catch(e){}
+  }
   me.lastLogin = Date.now();
   store.set('bw-lastseen', Date.now());
   if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
@@ -2502,12 +2522,30 @@ async function renderProfil(){
       <p class="err" id="pfErr" hidden></p>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
       <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
+      ${KALENDER_BASIS && me.feedToken ? `
+      <div class="ah4">Apple Kalender</div>
+      <div class="grp">
+        <p class="hinweis" style="margin-top:0">Deine Termine erscheinen automatisch im Kalender und im Widget.
+          Einmal antippen genügt — der Kalender fragt dann nach der Bestätigung.</p>
+        <div class="actions">
+          <a class="btn primary wide" id="pfAbo" href="webcal://${KALENDER_BASIS.replace(/^https?:\/\//,"")}/kalender/${me.feedToken}.ics">Im Apple Kalender abonnieren</a>
+        </div>
+        <div class="actions"><button class="btn" id="pfFeedCopy">Adresse kopieren</button></div>
+      </div>` : ""}
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
     </div>`;
   document.getElementById('pfSave').onclick = profilSpeichern;
   document.getElementById('pfPinNeu').onclick = pinDialog;
+  const fc = document.getElementById('pfFeedCopy');
+  if(fc) fc.onclick = ()=>{
+    const url = KALENDER_BASIS + "/kalender/" + me.feedToken + ".ics";
+    navigator.clipboard.writeText(url)
+      .then(()=>{ fc.textContent = "Kopiert"; setTimeout(()=>fc.textContent="Adresse kopieren",1500); })
+      .catch(()=>{ fc.textContent = "Kopieren nicht möglich"; });
+  };
+
 }
 /* PIN setzen oder ändern – braucht das aktuelle Passwort, weil es damit verschlüsselt hinterlegt wird */
 function pinDialog(){
@@ -2785,6 +2823,65 @@ document.addEventListener('click', ev=>{
   navigator.clipboard.writeText(txt)
     .then(()=>{ b.textContent = "Kopiert"; setTimeout(()=>b.textContent="Als Text kopieren",1500); })
     .catch(()=>{ b.textContent = "Kopieren nicht möglich"; });
+});
+
+
+/* ================= Adressvervollständigung ================= */
+/* Nutzt Photon (OpenStreetMap) – kein Schlüssel, keine Anmeldung nötig */
+let adrTimer = null, adrLetzte = "";
+function adrSchliessen(){
+  const box = document.getElementById('strVorschlaege');
+  if(box){ box.hidden = true; box.innerHTML = ""; }
+}
+async function adrSuchen(text){
+  const box = document.getElementById('strVorschlaege');
+  if(!box) return;
+  if(text.length < 4){ adrSchliessen(); return; }
+  try{
+    const r = await fetch("https://photon.komoot.io/api/?limit=6&lang=de&q="+encodeURIComponent(text));
+    const j = await r.json();
+    const treffer = (j.features||[])
+      .map(f=>f.properties)
+      .filter(p => p.country === "Deutschland" && (p.street || p.name))
+      .map(p => ({
+        strasse: [p.street || p.name, p.housenumber].filter(Boolean).join(" "),
+        plz: p.postcode || "",
+        ort: p.city || p.town || p.village || p.district || ""
+      }))
+      .filter(a => a.strasse);
+    /* Doppelte Vorschläge zusammenfassen */
+    const gesehen = new Set(), liste = [];
+    treffer.forEach(a=>{
+      const id = a.strasse+"|"+a.plz+"|"+a.ort;
+      if(!gesehen.has(id)){ gesehen.add(id); liste.push(a); }
+    });
+    if(!liste.length){ adrSchliessen(); return; }
+    box.innerHTML = liste.map(a=>
+      `<button type="button" class="vorschlag" data-str="${a.strasse}" data-plz="${a.plz}" data-ort="${a.ort}">
+         <b>${a.strasse}</b><span>${[a.plz,a.ort].filter(Boolean).join(" ")}</span></button>`).join("");
+    box.hidden = false;
+  }catch(err){ adrSchliessen(); }
+}
+document.addEventListener('input', ev=>{
+  if(ev.target.id !== 'f_str') return;
+  const text = ev.target.value.trim();
+  if(text === adrLetzte) return;
+  adrLetzte = text;
+  clearTimeout(adrTimer);
+  adrTimer = setTimeout(()=> adrSuchen(text), 350);
+});
+document.addEventListener('click', ev=>{
+  const v = ev.target.closest('.vorschlag');
+  if(v){
+    const setz = (id,wert) => { const el = document.getElementById(id); if(el && wert) el.value = wert; };
+    setz('f_str', v.dataset.str);
+    setz('f_plz', v.dataset.plz);
+    setz('f_ort', v.dataset.ort);
+    if(draft){ draft.nb.f_str = v.dataset.str; draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort; }
+    adrSchliessen();
+    return;
+  }
+  if(!ev.target.closest('.vorschlagfeld')) adrSchliessen();
 });
 
 /* ================= Rahmen ================= */
