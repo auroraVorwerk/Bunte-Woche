@@ -2101,8 +2101,20 @@ function applyData(d){
   einkaeufe.length = 0; ((d && d.einkaeufe) || []).forEach(x=>einkaeufe.push(x));
   Object.keys(inventur).forEach(k=>delete inventur[k]);
   Object.assign(inventur, (d && d.inventur) || {});
+  bestandUmstellen();
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
+}
+/* Der neuere Stand gewinnt – ist dort ein Bereich leer, springt der ältere ein.
+   Verhindert, dass ein Teil der Daten durch einen halben Speichervorgang verschwindet. */
+function mische(wolke, lokal){
+  const neuer = (wolke.ts||0) >= (lokal.ts||0) ? {...wolke} : {...lokal};
+  const alt   = (wolke.ts||0) >= (lokal.ts||0) ? lokal : wolke;
+  const leer = v => !v || (Array.isArray(v) ? !v.length : !Object.keys(v).length);
+  ["entries","inventur","potenzial","einkaeufe","verlauf"].forEach(f=>{
+    if(leer(neuer[f]) && !leer(alt[f])) neuer[f] = alt[f];
+  });
+  return neuer;
 }
 async function loadData(dk, fremd){
   const lokal = fremd ? null : store.get('bw-data-'+dk);
@@ -2113,7 +2125,7 @@ async function loadData(dk, fremd){
     const wolke = s.val();
     if(!wolke) return lokal;                                  // in der Cloud noch nichts
     if(!lokal)  return wolke;
-    return (wolke.ts||0) >= (lokal.ts||0) ? wolke : lokal;    // der neuere Stand gewinnt
+    return mische(wolke, lokal);                              // neuerer Stand gewinnt, Lücken werden gefüllt
   }catch(err){
     if(fremd){                                                // fremde Daten: eigener Stand bleibt unberührt
       const kein = (err && err.code === "PERMISSION_DENIED") || /permission/i.test(err&&err.message||"");
@@ -3056,6 +3068,20 @@ document.addEventListener('click', ev=>{
 
 /* ================= K70 Inventur ================= */
 const artKey = n => n.replace(/[.#$\[\]\/]/g,"_").slice(0,120);
+/* Frühere Fassung zählte ohne Kategorie im Schlüssel – Bestände übernehmen */
+function bestandUmstellen(){
+  if(!katalog.liste || !katalog.liste.length) return;
+  let geaendert = false;
+  katalog.liste.forEach(k => (k.artikel||[]).forEach(a=>{
+    const alt = artKey(a.n), neu = artKey(k.kat+'|'+a.n);
+    if(inventur[alt] !== undefined && inventur[neu] === undefined){
+      inventur[neu] = inventur[alt];
+      delete inventur[alt];
+      geaendert = true;
+    }
+  }));
+  if(geaendert) saveData();
+}
 function bestandWert(){
   let summe = 0;
   (katalog.liste||[]).forEach(k => (k.artikel||[]).forEach(a=>{
