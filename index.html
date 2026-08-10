@@ -160,7 +160,14 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .farbe:hover{transform:scale(1.08)}
 .farbe[aria-pressed="true"]{border-color:var(--text);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 0 0 3px var(--surface)}
 .btn.wide{flex:1 1 100%}
-a.btn{text-decoration:none;text-align:center;display:block}
+a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
+.btn.abo{flex:1 1 100%;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600}
+.btn.abo .logo{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;
+  background:var(--surface);flex:none}
+.btn.apple{background:#f5f5f7;border-color:#f5f5f7;color:#1d1d1f}
+.btn.apple .logo{background:#1d1d1f;color:#f5f5f7}
+.btn.google{background:var(--surface-2);border-color:var(--line);color:var(--text)}
+.btn.google .logo{background:#fff}
 .checks{display:flex;flex-wrap:wrap;gap:6px}
 .checks.stack{flex-direction:column;flex-wrap:nowrap;gap:7px}
 .checks.stack button{width:100%;border-radius:var(--r);padding:12px 14px;text-align:center;font-size:.84rem}
@@ -283,14 +290,23 @@ a.btn{text-decoration:none;text-align:center;display:block}
 .invkat{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
   margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .invkat:first-child{margin-top:0}
-.invzeile{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line-soft)}
+.invzeile{display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid var(--line-soft);border-radius:8px}
 .invzeile .nm{flex:1;min-width:0;font-size:.86rem;display:flex;align-items:center;gap:8px}
 .invzeile .pr{flex:none;width:82px;text-align:right;font-family:"JetBrains Mono",monospace;font-size:.82rem;color:var(--muted)}
 .invzeile .menge{flex:none;width:64px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
   padding:8px;text-align:center;font-family:"JetBrains Mono",monospace}
 .invzeile .menge:focus{border-color:var(--accent);outline:none}
-.invzeile.top .nm{font-weight:600}
-.marke{flex:none;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.invzeile.top{box-shadow:inset 3px 0 0 var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.invzeile.top .nm{font-weight:700;color:var(--text)}
+.invzeile .nm{color:var(--muted)}
+.stepper{flex:none;display:flex;align-items:center;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.stepper button{width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:var(--muted);
+  font-size:1.05rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.stepper button:hover{background:var(--surface-3);color:var(--text)}
+.stepper b{min-width:26px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:.9rem;color:var(--faint)}
+.stepper.hat{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.stepper.hat b{color:var(--accent)}
+.invzeile[hidden],.invkat[hidden]{display:none!important}
 .invsumme{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 16px;
   background:color-mix(in srgb,var(--accent) 16%,var(--surface-2));border-radius:var(--r-lg);font-size:.9rem}
 .invsumme b{font-family:"JetBrains Mono",monospace;font-size:1.15rem}
@@ -562,6 +578,7 @@ function label(e){
 /* Beträge: "1.250,50" -> 1250.5 */
 const num = s => { const v = parseFloat(String(s??"").replace(/\./g,"").replace(",",".")); return isNaN(v)?0:v; };
 const eur = v => v ? v.toLocaleString("de-DE",{maximumFractionDigits:2}) : "–";
+const preis = v => (+v||0).toLocaleString("de-DE",{minimumFractionDigits:2, maximumFractionDigits:2});
 function dayTotals(day){
   const t = {fg:0,wg:0,k70:0,k70ein:0};
   HOURS_ASC.forEach(h=>{
@@ -751,11 +768,12 @@ const fld = (id,lbl,val="",type="text",extra="") => `<div class="field"><label f
 const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option value="${h}" ${+cur===h?"selected":""}>${pad(h)}:00 – ${pad(h+2)}:00</option>`).join("")}</select>`;
 
 const FIELD_IDS = ["empfAnzahl","jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum",
-                   "f_vor","f_nach","f_str","f_plz","f_ort","f_tel","vsDatum",
+                   "f_vor","f_nach","f_str","f_hnr","f_plz","f_ort","f_tel","vsDatum",
                    "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG"];
 function collect(){
   FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) draft.nb[id]=el.value;});
   const sel = document.getElementById('pcZeit'); if(sel) draft.nb.pcZeit = sel.value;
+  const anr = document.getElementById('f_anrede'); if(anr) draft.nb.f_anrede = anr.value;
   const vs  = document.getElementById('vsZeit');  if(vs)  draft.nb.vsZeit  = vs.value;
 }
 function repaint(){ const y = sheet.scrollTop; paint(); sheet.scrollTop = y; }
@@ -786,6 +804,13 @@ function nbForm(){
       ${n.kundenstatus==="Neukunde" ? "" : `<div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>`}
     </div>
 
+    <div class="h4">Echte Zeiten</div>
+    <div class="grp">
+      <div class="row2">
+        ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
+        ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
+      </div>
+    </div>
     <div class="h4">Abschluss</div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
@@ -824,6 +849,13 @@ function nbForm(){
 function nbPremiumForm(){
   const n = draft.nb;
   return `<div class="h4">Nachbereitung · Premium CheckIn</div>
+    <div class="h4">Echte Zeiten</div>
+    <div class="grp">
+      <div class="row2">
+        ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
+        ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
+      </div>
+    </div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde etwas nachgekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
       ${n.verkauft==="Ja" ? `
@@ -895,6 +927,9 @@ function saveNb(e){
   const n = draft.nb;
   if(!n.kundenstatus || !n.gebiet){ error="Bitte Neukunde/Bestandskunde und Gebiet angeben."; repaint(); return; }
   if(!n.verkauft){ error="Bitte angeben, ob der Kunde gekauft hat."; repaint(); return; }
+  if(n.realStart && n.realEnde && toDec(n.realEnde) <= toDec(n.realStart)){
+    error="Die Endzeit muss nach der Startzeit liegen."; repaint(); return;
+  }
   if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim()){
     error="Bitte den Grund eintragen, warum nicht gekauft wurde."; repaint(); return;
   }
@@ -986,8 +1021,13 @@ function startEdit(e){
   draft.bisTag = e.bisTag;
   draft.nb = {...(e.nb||{})};
   if(e.kind==="kunde" || e.kind==="premium"){
-    Object.assign(draft.nb, {f_vor:e.vorname||"", f_nach:e.nachname||"", f_str:e.strasse||"",
-                             f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||""});
+    let str = e.str, hnr = e.hnr;
+    if(str === undefined){                                   // ältere Einträge aufteilen
+      const m = (e.strasse||"").match(/^(.*?)[\s,]+(\d+\s*[a-zA-Z]?)$/);
+      str = m ? m[1] : (e.strasse||""); hnr = m ? m[2] : "";
+    }
+    Object.assign(draft.nb, {f_vor:e.vorname||"", f_nach:e.nachname||"", f_str:str||"", f_hnr:hnr||"",
+                             f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||"", f_anrede:e.anrede||""});
     draft.back = "kind"; step = "kunde";
   }else if(e.kind==="eigenkauf"){ step = "eigen"; }
   else if(e.kind==="individuell"){ draft.titel = e.titel||""; draft.farbe = e.farbe; step = "indiv"; }
@@ -1003,12 +1043,12 @@ function paint(){
 
   if(step==="view" && e){
     let body = "";
-    if(e.vorname) body = `<div class="summary"><b>${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":e.quelle||""}</span>
+    if(e.vorname) body = `<div class="summary"><b>${e.anrede?e.anrede+" ":""}${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":e.quelle||""}</span>
       ${e.strasse?`<br>${e.strasse}`:""}${(e.plz||e.ort)?`<br>${e.plz||""} ${e.ort||""}`:""}${e.telefon?`<br><span>${e.telefon}</span>`:""}</div>`;
     else if(e.bis) body = `<div class="summary"><b>${e.art||"Privat"}</b><br><span>${e.von}–${e.bis} Uhr</span></div>`;
     else body = `<div class="summary"><b>${label(e).t1}</b><br><span>${label(e).t2}</span></div>`;
 
-    let extra = "", saveBtn = "";
+    let extra = "", saveBtn = "", ohneLoeschen = false;
     if(e.kind==="terminieren"){
       extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"");
       saveBtn = `<button class="btn primary" id="saveNbT">Nachbereitung speichern</button>`;
@@ -1026,12 +1066,15 @@ function paint(){
           <div class="field"><label for="vsZeit">Neue Startzeit</label>${hourSelect("vsZeit",draft.nb.vsZeit??draft.hour)}</div>
         </div>${error?`<div class="err">${error}</div>`:""}
         <div class="actions"><button class="btn primary" id="doMove">Termin verschieben</button></div>`;
-      if(st==="Abgesagt") extra += `<div class="hint" style="margin-top:14px">Der Termin wird aus dem Kalender gelöscht.</div>
-        <div class="actions"><button class="btn danger" id="doCancel">Termin löschen</button></div>`;
+      if(st==="Abgesagt"){
+        extra += `<div class="hint" style="margin-top:14px">Der Termin wird aus dem Kalender gelöscht.</div>`;
+        saveBtn = `<button class="btn danger" id="doCancel">Termin löschen</button>`;
+        ohneLoeschen = true;
+      }
     }
     const bearbeitbar = ["kunde","premium","eigenkauf","meeting","privat","terminieren","individuell"].includes(e.kind);
     const foot = `<div class="actions">
-        <button class="btn danger" id="del">Löschen</button>
+        ${ohneLoeschen ? "" : `<button class="btn danger" id="del">Löschen</button>`}
         ${saveBtn}
       </div>
       ${bearbeitbar ? `<div class="actions"><button class="btn primary wide" id="editBtn">${
@@ -1099,9 +1142,16 @@ function paint(){
     const n = draft.nb;
     sheet.innerHTML = head(draft.kind==="premium"?"Premium CheckIn":"Kundendaten") +
       `<div class="row2">${fld("f_vor","Vorname",n.f_vor)}${fld("f_nach","Nachname",n.f_nach)}</div>
-       <div class="field vorschlagfeld"><label for="f_str">Straße und Hausnummer</label>
-         <input id="f_str" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
-         <div class="vorschlaege" id="strVorschlaege" hidden></div></div>
+       <div class="field"><label for="f_anrede">Anrede</label>
+         <select id="f_anrede">${["","Herr","Frau","Divers"].map(a=>
+           `<option value="${a}" ${(n.f_anrede||"")===a?"selected":""}>${a||"kein Eintrag"}</option>`).join("")}</select></div>
+       <div class="row2">
+         <div class="field vorschlagfeld" style="flex:1 1 65%"><label for="f_str">Straße</label>
+           <input id="f_str" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
+           <div class="vorschlaege" id="strVorschlaege" hidden></div></div>
+         <div class="field" style="flex:0 0 30%"><label for="f_hnr">Hausnummer</label>
+           <input id="f_hnr" value="${n.f_hnr||""}" autocomplete="off" spellcheck="false"></div>
+       </div>
        <div class="row2"><div class="field" style="flex:0 0 42%"><label for="f_plz">PLZ</label>
          <input id="f_plz" value="${n.f_plz||""}" inputmode="numeric" maxlength="5" pattern="\\d{5}"></div>
          ${fld("f_ort","Ort",n.f_ort)}</div>
@@ -1120,8 +1170,12 @@ function paint(){
       const alt = entries[key(draft.day,draft.hour)] || {};
       const eintrag = {...alt,
         kind:draft.kind,
-        vorname:g('f_vor'), nachname:g('f_nach'), strasse:g('f_str'), plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
+        vorname:g('f_vor'), nachname:g('f_nach'),
+        str:g('f_str'), hnr:g('f_hnr'),
+        strasse:[g('f_str'), g('f_hnr')].filter(Boolean).join(" "),
+        plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
       };
+      if(draft.nb.f_anrede) eintrag.anrede = draft.nb.f_anrede; else delete eintrag.anrede;
       if(draft.quelle) eintrag.quelle = draft.quelle;
       entries[key(draft.day,draft.hour)] = eintrag;
       closeModal(); renderAll();
@@ -1508,7 +1562,7 @@ const K70_KATALOG = [
   {kat:"PB420 / 430 Polsterboy",artikel:[{n:"PB420 Ersatzschuh inkl. Bürsten (1 Stück)",p:39},{n:"PB430 Ersatzschuh inkl. Bürsten (1 Stück)",p:35}]},
   {kat:"PBB100",artikel:[{n:"Kobold MP Noppenscheibe",p:15},{n:"Kobold MR100 Matratzen-Saugaufsatz",p:39},{n:"Kobold PB(B) Ersatzschuh inkl. Bürsten",p:39}]},
   {kat:"SB100 Saugschlauch",artikel:[{n:"Kobold SB100 Saugschlauch",p:49}]},
-  {kat:"Serviceartikel",artikel:[{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Revisionsklappe",p:6},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"Kobold HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"KOBOLD VA7 Groß Set 3 (2 x)",p:15},{n:"KOBOLD VA7 Medium Set 2 (3 x)",p:12},{n:"KOBOLD VA7 Universal Set 1 (3 x Mix)",p:15},{n:"Kobold VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Set Tankverschlüsse VG100",p:8},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP520 Seitenklappe",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
+  {kat:"Serviceartikel",artikel:[{n:"VR300 Hauptbürste neu",p:29.9},{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Revisionsklappe",p:6},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"Kobold HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"KOBOLD VA7 Groß Set 3 (2 x)",p:15},{n:"KOBOLD VA7 Medium Set 2 (3 x)",p:12},{n:"KOBOLD VA7 Universal Set 1 (3 x Mix)",p:15},{n:"Kobold VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Set Tankverschlüsse VG100",p:8},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP520 Seitenklappe",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
   {kat:"SP520 / 530 Hartbodenreiniger",artikel:[{n:"MF Dry (2 Stück)",p:29.9},{n:"MF Parkett (3 Stück)",p:39.9},{n:"MF Universal (3 Stück)",p:39.9},{n:"MF Universal Soft (3 Stück)",p:39.9},{n:"SP Dosierflasche (1 Stück)",p:20},{n:"SP Zubehörtasche (1 Stück)",p:29},{n:"SP520/530 Tuchträger (1 Stück)",p:25}]},
   {kat:"SP600 Hartbodenreiniger",artikel:[{n:"Dichtlippen-Set SP600",p:19},{n:"Kobold SP600 Wassertank",p:30},{n:"Tuchträgerplatte kpl SP600, verp.",p:25}]},
   {kat:"SP7",artikel:[{n:"KOBOLD SP7 TUCHTRÄGERRAHMEN",p:22},{n:"KOBOLD SP7 WASSERTANK (kompl.)",p:30},{n:"Kobold SPB100/7 Dichtlippenset",p:19}]},
@@ -1576,6 +1630,21 @@ function umsatz(fromK,toK){
   einkaeufe.forEach(e=>{ if(e.datum>=fromK && e.datum<=toK) u.k70ein += num(e.brutto); });
   return u;
 }
+/* Echte Arbeitszeit eines Zeitraums – Meetings sind keine Arbeitszeit */
+function arbeitsStunden(fromK,toK){
+  let std = 0;
+  Object.keys(entries).forEach(k=>{
+    const tag = k.split("|")[0];
+    if(tag < fromK || tag > toK) return;
+    const e = entries[k], n = e.nb;
+    if(!n || e.kind==="meeting" || e.kind==="privat" || e.kind==="individuell") return;
+    if(!n.realStart || !n.realEnde) return;
+    const d = (toDec(n.realEnde)||0) - (toDec(n.realStart)||0);
+    if(d > 0) std += d;
+  });
+  return std;
+}
+
 /* Bonusstufe – zählt nur, was im Festgebiet passiert ist (K70-Einkauf gilt als Festgebiet) */
 function bonusStufe(fgNetto, weeks){
   const f = weeks/4;
@@ -1653,6 +1722,7 @@ function renderProv(){
   const qFG = netto(qU.fg) + netto(qU.k70ein);
   const jFG = netto(jU.fg) + netto(jU.k70ein);
   const jahrWochen = weeksInISOYear(vm.year);
+  const std = arbeitsStunden(vm.fromK, vm.toK);
 
   const setzeProv = () => { const f = document.getElementById('pvMinus'); if(f) f.onchange = ()=>{ settings.minusVormonat = num(f.value); saveData(); renderProv(); }; };
   document.getElementById('prov').innerHTML = `
@@ -1691,6 +1761,13 @@ function renderProv(){
             <td>${erreicht ? "erreicht" : "fehlen "+eur(ziel-p.basis)+" €"}</td></tr>`;
         }).join("")}</tbody></table></div>
       <p class="hinweis">Bewertet wird der Nettoumsatz im Festgebiet einschließlich K70-Einkauf: aktuell ${eur(p.basis)} €.</p>
+
+      <div class="ah4">Arbeitszeit</div>
+      <div class="kpis">
+        ${kpi("Arbeitsstunden", dec(std,1)+" h", "ohne Meetings")}
+        ${kpi("Stundenlohn", std ? eur((p.prov+p.vers)/std)+" €" : "–", "Provision inkl. Bonus je Stunde")}
+        ${kpi("Nach Warenkredit", std ? eur(p.saldo/std)+" €" : "–", "was übrig bleibt je Stunde")}
+      </div>
 
       <div class="ah4">Minus aus dem Vormonat</div>
       <div class="grp">
@@ -2142,6 +2219,8 @@ async function pinOeffnen(pin, dk){
 }
 
 const feld  = (id,l,v="",extra="") => `<div class="field"><label for="${id}">${l}</label><input id="${id}" value="${v}" autocomplete="off" spellcheck="false" ${extra}></div>`;
+const APPLE_LOGO = `<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.9-3-.8-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.9 1.1 9.1.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.2.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.6zM14.2 5.3c.6-.8 1-1.9.9-3-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.8-.9 2.9 1 .1 2-.5 2.7-1.3z"/></svg>`;
+const GOOGLE_LOGO = `<svg viewBox="0 0 24 24" width="15" height="15"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2L6.4 14z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.8-2.8A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.3 3-4.1 5.6-4.1z"/></svg>`;
 const EYE_AN = `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>`;
 const EYE_AUS = `<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-6 10-6c2.1 0 3.9.6 5.4 1.5M22 12s-3.6 6-10 6c-2.1 0-3.9-.6-5.4-1.5"/><line x1="4" y1="20" x2="20" y2="4"/></svg>`;
 const pwFeld = (id,l) => `<div class="field pw"><label for="${id}">${l}</label>
@@ -2607,11 +2686,13 @@ async function renderProfil(){
         <p class="hinweis" style="margin-top:0">Deine Termine erscheinen automatisch im Kalender und im Widget.
           Einmal antippen genügt — der Kalender fragt dann nach der Bestätigung.</p>
         <div class="actions">
-          <a class="btn primary wide" id="pfAbo" href="webcal://${KALENDER_BASIS.replace(/^https?:\/\//,"")}/kalender/${me.feedToken}.ics">Im Apple Kalender abonnieren</a>
+          <a class="btn abo apple" href="webcal://${KALENDER_BASIS.replace(/^https?:\/\//,"")}/kalender/${me.feedToken}.ics">
+            <span class="logo">${APPLE_LOGO}</span>Im Apple Kalender abonnieren</a>
         </div>
         <div class="actions">
-          <a class="btn wide" id="pfAboG" target="_blank" rel="noopener"
-             href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(KALENDER_BASIS + "/kalender/" + me.feedToken + ".ics")}">Im Google Kalender abonnieren</a>
+          <a class="btn abo google" target="_blank" rel="noopener"
+             href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(KALENDER_BASIS + "/kalender/" + me.feedToken + ".ics")}">
+            <span class="logo">${GOOGLE_LOGO}</span>Im Google Kalender abonnieren</a>
         </div>
         <div class="actions"><button class="btn" id="pfFeedCopy">Adresse kopieren</button></div>
         <p class="hinweis">Google aktualisiert abonnierte Kalender nur alle paar Stunden — Apple lässt sich auf fünf Minuten stellen.</p>
@@ -2928,6 +3009,8 @@ async function adrSuchen(text){
       .map(f=>f.properties)
       .filter(p => p.country === "Deutschland" && (p.street || p.name))
       .map(p => ({
+        str: p.street || p.name || "",
+        hnr: p.housenumber || "",
         strasse: [p.street || p.name, p.housenumber].filter(Boolean).join(" "),
         plz: p.postcode || "",
         ort: p.city || p.town || p.village || p.district || ""
@@ -2941,8 +3024,8 @@ async function adrSuchen(text){
     });
     if(!liste.length){ adrSchliessen(); return; }
     box.innerHTML = liste.map(a=>
-      `<button type="button" class="vorschlag" data-str="${a.strasse}" data-plz="${a.plz}" data-ort="${a.ort}">
-         <b>${a.strasse}</b><span>${[a.plz,a.ort].filter(Boolean).join(" ")}</span></button>`).join("");
+      `<button type="button" class="vorschlag" data-str="${a.str}" data-hnr="${a.hnr}" data-plz="${a.plz}" data-ort="${a.ort}">
+         <b>${[a.str,a.hnr].filter(Boolean).join(" ")}</b><span>${[a.plz,a.ort].filter(Boolean).join(" ")}</span></button>`).join("");
     box.hidden = false;
   }catch(err){ adrSchliessen(); }
 }
@@ -2959,9 +3042,11 @@ document.addEventListener('click', ev=>{
   if(v){
     const setz = (id,wert) => { const el = document.getElementById(id); if(el && wert) el.value = wert; };
     setz('f_str', v.dataset.str);
+    setz('f_hnr', v.dataset.hnr);
     setz('f_plz', v.dataset.plz);
     setz('f_ort', v.dataset.ort);
-    if(draft){ draft.nb.f_str = v.dataset.str; draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort; }
+    if(draft){ draft.nb.f_str = v.dataset.str; draft.nb.f_hnr = v.dataset.hnr;
+               draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort; }
     adrSchliessen();
     return;
   }
@@ -2994,26 +3079,48 @@ function katalogParsen(text){
   return kats;
 }
 let invSuche = "";
+function invSummeZeigen(){
+  const el = document.querySelector('.invsumme b');
+  if(el) el.textContent = preis(bestandWert()) + " €";
+}
+/* Filtert die vorhandenen Zeilen, ohne die Seite neu aufzubauen –
+   dadurch bleibt die Tastatur stehen und nichts ruckelt */
+function invFiltern(){
+  const q = invSuche.trim().toLowerCase().replace(".",",");
+  const box = document.getElementById('invliste');
+  if(!box) return;
+  let sichtbar = 0, offen = null, offenZahl = 0;
+  box.querySelectorAll('.invkat, .invzeile').forEach(el=>{
+    if(el.classList.contains('invkat')){
+      if(offen) offen.hidden = offenZahl === 0;
+      offen = el; offenZahl = 0;
+      return;
+    }
+    const treffer = !q || el.dataset.such.includes(q);
+    el.hidden = !treffer;
+    if(treffer){ sichtbar++; offenZahl++; }
+  });
+  if(offen) offen.hidden = offenZahl === 0;
+  const info = document.getElementById('invTreffer');
+  if(info){ info.textContent = q ? `${sichtbar} Treffer` : ""; info.hidden = !q; }
+}
 function renderInventur(){
   const box = document.getElementById('inventur');
   if(!box || !me) return;
-  const q = invSuche.trim().toLowerCase();
-  const passt = a => !q || a.n.toLowerCase().includes(q)
-    || eur(a.p).toLowerCase().includes(q.replace(".",","))
-    || String(a.p).includes(q.replace(",","."));
-
   let liste = "";
-  let treffer = 0;
   (katalog.liste||[]).forEach(k=>{
-    const artikel = (k.artikel||[]).filter(passt);
-    if(!artikel.length) return;
-    treffer += artikel.length;
-    liste += `<div class="invkat">${k.kat}</div>` + artikel.map(a=>{
+    liste += `<div class="invkat">${k.kat}</div>`;
+    liste += (k.artikel||[]).map(a=>{
       const id = artKey(k.kat+'|'+a.n);
-      return `<div class="invzeile${a.top?" top":""}">
-        <span class="nm">${a.top?`<i class="marke" title="verkauft sich gut"></i>`:""}${a.n}</span>
-        <span class="pr">${eur(a.p)} €</span>
-        <input class="menge" type="number" min="0" inputmode="numeric" value="${inventur[id]||""}" placeholder="0" data-art="${id}" aria-label="Bestand ${a.n}">
+      const such = (a.n + " " + preis(a.p)).toLowerCase();
+      return `<div class="invzeile${a.top?" top":""}" data-such="${such}">
+        <span class="nm">${a.n}</span>
+        <span class="pr">${preis(a.p)} €</span>
+        <span class="stepper">
+          <button type="button" data-minus="${id}" aria-label="weniger">−</button>
+          <b data-menge="${id}">${inventur[id]||0}</b>
+          <button type="button" data-plus="${id}" aria-label="mehr">+</button>
+        </span>
       </div>`;
     }).join("");
   });
@@ -3022,31 +3129,68 @@ function renderInventur(){
     <div class="asec">
       <h3>K70 Inventur</h3>
       <p class="sub">Warenbestand nach Kategorien des Shops — Reihenfolge wie im Original.</p>
-      <div class="field"><input id="invSuche" value="${invSuche}" placeholder="Artikel oder Preis suchen" autocomplete="off"></div>
-      ${katalog.liste && katalog.liste.length ? "" :
-        `<p class="aempty">Noch kein Katalog hinterlegt.${istAdmin()?" Über den Knopf unten einfügen.":" Der Admin muss ihn einmal einpflegen."}</p>`}
-      <div class="invsumme"><span>Warenbestand gesamt</span><b>${eur(bestandWert())} €</b></div>
-      ${q ? `<p class="hinweis">${treffer} Treffer</p>` : ""}
+      <div class="field vorschlagfeld">
+        <input id="invSuche" value="${invSuche}" placeholder="Artikel oder Preis suchen" autocomplete="off" inputmode="search">
+        <div class="vorschlaege" id="invVorschlaege" hidden></div>
+      </div>
+      <p class="hinweis" id="invTreffer" hidden></p>
+      <div class="invsumme"><span>Warenbestand gesamt</span><b>${preis(bestandWert())} €</b></div>
     </div>
-    <div class="asec invliste">${liste || (q ? `<p class="aempty">Nichts gefunden.</p>` : "")}</div>
+    <div class="asec invliste" id="invliste">${liste}</div>
     ${istAdmin() ? `<div class="asec"><div class="actions"><button class="btn" id="invImport">Katalog einfügen oder aktualisieren</button></div></div>` : ""}`;
 
-  const suche = document.getElementById('invSuche');
-  suche.oninput = ev => { invSuche = ev.target.value; const pos = ev.target.selectionStart; renderInventur();
-    const neu = document.getElementById('invSuche'); neu.focus(); neu.setSelectionRange(pos,pos); };
-  box.querySelectorAll('[data-art]').forEach(i=> i.onchange = ()=>{
-    const wert = Math.max(0, Math.round(+i.value || 0));
-    if(wert > 0) inventur[i.dataset.art] = wert; else delete inventur[i.dataset.art];
-    saveData();
-    document.querySelector('.invsumme b').textContent = eur(bestandWert()) + " €";
-    renderProv();
+  const feld = document.getElementById('invSuche');
+  feld.oninput = ()=>{ invSuche = feld.value; invFiltern(); invVorschlaege(feld.value); };
+  feld.onkeydown = ev => { if(ev.key === "Enter"){ ev.preventDefault(); feld.blur(); invVorschlagZu(); } };
+  box.querySelectorAll('[data-plus],[data-minus]').forEach(b=> b.onclick = ()=>{
+    const id = b.dataset.plus || b.dataset.minus;
+    const neu = Math.max(0, (+inventur[id] || 0) + (b.dataset.plus ? 1 : -1));
+    if(neu > 0) inventur[id] = neu; else delete inventur[id];
+    const anzeige = box.querySelector(`[data-menge="${id}"]`);
+    if(anzeige){ anzeige.textContent = neu; anzeige.parentElement.classList.toggle('hat', neu > 0); }
+    invSummeZeigen(); saveData(); renderProv();
+  });
+  box.querySelectorAll('[data-menge]').forEach(el=>{
+    el.parentElement.classList.toggle('hat', (+el.textContent||0) > 0);
   });
   const imp = document.getElementById('invImport');
   if(imp) imp.onclick = katalogDialog;
+  invFiltern();
 }
+/* Vorschläge beim Tippen, wie bei den Adressen */
+function invVorschlagZu(){
+  const v = document.getElementById('invVorschlaege');
+  if(v){ v.hidden = true; v.innerHTML = ""; }
+}
+function invVorschlaege(text){
+  const box = document.getElementById('invVorschlaege');
+  if(!box) return;
+  const q = text.trim().toLowerCase().replace(".",",");
+  if(q.length < 2){ invVorschlagZu(); return; }
+  const treffer = [];
+  (katalog.liste||[]).forEach(k => (k.artikel||[]).forEach(a=>{
+    if(treffer.length < 8 && (a.n + " " + preis(a.p)).toLowerCase().includes(q))
+      treffer.push({n:a.n, p:a.p, kat:k.kat});
+  }));
+  if(!treffer.length){ invVorschlagZu(); return; }
+  box.innerHTML = treffer.map(t=>
+    `<button type="button" class="vorschlag" data-inv="${t.n.replace(/"/g,'&quot;')}">
+       <b>${t.n}</b><span>${t.kat} · ${preis(t.p)} €</span></button>`).join("");
+  box.hidden = false;
+}
+document.addEventListener('click', ev=>{
+  const v = ev.target.closest('[data-inv]');
+  if(v){
+    const feld = document.getElementById('invSuche');
+    feld.value = v.dataset.inv; invSuche = v.dataset.inv;
+    invVorschlagZu(); invFiltern();
+    return;
+  }
+  if(!ev.target.closest('#invVorschlaege') && !ev.target.closest('#invSuche')) invVorschlagZu();
+});
 function katalogDialog(){
   const jetzt = (katalog.liste||[]).map(k =>
-    "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${eur(a.p)}${a.top?" | top":""}`).join("\n")
+    "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${preis(a.p)}${a.top?" | top":""}`).join("\n")
   ).join("\n\n");
   simpleDialog("Katalog einfügen", "Kategorien mit #, dann Artikel | Preis | top",
     `<div class="grp"><div class="field"><label for="katText">Katalog</label>
