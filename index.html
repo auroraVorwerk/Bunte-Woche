@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#262624">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bunte Woche">
 <title>Bunte Woche</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -16,7 +20,13 @@
   --bg:#262624;--surface:#2f2e2b;--surface-2:#353330;--surface-3:#3d3b36;
   --line:#403e39;--line-soft:#37352f;--text:#ecebe5;--muted:#a5a29a;--faint:#7a776f;
   --accent:#7fa88c;--warn:#e0806f;
+  --z0:#2e2c29;--z1:#35332f;--tick:#3a3833;
   --r-xl:26px;--r-lg:20px;--r:14px;--r-sm:10px;
+}
+body.hell{
+  --bg:#f5f4f1;--surface:#fff;--surface-2:#f1efeb;--surface-3:#e6e3dd;
+  --line:#e2dfd9;--line-soft:#ecead5;--text:#23221f;--muted:#6c6963;--faint:#95918a;
+  --z0:#fbfaf8;--z1:#f2f0ec;--tick:#eceae5;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
@@ -42,8 +52,20 @@ button{-webkit-tap-highlight-color:transparent}
 .scrim.open{opacity:1;pointer-events:auto}
 .drawer{position:fixed;z-index:50;top:10px;bottom:10px;left:10px;width:min(300px,84vw);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:18px 14px;display:flex;flex-direction:column;gap:4px;transform:translateX(-115%);transition:transform .3s cubic-bezier(.3,.85,.3,1)}
 .drawer.open{transform:none}
-.drawer h2{font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:6px 8px 14px}
-.navlink{display:block;padding:13px 16px;border-radius:var(--r);color:var(--text);text-decoration:none;font-weight:500}
+.konto{display:flex;align-items:center;gap:10px;padding:10px 12px 14px;border-bottom:1px solid var(--line);margin-bottom:10px}
+.konto .ktext{flex:1;min-width:0;line-height:1.35}
+.konto .ktext b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.konto .ktext span{font-size:.72rem;color:var(--faint)}
+.konto button{flex:none;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:7px 13px;font-size:.74rem;cursor:pointer}
+.konto button:hover{border-color:var(--accent);color:var(--text)}
+.navliste{display:flex;flex-direction:column;gap:2px}
+.navliste.unten{margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.navlink{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:var(--r);color:var(--text);
+  text-decoration:none;font-weight:500;font-size:.92rem}
+.navlink .mic{flex:none;width:20px;height:20px;color:var(--faint);display:flex}
+.navlink .mic svg{width:20px;height:20px}
+.navlink[aria-current="page"] .mic{color:var(--accent)}
 .navlink:hover{background:rgba(255,255,255,.04)}
 .navlink[aria-current="page"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
 
@@ -67,7 +89,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .todaybtn[hidden]{display:none}
 
 /* Raster */
-.board{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:8px}
+.board{background:var(--surface);border-radius:var(--r-xl);padding:10px}
 .scroller{overflow-x:auto;overscroll-behavior-x:contain}
 .grid{display:grid;grid-template-columns:168px repeat(7,minmax(156px,1fr));gap:4px;min-width:1180px}
 .cell{border-radius:var(--r-sm);padding:8px;font-size:.82rem}
@@ -82,7 +104,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .timelbl b{font-weight:500;color:var(--text)}
 .slot{background:var(--surface-2);border:1px solid transparent;border-radius:var(--r-sm);min-height:46px;cursor:pointer;transition:.15s;text-align:left;padding:7px 10px;display:flex;flex-direction:column;justify-content:center;gap:1px;overflow:hidden}
 .slot:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent);background:var(--surface-3)}
-.row-alt .slot{background:#302e2b}
+.row-alt .slot{background:var(--z0)}
 .slot .t1{font-weight:600;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
 .slot .t2{font-size:.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
 .slot.filled{border-color:var(--line);background:var(--surface-3);border-left:3px solid var(--accent)}
@@ -92,13 +114,20 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .slot.col.done .t1::before{color:inherit}
 .slot.done .t1::before{content:"✓ ";color:var(--accent)}
 .slot.blocked{cursor:not-allowed;color:var(--faint);border-color:transparent;
-  background:repeating-linear-gradient(135deg,rgba(0,0,0,.16) 0 8px,rgba(0,0,0,0) 8px 16px),var(--bc,#302e2b)}
+  background:repeating-linear-gradient(135deg,rgba(0,0,0,.14) 0 8px,rgba(0,0,0,0) 8px 16px),var(--bc,var(--z0))}
 .slot.blocked:hover{filter:none}
 .slot.blocked.soft{cursor:pointer}
 .slot.blocked.soft:hover{filter:brightness(1.12)}
 .spacer{grid-column:1/-1;height:10px}
 .metriclbl{display:flex;flex-direction:column;justify-content:center;font-size:.78rem;font-weight:600;line-height:1.25;padding:8px 14px}
 .metriclbl small{font-weight:400;color:var(--faint);font-size:.68rem;font-family:"JetBrains Mono",monospace}
+.ampel{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--a);margin-left:7px;vertical-align:middle}
+.pcard.faellig{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.pcard .wieder{font-size:.7rem;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);
+  border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:middle}
+.hzeile{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;padding:7px 0;border-bottom:1px solid var(--line-soft)}
+.hzeile:last-child{border-bottom:0}
+.hzeile .hinfo{color:var(--muted);text-align:right}
 .metric{background:var(--surface-2);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;gap:4px;font-family:"JetBrains Mono",monospace;min-height:46px}
 .metric input{width:44%;background:transparent;border:0;text-align:center;border-radius:8px;padding:5px 2px;font-family:"JetBrains Mono",monospace;font-size:.82rem}
 .metric input::placeholder{color:var(--faint)}
@@ -142,7 +171,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .field select{-webkit-appearance:none;appearance:none;text-align:left;min-height:46px;
   background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
   background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:38px}
-.grp{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:12px}
+.grp{background:var(--surface-2);border-radius:var(--r-lg);padding:16px;margin-bottom:14px}
 .grp>.sect:last-child,.grp>.field:last-child{margin-bottom:0}
 .grp .field input,.grp .field select,.grp .field textarea,.grp .seg button,.grp .checks button,.grp .field .fixed{background-color:var(--surface)}
 .grp .seg button[aria-pressed="true"],.grp .checks button[aria-pressed="true"]{background-color:color-mix(in srgb,var(--accent) 22%,var(--surface))}
@@ -150,9 +179,10 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .row2{display:flex;gap:10px}
 .row2 .field{flex:1}
 .seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(102px,1fr));gap:8px;margin-bottom:2px}
-.seg button{width:100%;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 6px;cursor:pointer;font-weight:600;font-size:.79rem;line-height:1.25;text-align:center;display:flex;align-items:center;justify-content:center;min-height:46px;transition:.15s}
-.seg button:hover{background:var(--surface-3)}
-.seg button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2))}
+.segbtn,.seg button{width:100%;min-width:0;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 6px;cursor:pointer;font-weight:600;font-size:.79rem;line-height:1.25;text-align:center;display:flex;align-items:center;justify-content:center;min-height:46px;transition:.15s}
+.segbtn{width:auto;min-width:110px;margin-right:8px}
+.seg button:hover,.segbtn:hover{background:var(--surface-3)}
+.seg button[aria-pressed="true"],.segbtn[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2))}
 .seg.danger button[aria-pressed="true"]{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 20%,var(--surface-2))}
 .farben{display:flex;flex-wrap:wrap;gap:10px}
 .farbe{width:36px;height:36px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0;
@@ -182,7 +212,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .actions{display:flex;gap:8px;margin-top:18px}
 .btn{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:12px;cursor:pointer;font-weight:600}
 .btn:hover{background:var(--surface-3)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#1e2a22}
+.btn.primary{background:var(--text);border-color:var(--text);color:var(--bg)}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.danger{color:var(--warn)}
 .hint{font-size:.75rem;color:var(--faint);margin-top:12px}
@@ -192,7 +222,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 
 /* Potenzialliste */
 .plist{display:grid;gap:12px}
-.pcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px}
+.pcard{background:var(--surface);border-radius:var(--r-lg);padding:18px 20px}
 .pcard .nm{font-weight:700;font-size:1rem}
 .pcard .meta{font-size:.8rem;color:var(--muted);margin-top:2px}
 .pcard .pot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -224,9 +254,9 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .stat thead tr.grp th.sticky{background:var(--surface)}
 .stat .s1{left:0}.stat .s2{left:78px}
 /* Zeilenwechsel + Hervorhebung */
-.stat tbody tr.z0 td{background:#2e2c29}
-.stat tbody tr.z1 td{background:#35332f}
-.stat tbody tr.hl td{background:#413e37}
+.stat tbody tr.z0 td{background:var(--z0)}
+.stat tbody tr.z1 td{background:var(--z1)}
+.stat tbody tr.hl td{background:var(--surface-3)}
 .stat tbody tr.hl td.sticky{box-shadow:inset 3px 0 0 var(--accent)}
 .stat tbody tr:hover td{filter:brightness(1.06)}
 /* Tagesbanner */
@@ -237,7 +267,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .stat td.name small{display:block;color:var(--muted);font-size:.72rem}
 .stat td.alt{font-size:.78rem}
 .stat td.off{color:transparent}
-.stat td.tick{font-weight:800;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22)}
+.stat td.tick{font-weight:800;background:var(--tick)!important;font-size:.95rem}
 .stat td.num{font-family:"JetBrains Mono",monospace}
 .stat td.strong{font-weight:700;color:var(--text)}
 .stat tr.sum td{background:color-mix(in srgb,var(--accent) 18%,var(--surface));font-weight:700;font-family:"JetBrains Mono",monospace}
@@ -246,15 +276,15 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .statnote{font-size:.76rem;color:var(--faint);margin-top:12px;padding:0 4px}
 
 /* Auswertungen */
-.rangebar{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:14px 16px;margin-bottom:16px}
+.rangebar{background:var(--surface);border-radius:var(--r-xl);padding:16px 18px;margin-bottom:18px}
 .rangebar .rl{display:block;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
-.asec{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:20px;margin-bottom:16px}
+.asec{background:var(--surface);border-radius:var(--r-xl);padding:24px;margin-bottom:20px}
 .asec h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
 .asec .sub{font-size:.8rem;color:var(--muted);margin-bottom:16px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:10px}
 .kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:14px}
-.kpi .kl{display:block;font-size:.7rem;color:var(--muted);line-height:1.3;min-height:2.2em}
-.kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.4rem;font-weight:600;margin-top:4px}
+.kpi .kl{display:block;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);line-height:1.35;min-height:2.4em}
+.kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.85rem;font-weight:600;margin-top:6px;letter-spacing:-.02em}
 .kpi .ks{display:block;font-size:.7rem;color:var(--faint);margin-top:2px}
 .kpi.hero{background:color-mix(in srgb,var(--accent) 18%,var(--surface-2))}
 .ah4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:24px 0 10px}
@@ -286,6 +316,41 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
   text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
 .mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+.wochenaktion{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
+.wochenaktion .todaybtn{margin:0}
+.slot.quelle{outline:2px dashed var(--accent);outline-offset:-3px}
+body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-3px}
+#schiebeleiste{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;
+  background:var(--surface-3);border-radius:999px;padding:10px 12px 10px 20px;font-size:.84rem;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.korb{margin-top:16px}
+.korb summary{list-style:none;cursor:pointer;font-size:.76rem;color:var(--faint);padding:6px 4px}
+.korb summary::-webkit-details-marker{display:none}
+.korb summary::after{content:" ›"}
+.korbliste{display:grid;gap:6px;margin-top:8px}
+.korbzeile{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface-2);
+  border-radius:var(--r);padding:10px 14px;font-size:.82rem}
+/* Heute */
+.tkarte{position:relative;display:flex;gap:14px;background:var(--surface-2);border-radius:var(--r-lg);
+  padding:14px 16px;margin-bottom:10px;box-shadow:inset 4px 0 0 var(--c)}
+.tzeit{flex:none;width:52px;font-family:"JetBrains Mono",monospace;font-size:1.05rem;font-weight:600;line-height:1.2}
+.tzeit span{display:block;font-size:.72rem;color:var(--faint)}
+.tinfo{flex:1;min-width:0}
+.tname{font-weight:700;font-size:.95rem}
+.tsub{font-size:.8rem;color:var(--muted);margin-top:1px}
+.tnotiz{font-size:.8rem;color:var(--text);margin-top:6px;border-left:2px solid var(--line);padding-left:10px}
+.taktion{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.taktion .mini{margin:0;text-decoration:none;color:var(--text);background:var(--surface);padding:7px 14px}
+.thaken{position:absolute;top:12px;right:14px;color:var(--accent);font-weight:800}
+.warnbox{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);
+  border-radius:var(--r-xl);padding:16px 18px;margin-bottom:16px;font-size:.88rem}
+.woffen{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.woffen .mini{margin:0;background:var(--surface)}
+.woffen .mehr{font-size:.76rem;color:var(--muted);align-self:center}
+.empkarte{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px}
+.empkarte .ekopf{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.empkarte .ekopf span{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.empkarte .field input,.empkarte .field textarea{background:var(--surface)}
+.pcard .pact .btn{flex:1 1 auto}
 /* Inventur */
 .invkat{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
   margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
@@ -307,8 +372,8 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .stepper.hat{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
 .stepper.hat b{color:var(--accent)}
 .invzeile[hidden],.invkat[hidden]{display:none!important}
-.invsumme{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 16px;
-  background:color-mix(in srgb,var(--accent) 16%,var(--surface-2));border-radius:var(--r-lg);font-size:.9rem}
+.invsumme{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding:16px 18px;
+  background:var(--surface-2);border-radius:var(--r-lg);font-size:.9rem}
 .invsumme b{font-family:"JetBrains Mono",monospace;font-size:1.15rem}
 .invliste{padding-top:14px}
 .atable.meld{min-width:0}
@@ -322,7 +387,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .aline .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:4px}
 .aline .vl{flex:none;width:92px;text-align:right;font-family:"JetBrains Mono",monospace;color:var(--muted)}
 
-.pdfbtn{background:var(--accent);color:#1e2a22;border:0;border-radius:999px;padding:7px 14px;font-size:.72rem;font-weight:800;cursor:pointer;letter-spacing:.04em}
+.pdfbtn{background:var(--text);color:var(--bg);border:0;border-radius:999px;padding:7px 14px;font-size:.72rem;font-weight:800;cursor:pointer;letter-spacing:.04em}
 .pdfbtn:hover{filter:brightness(1.08)}
 .printhead{display:none}
 
@@ -361,7 +426,6 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .eye svg{display:block;margin:0}
 .pinput input{letter-spacing:.6em;text-align:center;font-family:"JetBrains Mono",monospace;font-size:1.3rem}
 .loginbox .err[hidden]{display:none}
-.drawer .foot{margin-top:auto;padding:10px 8px;font-size:.75rem;color:var(--muted);line-height:1.5}
 .drawer .foot b{color:var(--text);display:block}
 .drawer .foot button{margin-top:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
   border-radius:999px;padding:6px 14px;font-size:.74rem;cursor:pointer}
@@ -380,7 +444,22 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .tmblock{margin-bottom:16px}
 .tmblock h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px 4px}
 
+.druckbereich{display:none}
 @media print{
+  body.drucke-pot main.wrap,body.drucke-pot .topbar,body.drucke-pot .drawer,body.drucke-pot .scrim,
+  body.drucke-pot .modal,body.drucke-pot .login{display:none!important}
+  body.drucke-pot{background:#fff!important;color:#000!important}
+  body.drucke-pot .druckbereich{display:block!important;padding:10mm;color:#000;background:#fff}
+  body.drucke-pot .druckbereich h1{font-size:14pt;font-weight:800;margin-bottom:2mm}
+  body.drucke-pot .druckbereich .dsub{font-size:9pt;color:#555;margin-bottom:5mm}
+  .pdruck{width:100%;border-collapse:collapse;font-size:8.5pt}
+  .pdruck th{text-align:left;border-bottom:1pt solid #333;padding:2mm 2mm 1.5mm;font-weight:700;
+    background:#fff!important;color:#000!important}
+  .pdruck td{border-bottom:.3pt solid #bbb;padding:1.8mm 2mm;vertical-align:top;
+    background:#fff!important;color:#000!important}
+  .pdruck thead{display:table-header-group}
+  .pdruck tr{page-break-inside:avoid}
+
   @page{size:A4 landscape;margin:0}
   html,body{background:var(--bg)!important;color:var(--text)!important}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -413,18 +492,9 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 </header>
 <div class="scrim" id="scrim"></div>
 <nav class="drawer" id="drawer" aria-label="Hauptmenü">
-  <h2>Menü</h2>
-  <a class="navlink" href="#planer" data-page="planer">Planer</a>
-  <a class="navlink" href="#potenzial" data-page="potenzial">Potenzialliste</a>
-  <a class="navlink" href="#statistik" data-page="statistik">Statistik</a>
-  <a class="navlink" href="#auswertungen" data-page="auswertungen">Auswertungen</a>
-  <a class="navlink" href="#provision" data-page="provision">Provisionsrechner</a>
-  <a class="navlink" href="#wunsch" data-page="wunsch">Provisionswunsch</a>
-  <a class="navlink" href="#team" data-page="team" id="navTeam" hidden>Teammitglieder</a>
-  <a class="navlink" href="#kbdelete" data-page="kbdelete" id="navDelete" hidden>KB Delete</a>
-  <a class="navlink" href="#inventur" data-page="inventur">K70 Inventur</a>
-  <a class="navlink" href="#profil" data-page="profil">Profil</a>
-  <div class="foot" id="drawerFoot"></div>
+  <div class="konto" id="drawerFoot"></div>
+  <div class="navliste" id="navHaupt"></div>
+  <div class="navliste unten" id="navTL"></div>
 </nav>
 
 <main class="wrap">
@@ -433,18 +503,24 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
     <div class="pagetitle" id="pagetitle">Planer</div>
   </div>
 
+  <section class="page" id="page-heute"><div id="heute"></div></section>
   <section class="page active" id="page-planer">
     <div class="weekbar">
       <button class="nav" id="prev" aria-label="Vorherige Woche"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button>
       <div class="weeklabel"><div class="kw" id="kwText">KW –</div><div class="range" id="rangeText">–</div></div>
       <button class="nav" id="next" aria-label="Nächste Woche"><svg viewBox="0 0 24 24"><polyline points="9 5 16 12 9 19"/></svg></button>
     </div>
-    <button class="todaybtn" id="todayBtn" hidden>Zur aktuellen Woche</button>
+    <div class="wochenaktion">
+      <button class="todaybtn" id="todayBtn" hidden>Zur aktuellen Woche</button>
+      <button class="todaybtn" id="kopierBtn">Woche kopieren</button>
+    </div>
     <div class="board"><div class="scroller"><div class="grid" id="grid"></div></div></div>
     <details class="legend"><summary>Farblegende</summary><div class="chips" id="chips"></div></details>
+    <div id="papierkorb"></div>
   </section>
 
   <section class="page" id="page-potenzial"><div id="plist"></div></section>
+  <section class="page" id="page-empfehlung"><div id="elist"></div></section>
   <section class="page" id="page-statistik">
     <div class="weekbar">
       <button class="nav" id="prev2" aria-label="Vorherige Woche"><svg viewBox="0 0 24 24"><polyline points="15 5 8 12 15 19"/></svg></button>
@@ -479,6 +555,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
       </div>
       <p class="hinweis" id="teamHint"></p>
     </div>
+    <div id="tmVergleich"></div>
     <div id="tmViews"></div>
   </section>
   <section class="page" id="page-inventur"><div id="inventur"></div></section>
@@ -494,6 +571,8 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
   </section>
 </main>
 
+<div id="druckPot" class="druckbereich"></div>
+
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="back" data-close></div>
   <div class="sheet" id="sheet"></div>
@@ -501,7 +580,7 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -552,6 +631,8 @@ function vertriebswoche(week,year){
 var viewUser = null;       // gesetzt, wenn ein Teamleiter fremde Daten ansieht
 const entries = {};        // "2026-08-03|14" -> Eintrag
 const potenzial = [];      // Potenzialliste
+const empfehlungen = [];   // namentliche Empfehlungen
+const papierkorb = [];     // gelöschte Termine, 30 Tage
 const verlauf = [];        // {datum, art:"verschoben"|"abgesagt"} für die Auswertung
 var monday = mondayOf(new Date());
 const key = (day,hour) => `${day}|${hour}`;
@@ -581,9 +662,10 @@ const eur = v => v ? v.toLocaleString("de-DE",{maximumFractionDigits:2}) : "–"
 const preis = v => (+v||0).toLocaleString("de-DE",{minimumFractionDigits:2, maximumFractionDigits:2});
 function dayTotals(day){
   const t = {fg:0,wg:0,k70:0,k70ein:0};
-  HOURS_ASC.forEach(h=>{
-    const e = entries[key(day,h)];
-    if(!e || !e.nb || e.nb.fremd==="Ja") return;            // für andere geschrieben
+  Object.keys(entries).forEach(k=>{
+    const e = entries[k];
+    if(!e.nb || e.nb.fremd==="Ja") return;                  // für andere geschrieben
+    if(abrechnungsTag(k.split("|")[0], e.nb) !== day) return;
     const n = e.nb;
     if(n.verkauft==="Ja"){
       if(n.gebiet==="Weißgebiet") t.wg += num(n.umsatz);
@@ -681,9 +763,13 @@ function render(){
   h += `<div class="spacer"></div>`;
   const totals = weekDays.map(d=>dayTotals(dk(d)));
   const soll = sollWerte();
+  const vmA = vertriebsmonat(monday);
+  const istM = umsatz(vmA.fromK, vmA.toK);
+  const zielM = monatsZiel(vmA);
   METRICS.forEach(m=>{
     const lbl = m.click ? `<button class="mlbl" data-mclick="${m.click}">${m.n}</button>` : m.n;
-    h += `<div class="cell metriclbl">${lbl}<small>${m.noSoll?"ist":"ist / soll"}</small></div>`;
+    const ampel = (m.k==="fg" || m.k==="wg") ? ampelPunkt(istM[m.k], zielM[m.k], vmA) : "";
+    h += `<div class="cell metriclbl">${lbl}${ampel}<small>${m.noSoll?"ist":"ist / soll"}</small></div>`;
     weekDays.forEach((d,i)=>{
       h += m.noSoll
         ? `<div class="cell metric one"><span class="ist">${eur(totals[i][m.k])}</span></div>`
@@ -692,12 +778,51 @@ function render(){
   });
   grid.innerHTML = h;
 }
+/* Termin gedrückt halten, dann Zielfeld antippen */
+let schiebe = null, halteTimer = null;
+function schiebeAn(day,hour){
+  schiebe = {day,hour};
+  document.body.classList.add('schiebt');
+  grid.querySelector(`[data-day="${day}"][data-hour="${hour}"]`)?.classList.add('quelle');
+  zeigeSchiebeleiste();
+}
+function schiebeAus(){
+  schiebe = null;
+  document.body.classList.remove('schiebt');
+  grid.querySelectorAll('.quelle').forEach(el=>el.classList.remove('quelle'));
+  document.getElementById('schiebeleiste')?.remove();
+}
+function zeigeSchiebeleiste(){
+  document.getElementById('schiebeleiste')?.remove();
+  const bar = document.createElement('div');
+  bar.id = 'schiebeleiste';
+  bar.innerHTML = `<span>Zielfeld antippen</span><button class="mini" id="schiebeStop">Abbrechen</button>`;
+  document.body.appendChild(bar);
+  document.getElementById('schiebeStop').onclick = schiebeAus;
+}
+grid.addEventListener('pointerdown', ev=>{
+  const s = ev.target.closest('.slot.filled');
+  if(!s || schiebe) return;
+  clearTimeout(halteTimer);
+  halteTimer = setTimeout(()=> schiebeAn(s.dataset.day, +s.dataset.hour), 450);
+});
+['pointerup','pointercancel','pointermove','scroll'].forEach(t=>
+  grid.addEventListener(t, ()=> clearTimeout(halteTimer), {passive:true}));
+
 grid.addEventListener('click', ev=>{
   const ml = ev.target.closest('[data-mclick]');
   if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
   const s = ev.target.closest('.slot');
   if(!s) return;
   if(s.classList.contains('blocked') && !s.classList.contains('soft')) return;
+  if(schiebe){
+    const ziel = {day:s.dataset.day, hour:+s.dataset.hour};
+    if(ziel.day === schiebe.day && ziel.hour === schiebe.hour){ schiebeAus(); return; }
+    if(entries[key(ziel.day,ziel.hour)]){ schiebeAus(); return; }
+    entries[key(ziel.day,ziel.hour)] = entries[key(schiebe.day,schiebe.hour)];
+    delete entries[key(schiebe.day,schiebe.hour)];
+    schiebeAus(); renderAll(); return;
+  }
   openSlot(s.dataset.day, +s.dataset.hour);
 });
 
@@ -768,12 +893,22 @@ const fld = (id,lbl,val="",type="text",extra="") => `<div class="field"><label f
 const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option value="${h}" ${+cur===h?"selected":""}>${pad(h)}:00 – ${pad(h+2)}:00</option>`).join("")}</select>`;
 
 const FIELD_IDS = ["empfAnzahl","jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum",
-                   "f_vor","f_nach","f_str","f_hnr","f_plz","f_ort","f_tel","vsDatum",
+                   "f_vor","f_nach","f_str","f_hnr","f_plz","f_ort","f_tel","f_notiz","lieferdatum","vsDatum",
                    "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG"];
 function collect(){
   FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) draft.nb[id]=el.value;});
   const sel = document.getElementById('pcZeit'); if(sel) draft.nb.pcZeit = sel.value;
   const anr = document.getElementById('f_anrede'); if(anr) draft.nb.f_anrede = anr.value;
+  const emp = document.querySelectorAll('[data-emp]');
+  if(emp.length){
+    const liste = [];
+    emp.forEach(el=>{
+      const [i,feld] = el.dataset.emp.split("|");
+      liste[i] = liste[i] || {};
+      liste[i][feld] = el.value;
+    });
+    draft.nb.empfListe = liste;
+  }
   const vs  = document.getElementById('vsZeit');  if(vs)  draft.nb.vsZeit  = vs.value;
 }
 function repaint(){ const y = sheet.scrollTop; paint(); sheet.scrollTop = y; }
@@ -793,6 +928,30 @@ function nbForm(){
     <div class="grp">
       <div class="sect"><span class="lb">Nach Empfehlungen gefragt?</span>${seg("empf",["Ja","Nein"],n.empf)}
         ${n.empf==="Ja"?fld("empfAnzahl","Wie viele bekommen?",n.empfAnzahl,"number",'min="0" inputmode="numeric"'):""}</div>
+      ${n.empf==="Ja" ? (n.empfListe||[{}]).map((e,i)=>`
+        <div class="empkarte">
+          <div class="ekopf"><span>Empfehlung ${i+1}</span>
+            ${(n.empfListe||[]).length>1?`<button type="button" class="mini" data-empdel="${i}">entfernen</button>`:""}</div>
+          <div class="row2">
+            <div class="field"><label>Vorname</label><input data-emp="${i}|vor" value="${e.vor||""}" autocomplete="off"></div>
+            <div class="field"><label>Nachname</label><input data-emp="${i}|nach" value="${e.nach||""}" autocomplete="off"></div>
+          </div>
+          <div class="row2">
+            <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
+              <input id="emp${i}_str" data-emp="${i}|str" data-adr="emp${i}" value="${e.str||""}" autocomplete="off">
+              <div class="vorschlaege" id="emp${i}_vorschlaege" hidden></div></div>
+            <div class="field" style="flex:0 0 30%"><label>Nr.</label>
+              <input id="emp${i}_hnr" data-emp="${i}|hnr" value="${e.hnr||""}" autocomplete="off"></div>
+          </div>
+          <div class="row2">
+            <div class="field" style="flex:0 0 42%"><label>PLZ</label>
+              <input id="emp${i}_plz" data-emp="${i}|plz" value="${e.plz||""}" inputmode="numeric" maxlength="5"></div>
+            <div class="field"><label>Ort</label>
+              <input id="emp${i}_ort" data-emp="${i}|ort" value="${e.ort||""}" autocomplete="off"></div>
+          </div>
+          <div class="field"><label>Telefon (freiwillig)</label><input data-emp="${i}|tel" value="${e.tel||""}" autocomplete="off"></div>
+          <div class="field"><label>Notiz</label><textarea data-emp="${i}|notiz" style="min-height:60px">${e.notiz||""}</textarea></div>
+        </div>`).join("") + `<div class="actions"><button type="button" class="btn" id="empPlus">+ weitere Empfehlung</button></div>` : ""}
       <div class="sect"><span class="lb">Nach Jobticket gefragt?</span>${seg("job",["Ja","Nein"],n.job)}
         ${n.job==="Ja"?fld("jobAnzahl","Wie viele bekommen?",n.jobAnzahl,"number",'min="0" inputmode="numeric"'):""}</div>
     </div>
@@ -814,7 +973,11 @@ function nbForm(){
     <div class="h4">Abschluss</div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
-      ${n.verkauft==="Ja"?`<div class="row2">${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}</div>`:""}
+      ${n.verkauft==="Ja"?`<div class="row2">${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}</div>
+        <div class="sect"><span class="lb">Späteres Lieferdatum?</span>${seg("datiert",["Ja","Nein"],n.datiert)}
+          ${n.datiert==="Ja"?`${fld("lieferdatum","Geliefert und abgerechnet am",n.lieferdatum||draft.day,"date")}
+            <p class="hinweis">Der Umsatz zählt heute in Statistik und Wochenmeldung, fließt aber erst im
+              Vertriebsmonat des Lieferdatums in die Provision.</p>`:""}</div>`:""}
       <div class="sect"><span class="lb">K70 aus dem Kofferraum verkauft?</span>${seg("k70",["Ja","Nein"],n.k70)}
         ${n.k70==="Ja"?fld("k70betrag","Bruttoumsatz K70 €",n.k70betrag,"text",'inputmode="decimal"'):""}</div>
     </div>
@@ -936,12 +1099,25 @@ function saveNb(e){
   if(n.verkauft==="Ja"){
     if(!n.pcDatum || n.pcZeit===undefined){ error="Bitte Datum und Startzeit für den Premium CheckIn wählen."; repaint(); return; }
     const k = key(n.pcDatum, +n.pcZeit);
-    if(entries[k]){ error="Zu diesem Termin steht schon ein Eintrag im Kalender."; repaint(); return; }
-    entries[k] = {kind:"premium", vorname:e.vorname, nachname:e.nachname, strasse:e.strasse, plz:e.plz, ort:e.ort, telefon:e.telefon};
+    const vorhanden = entries[k];
+    const gleich = vorhanden && vorhanden.kind==="premium"
+      && (vorhanden.nachname||"") === (e.nachname||"") && (vorhanden.vorname||"") === (e.vorname||"");
+    if(vorhanden && !gleich){ error="Zu diesem Termin steht schon ein anderer Eintrag im Kalender."; repaint(); return; }
+    entries[k] = {...(vorhanden||{}), kind:"premium", vorname:e.vorname, nachname:e.nachname,
+      strasse:e.strasse, plz:e.plz, ort:e.ort, telefon:e.telefon};
   }
   if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length){
     addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day);
   }
+  if(n.empf==="Ja") (n.empfListe||[]).forEach(x=>{
+    if(!(x.nach||"").trim()) return;
+    const rec = {id: [x.vor,x.nach,x.str,x.plz].map(v=>(v||"").trim().toLowerCase()).join("|"),
+      vorname:x.vor||"", nachname:x.nach||"", strasse:[x.str,x.hnr].filter(Boolean).join(" "),
+      str:x.str||"", hnr:x.hnr||"", plz:x.plz||"", ort:x.ort||"", telefon:x.tel||"", notiz:x.notiz||"",
+      von:`${e.vorname||""} ${e.nachname||""}`.trim(), datum:draft.day};
+    const i = empfehlungen.findIndex(y=>y.id===rec.id);
+    if(i>=0) empfehlungen[i] = rec; else empfehlungen.push(rec);
+  });
   e.status = "stattgefunden";
   e.nb = {...n};
   closeModal(); renderAll();
@@ -960,13 +1136,13 @@ function addPotenzial(e,offen,grund,datum){
   if(i>=0) potenzial[i] = rec; else potenzial.push(rec);
 }
 /* Aus einem Potenzialeintrag direkt einen Kundentermin anlegen */
-function terminAusPotenzial(p){
+function terminAusPotenzial(p, quelle){
   simpleDialog("Termin anlegen", `${p.vorname} ${p.nachname}`,
     `<div class="grp">
        ${fld("ptDatum","Datum",dk(new Date()),"date")}
        <div class="field"><label for="ptZeit">Startzeit</label>${hourSelect("ptZeit",13)}</div>
        <div class="field"><label for="ptQuelle">Quelle</label>
-         <select id="ptQuelle">${QUELLEN.map(q=>`<option value="${q}">${q}</option>`).join("")}</select></div>
+         <select id="ptQuelle">${QUELLEN.map(q=>`<option value="${q}" ${quelle===q?"selected":""}>${q}</option>`).join("")}</select></div>
      </div>
      <p class="err" id="ptErr" hidden></p>`,
     ()=>{
@@ -980,24 +1156,131 @@ function terminAusPotenzial(p){
       closeModal(); renderAll();
     }, "Termin eintragen");
 }
+/* Schlichte Tabelle im Querformat, aufsteigend nach letztem Termin */
+function potDrucken(liste, wer){
+  const zeilen = liste.slice().sort((a,b)=>(a.letzterBesuch||"").localeCompare(b.letzterBesuch||""));
+  document.getElementById('druckPot').innerHTML = `
+    <h1>Potenzialliste${wer ? " · " + wer : ""}</h1>
+    <p class="dsub">${zeilen.length} Einträge · Stand ${fmt(new Date())}</p>
+    <table class="pdruck">
+      <thead><tr>
+        <th>Vorname</th><th>Nachname</th><th>Potenzial auf</th><th>Letzter Termin</th>
+        <th>Telefon</th><th>Adresse</th><th>Warum nicht gekauft</th>
+      </tr></thead>
+      <tbody>${zeilen.map(p=>`<tr>
+        <td>${p.vorname||""}</td>
+        <td>${p.nachname||""}</td>
+        <td>${(p.potenzial||[]).join(", ")}</td>
+        <td>${p.letzterBesuch ? fmt(fromDk(p.letzterBesuch)) : ""}</td>
+        <td>${p.telefon||""}</td>
+        <td>${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</td>
+        <td>${p.grund||""}</td>
+      </tr>`).join("")}</tbody>
+    </table>`;
+  document.body.classList.add('drucke-pot');
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=> document.body.classList.remove('drucke-pot'), 400);
+  }, 120);
+}
+function renderEmpfehlung(){
+  const el = document.getElementById('elist');
+  if(!el) return;
+  if(!empfehlungen.length){
+    el.innerHTML = `<div class="placeholder">Noch keine Empfehlungen. Sie erscheinen hier, sobald du sie in einer Nachbereitung namentlich einträgst.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="plist">` + empfehlungen.slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||"")).map(p=>`
+    <div class="pcard">
+      <div class="nm">${p.vorname} ${p.nachname}</div>
+      <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
+      <div class="meta">${p.telefon?p.telefon+" · ":""}${p.von?"empfohlen von "+p.von+" · ":""}${p.datum?fmt(fromDk(p.datum)):""}</div>
+      ${p.notiz?`<div class="why">${p.notiz}</div>`:""}
+      ${(()=>{ const eigene = empfehlungen.filter(x=>x.von && x.von.toLowerCase() === `${p.vorname} ${p.nachname}`.trim().toLowerCase());
+        return eigene.length ? `<div class="pot">${eigene.map(x=>`<span>empfahl ${x.vorname} ${x.nachname}</span>`).join("")}</div>` : ""; })()}
+      <div class="pact">
+        <button class="btn" data-etermin="${p.id}">Termin anlegen</button>
+        <button class="btn" data-eedit="${p.id}">Bearbeiten</button>
+        <button class="btn danger" data-edel="${p.id}">Löschen</button>
+      </div>
+    </div>`).join("") + `</div>`;
+  el.querySelectorAll('[data-edel]').forEach(b=> b.onclick = ()=>{
+    const i = empfehlungen.findIndex(x=>x.id===b.dataset.edel);
+    if(i>=0) empfehlungen.splice(i,1); renderAll();
+  });
+  el.querySelectorAll('[data-etermin]').forEach(b=> b.onclick = ()=>{
+    const p = empfehlungen.find(x=>x.id===b.dataset.etermin);
+    if(p) terminAusPotenzial(p, "Empfehlung");
+  });
+  el.querySelectorAll('[data-eedit]').forEach(b=> b.onclick = ()=>{
+    const p = empfehlungen.find(x=>x.id===b.dataset.eedit);
+    if(p) kontaktBearbeiten(p, empfehlungen, false);
+  });
+}
+/* Kundendaten, Notiz und bei der Potenzialliste auch die Geräte ändern */
+function kontaktBearbeiten(p, liste, mitGeraeten){
+  simpleDialog("Eintrag bearbeiten", `${p.vorname} ${p.nachname}`,
+    `<div class="grp">
+       <div class="row2">
+         <div class="field"><label>Vorname</label><input id="kbVor" value="${p.vorname||""}"></div>
+         <div class="field"><label>Nachname</label><input id="kbNach" value="${p.nachname||""}"></div>
+       </div>
+       <div class="row2">
+         <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
+           <input id="kb_str" data-adr="kb" value="${p.str||p.strasse||""}" autocomplete="off">
+           <div class="vorschlaege" id="kb_vorschlaege" hidden></div></div>
+         <div class="field" style="flex:0 0 30%"><label>Nr.</label><input id="kb_hnr" value="${p.hnr||""}"></div>
+       </div>
+       <div class="row2">
+         <div class="field" style="flex:0 0 42%"><label>PLZ</label><input id="kb_plz" value="${p.plz||""}" inputmode="numeric" maxlength="5"></div>
+         <div class="field"><label>Ort</label><input id="kb_ort" value="${p.ort||""}"></div>
+       </div>
+       <div class="field"><label>Telefon</label><input id="kbTel" value="${p.telefon||""}"></div>
+       ${mitGeraeten?`<div class="field"><label>Potenzial (mit Komma trennen)</label>
+         <input id="kbPot" value="${(p.potenzial||[]).join(", ")}"></div>`:""}
+       <div class="field"><label for="kbWieder">Wieder ansprechen am</label>
+         <input id="kbWieder" type="date" value="${p.wieder||""}"></div>
+       <div class="field"><label>Notiz</label><textarea id="kbNotiz" style="min-height:70px">${p.notiz||p.grund||""}</textarea></div>
+     </div>`,
+    ()=>{
+      const w = id => (document.getElementById(id)||{value:""}).value.trim();
+      p.vorname = w('kbVor'); p.nachname = w('kbNach');
+      p.str = w('kb_str'); p.hnr = w('kb_hnr');
+      p.strasse = [p.str,p.hnr].filter(Boolean).join(" ");
+      p.plz = w('kb_plz'); p.ort = w('kb_ort'); p.telefon = w('kbTel');
+      if(mitGeraeten){ p.potenzial = w('kbPot').split(",").map(x=>x.trim()).filter(Boolean); p.grund = w('kbNotiz'); }
+      else p.notiz = w('kbNotiz');
+      if(w('kbWieder')) p.wieder = w('kbWieder'); else delete p.wieder;
+      closeModal(); renderAll();
+    }, "Speichern");
+}
 function renderPotenzial(){
   const el = document.getElementById('plist');
   if(!potenzial.length){
     el.innerHTML = `<div class="placeholder">Noch keine Einträge. Kunden landen hier, sobald ein Termin ohne Kauf nachbereitet wird.</div>`;
     return;
   }
-  el.innerHTML = `<div class="plist">` + potenzial.slice().sort((a,b)=>b.letzterBesuch.localeCompare(a.letzterBesuch)).map(p=>`
-    <div class="pcard">
-      <div class="nm">${p.vorname} ${p.nachname}</div>
+  const heute = dk(new Date());
+  const rang = p => (p.wieder && p.wieder <= heute) ? 0 : (p.wieder ? 1 : 2);
+  el.innerHTML = `<div class="plist">` + potenzial.slice().sort((a,b)=>
+      rang(a) - rang(b) || (rang(a)===2 ? b.letzterBesuch.localeCompare(a.letzterBesuch)
+                                        : (a.wieder||"").localeCompare(b.wieder||""))).map(p=>`
+    <div class="pcard${p.wieder && p.wieder <= heute ? " faellig" : ""}">
+      <div class="nm">${p.vorname} ${p.nachname}${p.wieder ? `<span class="wieder">${
+        p.wieder <= heute ? "fällig" : "ab "+fmtShort(fromDk(p.wieder))}</span>` : ""}</div>
       <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
       <div class="meta">${p.telefon?p.telefon+" · ":""}Letzter Besuch: ${fmt(fromDk(p.letzterBesuch))}</div>
       <div class="pot">${p.potenzial.map(x=>`<span>${x}</span>`).join("")}</div>
       ${p.grund?`<div class="why">${p.grund}</div>`:""}
       <div class="pact">
         <button class="btn" data-ptermin="${p.id}">Termin anlegen</button>
+        <button class="btn" data-pedit="${p.id}">Bearbeiten</button>
         <button class="btn danger" data-pdel="${p.id}">Löschen</button>
       </div>
     </div>`).join("") + `</div>`;
+  el.insertAdjacentHTML('beforeend',
+    `<div class="asec"><div class="actions"><button class="btn" id="potDruck">Potenzialliste drucken</button></div></div>`);
+  document.getElementById('potDruck').onclick = ()=> potDrucken(potenzial, me ? `${me.vorname} ${me.nachname}` : "");
   el.querySelectorAll('[data-pdel]').forEach(b=> b.onclick = ()=>{
     const i = potenzial.findIndex(x=>x.id===b.dataset.pdel);
     if(i>=0) potenzial.splice(i,1);
@@ -1007,9 +1290,36 @@ function renderPotenzial(){
     const p = potenzial.find(x=>x.id===b.dataset.ptermin);
     if(p) terminAusPotenzial(p);
   });
+  el.querySelectorAll('[data-pedit]').forEach(b=> b.onclick = ()=>{
+    const p = potenzial.find(x=>x.id===b.dataset.pedit);
+    if(p) kontaktBearbeiten(p, potenzial, true);
+  });
 }
 
 /* ---------- Dialogschritte ---------- */
+/* Frühere Termine mit derselben Person */
+function historie(e){
+  if(!e.nachname) return "";
+  const id = [e.vorname,e.nachname,e.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
+  const treffer = [];
+  Object.keys(entries).forEach(k=>{
+    const x = entries[k];
+    if(!x.nachname || k === key(draft.day,draft.hour)) return;
+    if([x.vorname,x.nachname,x.plz].map(v=>(v||"").trim().toLowerCase()).join("|") !== id) return;
+    const [tag,h] = k.split("|");
+    treffer.push({tag, h:+h, x});
+  });
+  if(!treffer.length) return "";
+  treffer.sort((a,b)=> b.tag.localeCompare(a.tag));
+  return `<div class="hr"></div><div class="h4">Frühere Termine</div>
+    <div class="grp">${treffer.slice(0,6).map(t=>{
+      const n = t.x.nb || {};
+      const info = n.verkauft==="Ja" ? `Kauf · ${n.einheiten||0} Einheiten · ${eur(num(n.umsatz))} €`
+                 : (t.x.status ? t.x.status : "ohne Nachbereitung");
+      return `<div class="hzeile"><span>${fmt(fromDk(t.tag))} · ${pad(t.h)} Uhr</span><span class="hinfo">${info}</span></div>`;
+    }).join("")}${treffer.length>6?`<p class="hinweis">und ${treffer.length-6} weitere</p>`:""}</div>`;
+}
+
 /* Vorhandenen Eintrag zum Ändern öffnen – vorhandene Nachbereitung bleibt erhalten */
 function startEdit(e){
   error = "";
@@ -1027,7 +1337,8 @@ function startEdit(e){
       str = m ? m[1] : (e.strasse||""); hnr = m ? m[2] : "";
     }
     Object.assign(draft.nb, {f_vor:e.vorname||"", f_nach:e.nachname||"", f_str:str||"", f_hnr:hnr||"",
-                             f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||"", f_anrede:e.anrede||""});
+                             f_plz:e.plz||"", f_ort:e.ort||"", f_tel:e.telefon||"", f_anrede:e.anrede||"",
+                             f_notiz:e.notiz||""});
     draft.back = "kind"; step = "kunde";
   }else if(e.kind==="eigenkauf"){ step = "eigen"; }
   else if(e.kind==="individuell"){ draft.titel = e.titel||""; draft.farbe = e.farbe; step = "indiv"; }
@@ -1044,7 +1355,11 @@ function paint(){
   if(step==="view" && e){
     let body = "";
     if(e.vorname) body = `<div class="summary"><b>${e.anrede?e.anrede+" ":""}${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":e.quelle||""}</span>
-      ${e.strasse?`<br>${e.strasse}`:""}${(e.plz||e.ort)?`<br>${e.plz||""} ${e.ort||""}`:""}${e.telefon?`<br><span>${e.telefon}</span>`:""}</div>`;
+      ${e.strasse?`<br>${e.strasse}`:""}${(e.plz||e.ort)?`<br>${e.plz||""} ${e.ort||""}`:""}${e.telefon?`<br><span>${e.telefon}</span>`:""}${e.notiz?`<br><span>${e.notiz}</span>`:""}</div>
+      <div class="actions">
+        ${e.telefon?`<a class="btn" href="${telLink(e.telefon)}">Anrufen</a>`:""}
+        ${adresseVon(e)?`<a class="btn" href="${mapsLink(adresseVon(e))}" target="_blank" rel="noopener">Route</a>`:""}
+      </div>`;
     else if(e.bis) body = `<div class="summary"><b>${e.art||"Privat"}</b><br><span>${e.von}–${e.bis} Uhr</span></div>`;
     else body = `<div class="summary"><b>${label(e).t1}</b><br><span>${label(e).t2}</span></div>`;
 
@@ -1080,17 +1395,17 @@ function paint(){
       ${bearbeitbar ? `<div class="actions"><button class="btn primary wide" id="editBtn">${
         (e.kind==="kunde"||e.kind==="premium") ? "Kundendaten bearbeiten" : "Daten bearbeiten"}</button></div>` : ""}`;
 
-    sheet.innerHTML = head(e.kind==="premium"?"Premium CheckIn":"Eintrag") + body + extra + foot;
+    sheet.innerHTML = head(e.kind==="premium"?"Premium CheckIn":"Eintrag") + body + historie(e) + extra + foot;
     wireSegs();
     const d1 = document.getElementById('del');
-    if(d1) d1.onclick = ()=>{ delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll(); };
+    if(d1) d1.onclick = ()=>{ inPapierkorb(draft.day,draft.hour); closeModal(); renderAll(); };
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
     const eb = document.getElementById('editBtn'); if(eb) eb.onclick = ()=> startEdit(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
     const dc = document.getElementById('doCancel');
     if(dc) dc.onclick = ()=>{
       verlauf.push({datum:draft.day, art:"abgesagt"});
-      delete entries[key(draft.day,draft.hour)]; closeModal(); renderAll();
+      inPapierkorb(draft.day,draft.hour); closeModal(); renderAll();
     };
     const dm = document.getElementById('doMove');
     if(dm) dm.onclick = ()=>{
@@ -1156,6 +1471,8 @@ function paint(){
          <input id="f_plz" value="${n.f_plz||""}" inputmode="numeric" maxlength="5" pattern="\\d{5}"></div>
          ${fld("f_ort","Ort",n.f_ort)}</div>
        ${fld("f_tel","Telefonnummer (freiwillig)",n.f_tel,"tel")}
+       <div class="field"><label for="f_notiz">Notiz zum Termin</label>
+         <textarea id="f_notiz" style="min-height:70px">${n.f_notiz||""}</textarea></div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="${draft.back||'quelle'}">Zurück</button><button class="btn primary" id="save">Termin speichern</button></div>
        <div class="actions"><button class="btn" id="spaeter">Später nachtragen</button></div>
@@ -1164,7 +1481,7 @@ function paint(){
     const speichere = (streng) => {
       collect();
       const g = id => (draft.nb[id]||"").trim();
-      if(!g('f_vor') || !g('f_nach')){ error="Vorname und Nachname fehlen."; repaint(); return; }
+      if(!g('f_nach')){ error="Der Nachname fehlt."; repaint(); return; }
       if(streng && !/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben."; repaint(); return; }
       if(!streng && g('f_plz') && !/^\d{5}$/.test(g('f_plz'))){ error="Die PLZ muss genau 5 Ziffern haben oder leer bleiben."; repaint(); return; }
       const alt = entries[key(draft.day,draft.hour)] || {};
@@ -1176,6 +1493,7 @@ function paint(){
         plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
       };
       if(draft.nb.f_anrede) eintrag.anrede = draft.nb.f_anrede; else delete eintrag.anrede;
+      if(g('f_notiz')) eintrag.notiz = g('f_notiz'); else delete eintrag.notiz;
       if(draft.quelle) eintrag.quelle = draft.quelle;
       entries[key(draft.day,draft.hour)] = eintrag;
       closeModal(); renderAll();
@@ -1364,6 +1682,15 @@ function paint(){
 const backBtn = to => `<div class="actions"><button class="btn" data-back="${to}">Zurück</button></div>`;
 function wireBack(){ sheet.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=>{ error=""; step=b.dataset.back; paint(); }); }
 function wireSegs(){
+  const plus = sheet.querySelector('#empPlus');
+  if(plus) plus.onclick = ()=>{ collect(); draft.nb.empfListe = [...(draft.nb.empfListe||[{}]), {}]; repaint(); };
+  sheet.querySelectorAll('[data-empdel]').forEach(b=> b.onclick = ()=>{
+    collect();
+    const l = [...(draft.nb.empfListe||[])];
+    l.splice(+b.dataset.empdel,1);
+    draft.nb.empfListe = l.length ? l : [{}];
+    repaint();
+  });
   sheet.querySelectorAll('[data-seg]').forEach(b=> b.onclick = ()=>{
     collect(); error="";
     draft.nb[b.dataset.seg] = draft.nb[b.dataset.seg]===b.dataset.val ? "" : b.dataset.val;
@@ -1398,10 +1725,10 @@ const demoColor = t =>
   t.startsWith("VM7")    ? C_VM7   :
   (t.startsWith("VR7") || t.startsWith("RB7")) ? C_ROBOT : C_ZUBEHOER;
 const tick = (on,c,gs="") => on
-  ? `<td class="tick ${gs}" style="background:${c};border-color:${c};color:${textOn(c)}">✓</td>`
+  ? `<td class="tick ${gs}" style="color:${c}">✓</td>`
   : `<td class="off ${gs}"></td>`;
 const cnt  = (v,c,gs="") => (+v>0)
-  ? `<td class="tick num ${gs}" style="background:${c};border-color:${c};color:${textOn(c)}">${+v}</td>`
+  ? `<td class="tick num ${gs}" style="color:${c}">${+v}</td>`
   : `<td class="off ${gs}"></td>`;
 const money = v => v ? `<td class="num strong">${eur(v)}</td>` : `<td class="off"></td>`;
 
@@ -1612,13 +1939,14 @@ function vertriebsmonat(date){
           fromK:dk(from), toK:dk(to), qFromK:dk(qFrom), jFromK:dk(jFrom)};
 }
 /* Bruttoumsätze eines Zeitraums */
+const abrechnungsTag = (tag,n) => (n && n.datiert==="Ja" && n.lieferdatum) ? n.lieferdatum : tag;
 function umsatz(fromK,toK){
   const u = {fg:0, wg:0, k70:0, k70ein:0};
   Object.keys(entries).forEach(k=>{
-    const day = k.split("|")[0];
-    if(day < fromK || day > toK) return;
     const n = entries[k].nb;
     if(!n || n.fremd==="Ja") return;                       // für andere geschrieben
+    const day = abrechnungsTag(k.split("|")[0], n);
+    if(day < fromK || day > toK) return;
     if(n.verkauft==="Ja"){
       if(n.gebiet==="Festgebiet") u.fg += num(n.umsatz);
       else if(n.gebiet==="Weißgebiet") u.wg += num(n.umsatz);
@@ -1689,6 +2017,56 @@ function restTage(vm, tagePw){
   const tage = Math.round((vm.to - heute)/86400000) + 1;
   return Math.max(1, tage * tagePw / 7);
 }
+/* Alle Vertriebsmonate des Jahres mit Umsatz, Einheiten und Bonusstufe */
+function jahresUebersicht(vmJetzt){
+  const jahr = vmJetzt.year, zeilen = [];
+  for(let q=0; q<4; q++){
+    [1,2,3].forEach(idx=>{
+      const startW = q*13 + (idx===1?1:idx===2?5:9);
+      const von = mondayOfISOWeek(jahr, startW);
+      const vm = vertriebsmonat(von);
+      if(vm.startW !== startW) return;
+      const u = umsatz(vm.fromK, vm.toK);
+      const p = provision(u, vm.weeks);
+      let einheiten = 0;
+      Object.keys(entries).forEach(k=>{
+        const n = entries[k].nb;
+        if(!n || n.fremd==="Ja") return;
+        const tag = abrechnungsTag(k.split("|")[0], n);
+        if(tag >= vm.fromK && tag <= vm.toK) einheiten += +n.einheiten || 0;
+      });
+      const vj = mondayOfISOWeek(jahr-1, startW);
+      const vmV = vertriebsmonat(vj);
+      const uV = umsatz(vmV.fromK, vmV.toK);
+      zeilen.push({vorjahr:uV.fg+uV.wg+uV.k70ein, name:`${q+1}. Quartal · ${idx}`, kw:`${vm.startW}–${vm.endW}`,
+        brutto:u.fg+u.wg+u.k70ein, einheiten, stufe:p.stufe, prov:p.prov,
+        aktuell: vm.startW === vmJetzt.startW});
+    });
+  }
+  return zeilen;
+}
+
+/* Monatsziel brutto je Gebiet */
+function monatsZiel(vm){
+  if(!(wunsch.einkommen > 0)) return {fg:0, wg:0};
+  const U = zielNetto(wunsch.einkommen, vm.weeks);
+  return {fg: U*.75*MWST, wg: U*.25*MWST};
+}
+/* Ampel: liegt der Ist-Wert im Plan für den bisherigen Verlauf des Monats? */
+function ampelPunkt(ist, ziel, vm){
+  if(!ziel) return "";
+  const heute = new Date(); heute.setHours(0,0,0,0);
+  let anteil = 1;
+  if(heute < vm.from) anteil = 0;
+  else if(heute <= vm.to) anteil = (Math.round((heute - vm.from)/86400000) + 1) / (vm.weeks*7);
+  const erwartet = ziel * anteil;
+  if(!erwartet) return "";
+  const quote = ist / erwartet;
+  const farbe = quote >= 1 ? "#7fa88c" : (quote >= .8 ? "#F2B33D" : "#E0806F");
+  const txt = `${Math.round(quote*100)} % vom Plan bis heute`;
+  return `<span class="ampel" style="--a:${farbe}" title="${txt}"></span>`;
+}
+
 /* Soll-Werte pro Tag für die Planer-Kennzahlen */
 function sollWerte(){
   const vm = vertriebsmonat(monday);
@@ -1761,6 +2139,13 @@ function renderProv(){
             <td>${erreicht ? "erreicht" : "fehlen "+eur(ziel-p.basis)+" €"}</td></tr>`;
         }).join("")}</tbody></table></div>
       <p class="hinweis">Bewertet wird der Nettoumsatz im Festgebiet einschließlich K70-Einkauf: aktuell ${eur(p.basis)} €.</p>
+
+      <div class="ah4">Vertriebsmonate ${vm.year}</div>
+      <div class="ascroll"><table class="atable">
+        <thead><tr><th>Monat</th><th>KW</th><th>Umsatz brutto</th><th>Vorjahr</th><th>Einheiten</th><th>Bonus</th><th>Provision</th></tr></thead>
+        <tbody>${jahresUebersicht(vm).map(j=>`<tr class="${j.aktuell?"best":""}">
+          <td>${j.name}</td><td>${j.kw}</td><td>${eur(j.brutto)}</td><td>${eur(j.vorjahr)}</td><td>${j.einheiten||"–"}</td>
+          <td>${j.stufe}</td><td>${eur(j.prov)}</td></tr>`).join("")}</tbody></table></div>
 
       <div class="ah4">Arbeitszeit</div>
       <div class="kpis">
@@ -1970,6 +2355,7 @@ function renderAusw(){
 
   const q = quoten();
   const f = q.fgb, p = q.promo, t = q.termine;
+  const serie = zielSerie();
 
   const s1 = `<div class="asec"><h3>Festgebietsbegehung</h3>
     <p class="sub">${f.n} Einsätze · ${dec(f.std)} Stunden im gewählten Zeitraum</p>
@@ -2025,7 +2411,11 @@ function renderAusw(){
         <span class="vl">${c} · ${pct(c,t.stattgefunden)}</span></div>`;
     }).join("") : `<p class="aempty">Noch keine nachbereiteten Termine.</p>`}</div>`;
 
-  document.getElementById('ausw').innerHTML = s1 + s2 + s3 + meldungHTML(monday);
+  const s0 = serie.wochen ? `<div class="asec"><div class="kpis">
+      ${kpi("Wochen in Folge im Ziel", serie.wochen, serie.wochen>1?"weiter so":"erste Woche","hero")}
+      ${kpi("Beste Serie", serie.beste, "seit Beginn")}
+    </div></div>` : "";
+  document.getElementById('ausw').innerHTML = s0 + s1 + s2 + s3 + meldungHTML(monday);
 }
 document.getElementById('rangeSeg').addEventListener('click', ev=>{
   const b = ev.target.closest('[data-rw]');
@@ -2091,12 +2481,15 @@ async function userSet(u){
 
 /* Alle Daten eines Benutzers als ein Paket */
 function dataBlob(){
-  return {entries, potenzial, verlauf, einkaeufe, inventur, settings, wunsch, ts:Date.now()};
+  return {entries, potenzial, empfehlungen, papierkorb, verlauf, einkaeufe, inventur, settings, wunsch, ts:Date.now()};
 }
 function applyData(d){
   Object.keys(entries).forEach(k=>delete entries[k]);
   Object.assign(entries, (d && d.entries) || {});
   potenzial.length = 0; ((d && d.potenzial) || []).forEach(x=>potenzial.push(x));
+  empfehlungen.length = 0; ((d && d.empfehlungen) || []).forEach(x=>empfehlungen.push(x));
+  const grenze = Date.now() - 30*86400000;
+  papierkorb.length = 0; ((d && d.papierkorb) || []).filter(x=>x.weg > grenze).forEach(x=>papierkorb.push(x));
   verlauf.length = 0;   ((d && d.verlauf)   || []).forEach(x=>verlauf.push(x));
   einkaeufe.length = 0; ((d && d.einkaeufe) || []).forEach(x=>einkaeufe.push(x));
   Object.keys(inventur).forEach(k=>delete inventur[k]);
@@ -2111,7 +2504,7 @@ function mische(wolke, lokal){
   const neuer = (wolke.ts||0) >= (lokal.ts||0) ? {...wolke} : {...lokal};
   const alt   = (wolke.ts||0) >= (lokal.ts||0) ? lokal : wolke;
   const leer = v => !v || (Array.isArray(v) ? !v.length : !Object.keys(v).length);
-  ["entries","inventur","potenzial","einkaeufe","verlauf"].forEach(f=>{
+  ["entries","inventur","potenzial","empfehlungen","papierkorb","einkaeufe","verlauf"].forEach(f=>{
     if(leer(neuer[f]) && !leer(alt[f])) neuer[f] = alt[f];
   });
   return neuer;
@@ -2179,7 +2572,7 @@ function flushSave(){
   const neuE = blob.entries || {}, altE = shadow.entries || {};
   Object.keys(neuE).forEach(k=>{ if(!gleich(neuE[k], altE[k])) updates[basis+'entries/'+k] = neuE[k]; });
   Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
-  ["potenzial","verlauf","einkaeufe","inventur","settings","wunsch"].forEach(f=>{
+  ["potenzial","empfehlungen","papierkorb","verlauf","einkaeufe","inventur","settings","wunsch"].forEach(f=>{
     if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
   });
   if(!Object.keys(updates).length){ saveState("gespeichert"); return; }
@@ -2493,13 +2886,10 @@ async function starteSitzung(u){
   dataReady = true;
   lgBusy = false; lg = {}; lgStep = "start"; lgErrText = "";
   loginEl.hidden = true;
-  document.getElementById('navTeam').hidden = !istTeamleiter();
-  document.getElementById('navDelete').hidden = !istTeamleiter();
-  document.getElementById('drawerFoot').innerHTML =
-    `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
-  document.getElementById('logoutBtn').onclick = logout;
+  renderMenu();
   await fuelleMemberSelect();
   renderAll();
+  if(istTeamleiter()) teamVergleich();
 }
 function logout(){
   clearTimeout(saveTimer); flushSave();
@@ -2509,7 +2899,7 @@ function logout(){
   lgStep = "start"; lg = {}; lgErrText = "";
   renderLogin();
   loginEl.hidden = false;
-  location.hash = "#planer";
+  location.hash = "#heute";
   setMenu(false);
   if(auth) auth.signOut();
 }
@@ -2560,11 +2950,54 @@ function fremdAnsicht(){
   render(); renderStat();
   const gridHtml = document.getElementById('grid').innerHTML;
   const statHtml = document.getElementById('statTable').innerHTML;
+  renderPotenzial();
+  const potHtml = document.getElementById('plist').innerHTML;
+  const potListe = potenzial.map(x=>({...x}));
   const meld = meldungHTML(new Date(teamMonday), viewUser.name);
   applyData(meins);
   monday = meinMontag;
-  render(); renderStat();
-  return {gridHtml, statHtml, meld};
+  render(); renderStat(); renderPotenzial();
+  return {gridHtml, statHtml, meld, potHtml, potListe};
+}
+/* Kennzahlen aller Mitglieder für die laufende Woche */
+async function teamVergleich(){
+  const box = document.getElementById('tmVergleich');
+  if(!box || !istTeamleiter()) return;
+  const dks = istAdmin()
+    ? (await alleNutzer()).filter(u=>u.dk!==me.dk).map(u=>u.dk)
+    : (me.team || []);
+  if(!dks.length){ box.innerHTML = ""; return; }
+  const tage = Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return dk(d);});
+  const von = tage[0], bis = tage[6];
+  const zeilen = [];
+  for(const d of dks){
+    const u = await userGet(d).catch(()=>null);
+    const blob = await loadData(d, true).catch(()=>null);
+    if(!u) continue;
+    const e = (blob && blob.entries) || {};
+    let termine=0, gemacht=0, verkauft=0, umsatzB=0, einheiten=0;
+    Object.keys(e).forEach(k=>{
+      const tag = k.split("|")[0], x = e[k];
+      if(tag < von || tag > bis) return;
+      if(x.kind !== "kunde") return;
+      termine++;
+      if(x.status === "stattgefunden") gemacht++;
+      const n = x.nb || {};
+      if(n.verkauft === "Ja"){ verkauft++; umsatzB += num(n.umsatz); einheiten += +n.einheiten||0; }
+    });
+    zeilen.push({name:`${u.vorname} ${u.nachname}`, termine, gemacht, verkauft, umsatzB, einheiten});
+  }
+  zeilen.sort((a,b)=> b.umsatzB - a.umsatzB);
+  box.innerHTML = `<div class="asec">
+    <h3>Team im Vergleich</h3>
+    <p class="sub">Kalenderwoche ${isoWeek(monday).week} · nach Umsatz sortiert</p>
+    <div class="ascroll"><table class="atable">
+      <thead><tr><th>Name</th><th>Termine</th><th>Gehalten</th><th>Abschlüsse</th><th>Quote</th><th>Einheiten</th><th>Umsatz</th></tr></thead>
+      <tbody>${zeilen.map(z=>`<tr>
+        <td>${z.name}</td><td>${z.termine}</td><td>${z.gemacht}</td><td>${z.verkauft}</td>
+        <td>${pct(z.verkauft, z.gemacht)}</td><td>${z.einheiten||"–"}</td><td>${eur(z.umsatzB)}</td>
+      </tr>`).join("")}</tbody></table></div>
+  </div>`;
 }
 function renderTeam(){
   const box = document.getElementById('tmViews');
@@ -2589,7 +3022,11 @@ function renderTeam(){
       <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>
     <div class="tmblock"><h4>Statistik · ${viewUser.name}</h4>
       <div class="board"><div class="scroller"><table class="stat">${v.statHtml}</table></div></div></div>
-    ${v.meld}`;
+    ${v.meld}
+    <div class="tmblock"><h4>Potenzialliste · ${viewUser.name}</h4>${v.potHtml}
+      <div class="actions"><button class="btn" id="tmPotDruck">Potenzialliste drucken</button></div></div>`;
+  const pd = document.getElementById('tmPotDruck');
+  if(pd) pd.onclick = ()=> potDrucken(v.potListe, viewUser.name);
   const pdf = document.getElementById('tmPdf');
   if(pdf) pdf.onclick = ()=> fremdPdf();
 }
@@ -2606,6 +3043,7 @@ function fremdPdf(){
   }, 300);
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
+addEventListener('hashchange', ()=>{ if(location.hash === "#team") teamVergleich(); });
 document.getElementById('tmPrev').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()-7); renderTeam(); } };
 document.getElementById('tmNext').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()+7); renderTeam(); } };
 document.getElementById('addMember').onclick = ()=>{
@@ -2690,6 +3128,11 @@ async function renderProfil(){
           <button type="button" class="eye" data-eye="pfPin" aria-label="PIN anzeigen">${EYE_AN}</button></div>
       </div>
       <p class="err" id="pfErr" hidden></p>
+      <div class="ah4">Erscheinungsbild</div>
+      <div class="grp"><div class="sect">${
+        ["Dunkel","Hell"].map(t=>`<button type="button" class="segbtn" data-thema="${t}"
+          aria-pressed="${(store.get('bw-thema')||'Dunkel')===t}">${t}</button>`).join("")}</div>
+        <p class="hinweis" style="margin-top:6px">Hell ist draußen bei Sonne besser lesbar.</p></div>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
       <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
       ${KALENDER_BASIS && me.feedToken ? `
@@ -2714,6 +3157,7 @@ async function renderProfil(){
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
     </div>`;
   document.getElementById('pfSave').onclick = profilSpeichern;
+  box.querySelectorAll('[data-thema]').forEach(b=> b.onclick = ()=>{ themaSetzen(b.dataset.thema); renderProfil(); });
   document.getElementById('pfPinNeu').onclick = pinDialog;
   const fc = document.getElementById('pfFeedCopy');
   if(fc) fc.onclick = ()=>{
@@ -2776,9 +3220,7 @@ async function profilSpeichern(){
     me = {...me, vorname:vor, nachname:nach};
     await userSet(me);
     if(hinweis){ err.textContent = hinweis; err.hidden = false; err.classList.add('ok'); return renderProfil(); }
-    document.getElementById('drawerFoot').innerHTML =
-      `<b>${me.vorname} ${me.nachname}</b>${me.dk} · ${me.rolle}<br><button id="logoutBtn">Abmelden</button>`;
-    document.getElementById('logoutBtn').onclick = logout;
+    renderMenu();
     zeig("");
     renderProfil();
   }catch(e2){
@@ -2885,6 +3327,27 @@ function sitzungAbgelaufen(u){
   return "";
 }
 
+
+/* Wie viele Wochen in Folge wurde das Wochenziel erreicht? */
+function zielSerie(){
+  if(!(wunsch.einkommen > 0)) return {wochen:0, beste:0};
+  let lauf = 0, beste = 0, aktuell = 0, erste = true;
+  const m = mondayOf(new Date());
+  for(let i=0; i<104; i++){
+    const von = new Date(m); von.setDate(von.getDate() - i*7);
+    const bis = new Date(von); bis.setDate(bis.getDate()+6);
+    const vm = vertriebsmonat(von);
+    const ziel = monatsZiel(vm);
+    const wochenziel = (ziel.fg + ziel.wg) / vm.weeks;
+    if(!wochenziel) break;
+    const u = umsatz(dk(von), dk(bis));
+    const erreicht = (u.fg + u.wg) >= wochenziel;
+    if(erreicht){ lauf++; beste = Math.max(beste, lauf); }
+    else { if(erste) aktuell = lauf; lauf = 0; }
+    if(erste && !erreicht) erste = false;
+  }
+  return {wochen: erste ? lauf : aktuell, beste: Math.max(beste, erste ? lauf : aktuell)};
+}
 
 /* ================= Wochenmeldung ================= */
 function meldungDaten(start){
@@ -3005,13 +3468,13 @@ document.addEventListener('click', ev=>{
 
 /* ================= Adressvervollständigung ================= */
 /* Nutzt Photon (OpenStreetMap) – kein Schlüssel, keine Anmeldung nötig */
-let adrTimer = null, adrLetzte = "";
+let adrTimer = null, adrLetzte = "", adrZiel = "f";
+const adrBox = () => document.getElementById(adrZiel === "f" ? 'strVorschlaege' : adrZiel + '_vorschlaege');
 function adrSchliessen(){
-  const box = document.getElementById('strVorschlaege');
-  if(box){ box.hidden = true; box.innerHTML = ""; }
+  document.querySelectorAll('.vorschlaege').forEach(b=>{ b.hidden = true; b.innerHTML = ""; });
 }
 async function adrSuchen(text){
-  const box = document.getElementById('strVorschlaege');
+  const box = adrBox();
   if(!box) return;
   if(text.length < 4){ adrSchliessen(); return; }
   try{
@@ -3042,7 +3505,8 @@ async function adrSuchen(text){
   }catch(err){ adrSchliessen(); }
 }
 document.addEventListener('input', ev=>{
-  if(ev.target.id !== 'f_str') return;
+  if(ev.target.id !== 'f_str' && !ev.target.dataset.adr) return;
+  adrZiel = ev.target.dataset.adr || "f";
   const text = ev.target.value.trim();
   if(text === adrLetzte) return;
   adrLetzte = text;
@@ -3052,12 +3516,11 @@ document.addEventListener('input', ev=>{
 document.addEventListener('click', ev=>{
   const v = ev.target.closest('.vorschlag');
   if(v){
-    const setz = (id,wert) => { const el = document.getElementById(id); if(el && wert) el.value = wert; };
-    setz('f_str', v.dataset.str);
-    setz('f_hnr', v.dataset.hnr);
-    setz('f_plz', v.dataset.plz);
-    setz('f_ort', v.dataset.ort);
-    if(draft){ draft.nb.f_str = v.dataset.str; draft.nb.f_hnr = v.dataset.hnr;
+    const z = v.closest('.vorschlaege').id.replace('_vorschlaege','').replace('strVorschlaege','f');
+    const setz = (feld,wert) => { const el = document.getElementById(z+"_"+feld); if(el && wert) el.value = wert; };
+    setz('str', v.dataset.str); setz('hnr', v.dataset.hnr);
+    setz('plz', v.dataset.plz); setz('ort', v.dataset.ort);
+    if(draft && z === "f"){ draft.nb.f_str = v.dataset.str; draft.nb.f_hnr = v.dataset.hnr;
                draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort; }
     adrSchliessen();
     return;
@@ -3163,7 +3626,10 @@ function renderInventur(){
       <div class="invsumme"><span>Warenbestand gesamt</span><b>${preis(bestandWert())} €</b></div>
     </div>
     <div class="asec invliste" id="invliste">${liste}</div>
-    ${istAdmin() ? `<div class="asec"><div class="actions"><button class="btn" id="invImport">Katalog einfügen oder aktualisieren</button></div></div>` : ""}`;
+    <div class="asec">
+      <div class="actions"><button class="btn" id="invBestand">Bestand einfügen oder sichern</button></div>
+      ${istAdmin() ? `<div class="actions"><button class="btn" id="invImport">Katalog einfügen oder aktualisieren</button></div>` : ""}
+    </div>`;
 
   const feld = document.getElementById('invSuche');
   feld.oninput = ()=>{ invSuche = feld.value; invFiltern(); invVorschlaege(feld.value); };
@@ -3181,6 +3647,7 @@ function renderInventur(){
   });
   const imp = document.getElementById('invImport');
   if(imp) imp.onclick = katalogDialog;
+  document.getElementById('invBestand').onclick = bestandDialog;
   invFiltern();
 }
 /* Vorschläge beim Tippen, wie bei den Adressen */
@@ -3214,6 +3681,49 @@ document.addEventListener('click', ev=>{
   }
   if(!ev.target.closest('#invVorschlaege') && !ev.target.closest('#invSuche')) invVorschlagZu();
 });
+/* Bestand als Liste einfügen – dient zugleich als Sicherung zum Herauskopieren */
+function bestandDialog(){
+  const jetzt = [];
+  (katalog.liste||[]).forEach(k => (k.artikel||[]).forEach(a=>{
+    const m = +inventur[artKey(k.kat+'|'+a.n)] || 0;
+    if(m > 0) jetzt.push(`${a.n} = ${m}`);
+  }));
+  simpleDialog("Bestand einfügen oder sichern", "Je Zeile: Artikelname = Anzahl",
+    `<div class="grp"><div class="field"><label for="bestText">Bestand</label>
+       <textarea id="bestText" style="min-height:220px;font-family:'JetBrains Mono',monospace;font-size:.78rem"
+         placeholder="KOBOLD SB7 Flexschlauch = 5">${jetzt.join("\n")}</textarea></div></div>
+     <p class="hinweis">Zum Sichern einfach den Text herauskopieren. Zum Einfügen die Liste ersetzen —
+       Artikel ohne Zeile bleiben unverändert, eine Null löscht den Bestand.</p>
+     <p class="err" id="bestErr" hidden></p>`,
+    ()=>{
+      const err = document.getElementById('bestErr');
+      const zeilen = document.getElementById('bestText').value.split(/\r?\n/);
+      const nachName = new Map();
+      (katalog.liste||[]).forEach(k => (k.artikel||[]).forEach(a=>
+        nachName.set(a.n.trim().toLowerCase(), artKey(k.kat+'|'+a.n))));
+      let gesetzt = 0; const unbekannt = [];
+      zeilen.forEach(z=>{
+        const t = z.trim(); if(!t) return;
+        const m = t.match(/^(.*?)\s*[=|;\t]\s*(\d+)$/);
+        if(!m){ unbekannt.push(t.slice(0,40)); return; }
+        const id = nachName.get(m[1].trim().toLowerCase());
+        if(!id){ unbekannt.push(m[1].slice(0,40)); return; }
+        const anzahl = +m[2];
+        if(anzahl > 0) inventur[id] = anzahl; else delete inventur[id];
+        gesetzt++;
+      });
+      if(unbekannt.length && !gesetzt){
+        err.textContent = "Keine Zeile erkannt. Format: Artikelname = Anzahl";
+        err.hidden = false; return;
+      }
+      closeModal(); saveData(); renderInventur(); renderProv();
+      if(unbekannt.length) setTimeout(()=> simpleDialog("Nicht zugeordnet",
+        `${gesetzt} Zeilen übernommen`,
+        `<div class="summary">${unbekannt.map(u=>`• ${u}`).join("<br>")}</div>
+         <p class="hinweis">Diese Namen stehen nicht im Katalog — bitte Schreibweise prüfen.</p>`,
+        ()=> closeModal(), "Verstanden"), 200);
+    }, "Übernehmen");
+}
 function katalogDialog(){
   const jetzt = (katalog.liste||[]).map(k =>
     "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${preis(a.p)}${a.top?" | top":""}`).join("\n")
@@ -3234,15 +3744,204 @@ function katalogDialog(){
     }, "Katalog speichern");
 }
 
+/* ================= Menü ================= */
+const IC = {
+  heute:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  planer:'<path d="M4 6h16v14H4z"/><path d="M4 10h16M9 3v4M15 3v4M9 14h2M13 14h2M9 17h2M13 17h2"/>',
+  statistik:'<path d="M3 5h18v14H3z"/><path d="M3 9h18M9 9v10M15 9v10"/>',
+  auswertungen:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/>',
+  potenzial:'<path d="M4 6h10M4 12h10M4 18h7"/><path d="m17 14 1.6 3.3 3.4.5-2.5 2.4.6 3.4-3.1-1.6-3.1 1.6.6-3.4L12 17.8l3.4-.5z" transform="translate(0,-6) scale(0.85) translate(3,3)"/>',
+  empfehlung:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M17 8h5M19.5 5.5v5"/>',
+  inventur:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/>',
+  wunsch:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+  provision:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15v2"/>',
+  profil:'<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/>',
+  team:'<circle cx="8.5" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M2.5 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2"/><path d="M16 14.2c2.9 0 5.5 1.5 5.5 4.3"/>',
+  kbdelete:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>'
+};
+const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
+const MENUE = [
+  ["heute","Heute"],["planer","Planer"],["statistik","Statistik"],["auswertungen","Auswertungen"],
+  ["potenzial","Potenzialliste"],["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
+  ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["profil","Profil"]
+];
+const MENUE_TL = [["team","Teammitglieder"],["kbdelete","KB Delete"]];
+function renderMenu(){
+  const bau = liste => liste.map(([k,t])=>
+    `<a class="navlink" href="#${k}" data-page="${k}"><span class="mic">${ic(k)}</span>${t}</a>`).join("");
+  document.getElementById('navHaupt').innerHTML = bau(MENUE);
+  document.getElementById('navTL').innerHTML = istTeamleiter() ? bau(MENUE_TL) : "";
+  document.getElementById('drawerFoot').innerHTML = me
+    ? `<div class="ktext"><b>${me.vorname} ${me.nachname}</b><span>${me.dk} · ${me.rolle}</span></div>
+       <button id="logoutBtn">Abmelden</button>` : "";
+  const lo = document.getElementById('logoutBtn');
+  if(lo) lo.onclick = logout;
+  const k = (location.hash.slice(1) || "planer");
+  document.querySelectorAll('.navlink').forEach(a=>
+    a.dataset.page === k ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
+}
+
+
+/* ================= Papierkorb ================= */
+function inPapierkorb(day,hour){
+  const e = entries[key(day,hour)];
+  if(!e) return;
+  papierkorb.unshift({tag:day, h:hour, e:JSON.parse(JSON.stringify(e)), weg:Date.now()});
+  if(papierkorb.length > 60) papierkorb.length = 60;
+  delete entries[key(day,hour)];
+}
+function renderPapierkorb(){
+  const box = document.getElementById('papierkorb');
+  if(!box) return;
+  if(!papierkorb.length){ box.innerHTML = ""; return; }
+  box.innerHTML = `<details class="korb"><summary>Papierkorb · ${papierkorb.length}</summary>
+    <div class="korbliste">${papierkorb.map((x,i)=>{
+      const l = label(x.e);
+      return `<div class="korbzeile">
+        <span>${fmtShort(fromDk(x.tag))} · ${pad(x.h)} Uhr · ${x.e.nachname || l.t1 || x.e.kind}</span>
+        <button class="mini" data-korb="${i}">Wiederherstellen</button></div>`;
+    }).join("")}</div>
+    <p class="hinweis">Einträge verschwinden nach 30 Tagen von selbst.</p></details>`;
+  box.querySelectorAll('[data-korb]').forEach(b=> b.onclick = ()=>{
+    const x = papierkorb[+b.dataset.korb];
+    if(!x) return;
+    if(entries[key(x.tag,x.h)]){ alert("Auf diesem Platz steht bereits ein Eintrag."); return; }
+    entries[key(x.tag,x.h)] = x.e;
+    papierkorb.splice(+b.dataset.korb,1);
+    renderAll();
+  });
+}
+
+/* ================= Heute ================= */
+const telLink  = t => `tel:${String(t).replace(/[^\d+]/g,"")}`;
+const mapsLink = a => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}`;
+const adresseVon = e => [e.strasse, [e.plz,e.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+
+/* Termine, die vorbei sind und noch keine Nachbereitung haben */
+function offeneNachbereitung(){
+  const heute = dk(new Date()), stunde = new Date().getHours();
+  const offen = [];
+  Object.keys(entries).forEach(k=>{
+    const [tag,h] = k.split("|");
+    const e = entries[k];
+    if(!["kunde","premium","terminieren"].includes(e.kind)) return;
+    if(e.status || (e.nb && Object.keys(e.nb).length)) return;
+    if(tag > heute || (tag === heute && +h + 2 > stunde)) return;
+    offen.push({tag, h:+h, e});
+  });
+  return offen.sort((a,b)=> a.tag === b.tag ? a.h - b.h : a.tag.localeCompare(b.tag));
+}
+function renderHeute(){
+  const box = document.getElementById('heute');
+  if(!box || !me) return;
+  const heute = dk(new Date());
+  const liste = HOURS_ASC.map(h=>({h, e:entries[key(heute,h)]})).filter(x=>x.e);
+  const offen = offeneNachbereitung();
+  const d = new Date();
+
+  const karte = ({h,e}) => {
+    const l = label(e), c = colorOf(e) || "var(--accent)";
+    const adr = adresseVon(e);
+    return `<div class="tkarte" style="--c:${c}">
+      <div class="tzeit">${pad(h)}<span>–${pad(h+2)}</span></div>
+      <div class="tinfo">
+        <div class="tname">${e.anrede?e.anrede+" ":""}${e.vorname||""} ${e.nachname||l.t1}</div>
+        ${l.t2?`<div class="tsub">${l.t2}</div>`:""}
+        ${adr?`<div class="tsub">${adr}</div>`:""}
+        ${e.notiz?`<div class="tnotiz">${e.notiz}</div>`:""}
+        <div class="taktion">
+          ${e.telefon?`<a class="mini" href="${telLink(e.telefon)}">Anrufen</a>`:""}
+          ${adr?`<a class="mini" href="${mapsLink(adr)}" target="_blank" rel="noopener">Route</a>`:""}
+          <button class="mini" data-oeffne="${heute}|${h}">Öffnen</button>
+        </div>
+      </div>
+      ${e.status?`<span class="thaken">✓</span>`:""}
+    </div>`;
+  };
+
+  box.innerHTML = `
+    ${offen.length ? `<div class="warnbox">
+      <b>${offen.length} ${offen.length===1?"Termin wartet":"Termine warten"} auf Nachbereitung</b>
+      <div class="woffen">${offen.slice(0,6).map(o=>
+        `<button class="mini" data-oeffne="${o.tag}|${o.h}">${fmtShort(fromDk(o.tag))} · ${pad(o.h)} Uhr · ${
+          (o.e.nachname || label(o.e).t1 || "Termin")}</button>`).join("")}
+        ${offen.length>6?`<span class="mehr">und ${offen.length-6} weitere</span>`:""}</div>
+    </div>` : ""}
+    <div class="asec">
+      <h3>${DAYS_L[(d.getDay()+6)%7]}, ${fmt(d)}</h3>
+      <p class="sub">${liste.length ? `${liste.length} ${liste.length===1?"Eintrag":"Einträge"}` : "Heute ist nichts eingetragen."}</p>
+      ${liste.map(karte).join("")}
+    </div>`;
+
+  box.querySelectorAll('[data-oeffne]').forEach(b=> b.onclick = ()=>{
+    const [tag,h] = b.dataset.oeffne.split("|");
+    monday = mondayOf(fromDk(tag));
+    render();
+    openSlot(tag, +h);
+  });
+}
+
+/* Offlinebetrieb – die App bleibt ohne Netz bedienbar */
+if("serviceWorker" in navigator){
+  addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+
+function themaSetzen(t){
+  store.set('bw-thema', t);
+  document.body.classList.toggle('hell', t === "Hell");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', t === "Hell" ? "#f5f4f1" : "#262624");
+}
+themaSetzen(store.get('bw-thema') || "Dunkel");
+
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderStat(); renderPotenzial(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
+function renderAll(){ render(); renderHeute(); renderPapierkorb(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
 document.getElementById('prev2').onclick = ()=> shiftWeek(-7);
 document.getElementById('next2').onclick = ()=> shiftWeek(7);
 document.getElementById('todayBtn').onclick = ()=>{monday = mondayOf(new Date()); renderAll();};
+document.getElementById('kopierBtn').onclick = ()=> wocheKopieren();
+function wocheKopieren(){
+  const arten = [["terminieren","Terminierungen"],["meeting","Meetings"],["privat","Privat"],["individuell","Individuell"]];
+  const ziel = new Date(monday); ziel.setDate(ziel.getDate()+7);
+  simpleDialog("Woche kopieren", `aus KW ${isoWeek(monday).week}`,
+    `<div class="grp">
+       <div class="sect"><span class="lb">Was übernehmen?</span>
+         <div class="checks stack">${arten.map(([k,t])=>
+           `<button type="button" data-wk="${k}" aria-pressed="true">${t}</button>`).join("")}</div></div>
+       ${fld("wkZiel","In die Woche ab",dk(ziel),"date")}
+     </div>
+     <p class="hinweis">Kundentermine und Premium CheckIns werden nie kopiert. Belegte Plätze bleiben unberührt.</p>
+     <p class="err" id="wkErr" hidden></p>`,
+    ()=>{
+      const gewaehlt = [...document.querySelectorAll('[data-wk][aria-pressed="true"]')].map(b=>b.dataset.wk);
+      const zielMontag = mondayOf(fromDk(document.getElementById('wkZiel').value));
+      const err = document.getElementById('wkErr');
+      if(!gewaehlt.length){ err.textContent = "Bitte mindestens eine Art wählen."; err.hidden = false; return; }
+      let n = 0;
+      weekDays.forEach((d,i)=>{
+        const von = dk(d);
+        const zt = new Date(zielMontag); zt.setDate(zt.getDate()+i);
+        const nach = dk(zt);
+        HOURS_ASC.forEach(h=>{
+          const e = entries[key(von,h)];
+          if(!e || !gewaehlt.includes(e.kind)) return;
+          if(entries[key(nach,h)]) return;
+          const kopie = {...e};
+          delete kopie.nb; delete kopie.status; delete kopie.bisTag;
+          entries[key(nach,h)] = kopie; n++;
+        });
+      });
+      closeModal();
+      monday = zielMontag;
+      renderAll();
+    }, "Kopieren");
+  sheet.querySelectorAll('[data-wk]').forEach(b=> b.onclick = ()=>
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === "true" ? "false" : "true"));
+}
 document.getElementById('todayBtn2').onclick = ()=>{monday = mondayOf(new Date()); renderAll();};
 
 const burger=document.getElementById('burger'), drawer=document.getElementById('drawer'), scrim=document.getElementById('scrim');
@@ -3268,7 +3967,7 @@ addEventListener('hashchange', ()=> show(location.hash.slice(1)));
 addEventListener('scroll', ()=> document.getElementById('topbar').classList.toggle('scrolled', scrollY>40));
 
 renderAll();
-show(location.hash.slice(1) || 'planer');
+show(location.hash.slice(1) || 'heute');
 </script>
 </body>
 </html>
