@@ -281,8 +281,8 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .asec{background:var(--surface);border-radius:var(--r-xl);padding:24px;margin-bottom:20px}
 .asec h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
 .asec .sub{font-size:.8rem;color:var(--muted);margin-bottom:16px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:10px}
-.kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+.kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:18px 20px}
 .kpi .kl{display:block;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);line-height:1.35;min-height:2.4em}
 .kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.85rem;font-weight:600;margin-top:6px;letter-spacing:-.02em}
 .kpi .ks{display:block;font-size:.7rem;color:var(--faint);margin-top:2px}
@@ -362,6 +362,11 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   padding:8px;text-align:center;font-family:"JetBrains Mono",monospace}
 .invzeile .menge:focus{border-color:var(--accent);outline:none}
 .invzeile.top{box-shadow:inset 3px 0 0 var(--accent);background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.invzeile.nichtda .nm{color:var(--faint)}
+.hw{display:block;font-style:normal;font-size:.7rem;color:var(--warn);margin-top:2px}
+.markbox{flex:none;width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--surface-2);
+  color:transparent;font-size:.75rem;line-height:1;cursor:pointer;padding:0}
+.markbox.an{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .invzeile.top .nm{font-weight:700;color:var(--text)}
 .invzeile .nm{color:var(--muted)}
 .stepper{flex:none;display:flex;align-items:center;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
@@ -1882,36 +1887,37 @@ const wunsch = {einkommen:0, tage:5, proAuftrag:0, quote:0};
 const einkaeufe = [];                       // K70-Einkauf: {datum, brutto}
 const inventur = {};                        // Artikelnummer -> Stückzahl
 const K70_KATALOG = [
-  {kat:"airumo",artikel:[{n:"airumo happy place Set",p:69},{n:"airumo summer delight Set",p:69},{n:"airumo wild heart Set",p:69},{n:"KOBOLD airumo dovina classic 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Duftkerze golden hour (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze happy (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze summer delight (360 g)",p:29.9},{n:"KOBOLD airumo Duftkerze wild heart (360 g)",p:29.9},{n:"KOBOLD airumo golden hour 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo happy (220 ml)",p:34.9},{n:"KOBOLD airumo happy place 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Mix Set",p:11.9,top:1},{n:"KOBOLD airumo mystic woods 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo Raumduft mystic woods (220 ml)",p:34.9},{n:"KOBOLD airumo Raumduft summer (220 ml)",p:34.9},{n:"KOBOLD airumo Raumduft wild heart (220 ml)",p:34.9},{n:"KOBOLD airumo summer delight 2x3 Stk.",p:11.9,top:1},{n:"KOBOLD airumo wild heart 2x3 Stk.",p:11.9,top:1}]},
-  {kat:"Elektro-Saugschläuche / -Saugrohre",artikel:[{n:"Elektrosaugrohr VT260/265",p:79},{n:"ESR300 Elektrosaugrohr",p:79},{n:"ESS 260/265 CC",p:99},{n:"ESS140 Elektrosaugschlauch (1 Stück)",p:58},{n:"ESS150/200 Elektrosaugschlauch",p:59},{n:"ESS270 Elektrosaugschlauch (1 Stück)",p:99},{n:"ESS300 Elektrosaugschlauch",p:99},{n:"Kobold ESR270 Elektrosaugrohr (1 Stück)",p:79}]},
+  {kat:"airumo",artikel:[{n:"airumo happy place Set",p:69,hw:"nicht verfügbar"},{n:"airumo summer delight Set",p:69},{n:"airumo wild heart Set",p:69,hw:"nicht verfügbar"},{n:"airumo dovina classic 2x3 Stk.",p:11.9,top:1},{n:"airumo Duftkerze golden hour (360 g)",p:29.9},{n:"airumo Duftkerze happy (360 g)",p:29.9},{n:"airumo Duftkerze summer delight (360 g)",p:29.9},{n:"airumo golden hour 2x3 Stk.",p:11.9,top:1},{n:"airumo happy (220 ml)",p:34.9,hw:"nicht verfügbar"},{n:"airumo happy place 2x3 Stk.",p:11.9,top:1},{n:"airumo Mix Set",p:11.9,top:1},{n:"airumo mystic woods 2x3 Stk.",p:11.9,top:1},{n:"airumo Raumduft mystic woods (220 ml)",p:34.9},{n:"airumo Raumduft summer (220 ml)",p:34.9},{n:"airumo Raumduft wild heart (220 ml)",p:34.9,hw:"nicht verfügbar"},{n:"airumo summer delight 2x3 Stk.",p:11.9,top:1},{n:"airumo wild heart 2x3 Stk.",p:11.9,top:1}]},
+  {kat:"Elektro-Saugschläuche / -Saugrohre",artikel:[{n:"Elektrosaugrohr VT260/265",p:79},{n:"ESR300 Elektrosaugrohr",p:79},{n:"ESS 260/265 CC",p:99},{n:"ESS140 Elektrosaugschlauch (1 Stück)",p:58},{n:"ESS150/200 Elektrosaugschlauch",p:59},{n:"ESS270 Elektrosaugschlauch (1 Stück)",p:99},{n:"ESS300 Elektrosaugschlauch",p:99},{n:"ESR270 Elektrosaugrohr (1 Stück)",p:79}]},
   {kat:"Fensterreinigung",artikel:[{n:"GD15 Glasdüse (1 Stück)",p:28},{n:"GT15 Glastuch (1 Stück)",p:12},{n:"Koboclear Glasreiniger, 750ml (1 Stück)",p:9.9}]},
-  {kat:"MP100",artikel:[{n:"Kobold MP100 Matratzen-Frischeraufsatz",p:59}]},
-  {kat:"PB420 / 430 Polsterboy",artikel:[{n:"PB420 Ersatzschuh inkl. Bürsten (1 Stück)",p:39},{n:"PB430 Ersatzschuh inkl. Bürsten (1 Stück)",p:35}]},
-  {kat:"PBB100",artikel:[{n:"Kobold MP Noppenscheibe",p:15},{n:"Kobold MR100 Matratzen-Saugaufsatz",p:39},{n:"Kobold PB(B) Ersatzschuh inkl. Bürsten",p:39}]},
-  {kat:"SB100 Saugschlauch",artikel:[{n:"Kobold SB100 Saugschlauch",p:49}]},
-  {kat:"Serviceartikel",artikel:[{n:"VR300 Hauptbürste neu",p:29.9},{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Revisionsklappe",p:6},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"Kobold HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"KOBOLD VA7 Groß Set 3 (2 x)",p:15},{n:"KOBOLD VA7 Medium Set 2 (3 x)",p:12},{n:"KOBOLD VA7 Universal Set 1 (3 x Mix)",p:15},{n:"Kobold VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Set Tankverschlüsse VG100",p:8},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP520 Seitenklappe",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
+  {kat:"MP100",artikel:[{n:"MP100 Matratzen-Frischeraufsatz",p:59}]},
+  {kat:"PB420 / 430 Polsterboy",artikel:[{n:"PB420 Ersatzschuh inkl. Bürsten (1 Stück)",p:39,hw:"nicht lieferbar"},{n:"PB430 Ersatzschuh inkl. Bürsten (1 Stück)",p:35}]},
+  {kat:"PBB100",artikel:[{n:"MP Noppenscheibe",p:15},{n:"MR100 Matratzen-Saugaufsatz",p:39},{n:"PB(B) Ersatzschuh inkl. Bürsten",p:39}]},
+  {kat:"SB100 Saugschlauch",artikel:[{n:"SB100 Saugschlauch",p:49}]},
+  {kat:"Serviceartikel",artikel:[{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9,hw:"nicht verfügbar"},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"EB400/100 Revisionsklappe",p:6},{n:"EBB100 Rundbürste",p:19.9},{n:"GP EB370 Matratzenbürsten (10 Stück)",p:150},{n:"GP EB370 Rundbürsten (10 Stück)",p:150},{n:"GP Koboclear (12 Stück)",p:108,hw:"zur Zeit nicht lieferbar"},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"MF520/530 Reinigungstücher-Set",p:93},{n:"TS7 Tücherset",p:49},{n:"VA7 Groß Set 3 (2 x)",p:15},{n:"VA7 Medium Set 2 (3 x)",p:12},{n:"VA7 Universal Set 1 (3 x Mix)",p:15},{n:"VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Kobotex, 200 ml (2 Stück)",p:15.9,hw:"zur Zeit nicht lieferbar"},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Rundbürsten zur ET340, EB350/351 (10 Paar)",p:150},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VR300 Hauptbürste neu",p:29.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
   {kat:"SP520 / 530 Hartbodenreiniger",artikel:[{n:"MF Dry (2 Stück)",p:29.9},{n:"MF Parkett (3 Stück)",p:39.9},{n:"MF Universal (3 Stück)",p:39.9},{n:"MF Universal Soft (3 Stück)",p:39.9},{n:"SP Dosierflasche (1 Stück)",p:20},{n:"SP Zubehörtasche (1 Stück)",p:29},{n:"SP520/530 Tuchträger (1 Stück)",p:25}]},
-  {kat:"SP600 Hartbodenreiniger",artikel:[{n:"Dichtlippen-Set SP600",p:19},{n:"Kobold SP600 Wassertank",p:30},{n:"Tuchträgerplatte kpl SP600, verp.",p:25}]},
-  {kat:"SP7",artikel:[{n:"KOBOLD SP7 TUCHTRÄGERRAHMEN",p:22},{n:"KOBOLD SP7 WASSERTANK (kompl.)",p:30},{n:"Kobold SPB100/7 Dichtlippenset",p:19}]},
-  {kat:"SPB100",artikel:[{n:"Kobold SPB100 Wassertank komplett",p:30}]},
-  {kat:"SPB100/SP600/SP7",artikel:[{n:"Koboclean Holzbodenseife 500ml",p:15.9,top:1},{n:"Koboclean Parkett 500ml",p:9.9,top:1},{n:"Koboclean Universal 500ml",p:9.9,top:1},{n:"KOBOLD MF Reinigungstuch Universal (3x)",p:39.9,top:1},{n:"MF600/601 Dry Set (2 Stk.)",p:29.9},{n:"Parkett Set (3 Stk.)",p:39.9,top:1},{n:"Universal Soft Set (3 Stk.)",p:39.9,top:1}]},
-  {kat:"VB100 Akkusauger",artikel:[{n:"EBB Bürste",p:19.9,top:1},{n:"FP 100 Filtertüte",p:23,top:1},{n:"VB100 2-1 Zubehördüse",p:25},{n:"VB100 Akku",p:99},{n:"VB100 Ladegerät",p:25},{n:"VB100 Motorschutzfilter",p:9.9}]},
+  {kat:"SP600 Hartbodenreiniger",artikel:[{n:"Dichtlippen-Set SP600",p:19},{n:"SP600 Wassertank",p:30},{n:"Tuchträgerplatte kpl SP600, verp.",p:25}]},
+  {kat:"SP7",artikel:[{n:"SP7 TUCHTRÄGERRAHMEN",p:22},{n:"SP7 WASSERTANK (kompl.)",p:30},{n:"SPB100/7 Dichtlippenset",p:19}]},
+  {kat:"SPB100",artikel:[{n:"SPB100 Wassertank komplett",p:30}]},
+  {kat:"SPB100/SP600/SP7",artikel:[{n:"Koboclean Holzbodenseife 500ml",p:15.9,top:1},{n:"Koboclean Parkett 500ml",p:9.9,top:1},{n:"Koboclean Universal 500ml",p:9.9,top:1},{n:"MF Reinigungstuch Universal (3x)",p:39.9,top:1},{n:"MF600/601 Dry Set (2 Stk.)",p:29.9},{n:"Parkett Set (3 Stk.)",p:39.9,top:1},{n:"Universal Soft Set (3 Stk.)",p:39.9,top:1}]},
+  {kat:"VB100 Akkusauger",artikel:[{n:"EBB Bürste",p:19.9,top:1},{n:"FP 100 Filtertüte",p:23,top:1},{n:"EBB100 Dichtlippen-Set (hinten)",p:20},{n:"EBB100 Seitenkappen",p:12},{n:"VB100 Filterdeckel",p:20},{n:"VB100 2-1 Zubehördüse",p:25},{n:"VB100 Akku",p:99},{n:"VB100 Ladegerät",p:25},{n:"VB100 Motorschutzfilter",p:9.9}]},
   {kat:"VC100 Akkusauger",artikel:[{n:"NC100 Zubehördüsen (1 Stück)",p:15},{n:"VC100 Filtereinheit(1 Stück)",p:9.9},{n:"VC100 Ladestation (1 Stück)",p:15}]},
   {kat:"VG100 Fensterreiniger",artikel:[{n:"MF100 Reinigungstuch (2 Stück)",p:25},{n:"VG 100 Abstellschale",p:15},{n:"VG100 Abziehlippe (1 Stück)",p:9},{n:"VG100 Teleskop (1 Stück)",p:60},{n:"VG100 Wassertrank (1 Stück)",p:30},{n:"VG100/VC100 Ladegerät (1 Stück)",p:15}]},
-  {kat:"VG100+ Flächenreiniger",artikel:[{n:"Kobold DA100 Kalkreiniger",p:9},{n:"Kobold GC100 Glasreiniger Konzentrat 200",p:9},{n:"Kobold MF100 Softfasertuch (2x)",p:25},{n:"Kobold VG100+ Teleskopstiel",p:60}]},
+  {kat:"VG100+ Flächenreiniger",artikel:[{n:"DA100 Kalkreiniger",p:9},{n:"GC100 Glasreiniger Konzentrat 200",p:9},{n:"MF100 Softfasertuch (2x)",p:25},{n:"VG100+ Teleskopstiel",p:60}]},
   {kat:"VK130 / 131 Handstaubsauger",artikel:[{n:"Aktiv-Geruchsfilter (1 Stück)",p:12.9,top:1},{n:"Filterset 130/131 (6 FP, 2 AGF, 1 HMF)",p:59},{n:"FP130/131 Filtertüte (6 Stück)",p:23,top:1},{n:"HMF 130/131 Hygiene-Mikrofilter (1 Stück)",p:19.9,top:1},{n:"VK130/131 Anschlussleitung lang",p:19}]},
-  {kat:"VK135 / 136 Handstaubsauger",artikel:[{n:"Anschlusskabel lang zum VK135/136 (1 Stück)",p:19},{n:"Anschlusskabel Standard zum VK135/136 (1 Stück)",p:15},{n:"Filterset 135/136 (6 FP, 1 HMF)",p:35},{n:"FP135/136 Filtertüten (6 Stück)",p:23,top:1},{n:"HMF135/136 Hygiene-Mikrofilter (1 Stück)",p:16.9,top:1}]},
+  {kat:"VK135 / 136 Handstaubsauger",artikel:[{n:"Anschlusskabel lang zum VK135/136 (1 Stück)",p:19},{n:"Anschlusskabel Standard zum VK135/136 (1 Stück)",p:15},{n:"Filterset 135/136 (6 FP, 1 HMF)",p:35},{n:"FP135/136 Filtertüten (6 Stück)",p:23,top:1},{n:"HMF135/136 Hygiene-Mikrofilter (1 Stück)",p:16.9,top:1},{n:"Hygiene-Mikrofilter zum VK135/136 (10 Stück)",p:150}]},
   {kat:"VK140 / 150 Handstaubsauger",artikel:[{n:"Premium Filtertüte FP140/150 (6 Stück)",p:23,top:1},{n:"VK140 Filterdeckel",p:29},{n:"VK150 Anschlusskabel, 10 m (1 Stück)",p:19},{n:"VK150 Filterdeckel",p:29}]},
-  {kat:"VK200 Handstaubsauger",artikel:[{n:"Anschlusskabel lang zum VK200 (1 Stück)",p:19},{n:"FL-M200 Motorschutzfilter",p:9.9},{n:"KOBOLD FP200 Filtertüte (RB7/VK200) (6x)",p:23,top:1},{n:"VK200 Filterdeckel",p:49}]},
-  {kat:"VK7",artikel:[{n:"Filtertüte FP7",p:23,top:1},{n:"KOBOLD AC7 Zubehör Set Box (inkl. SB7, FD7, VD7)",p:89,top:1},{n:"KOBOLD AD7 Anschlussadapter",p:20},{n:"KOBOLD BY7 Akku",p:159,top:1},{n:"KOBOLD CA7 LADESCHALE",p:20,top:1},{n:"KOBOLD CD7 Autodüse",p:25,top:1},{n:"KOBOLD DS7 DISPLAYSCHUTZFOLIE (3 Stk.)",p:9},{n:"KOBOLD EB7 DICHTLIPPE (hi.)",p:8},{n:"KOBOLD EB7 REVISIONSKLAPPE",p:6},{n:"KOBOLD EB7 RUNDBÜRSTEN",p:15,top:1},{n:"Kobold EB7 Seitenklappen Set (li.,re.)",p:10},{n:"KOBOLD FD7 Bürstenkranz inkl. Transportschutz",p:12},{n:"KOBOLD FD7 Flächendüse",p:25},{n:"Kobold FK7 SET",p:143},{n:"KOBOLD HD7 Borstenträgerplatte",p:25},{n:"KOBOLD HD7 Hardbodendüse",p:89},{n:"KOBOLD HD7 Revisionsklappe",p:6},{n:"KOBOLD MF7 MOTORSCHUTZFILTER",p:9},{n:"KOBOLD MP Noppenscheibe",p:15},{n:"KOBOLD MP7 Matratzenfrischer Aufsatz",p:59},{n:"KOBOLD MR7 Matratzenreinigungs Aufsatz",p:39,top:1},{n:"KOBOLD PB7 Saugschuh (black, inkl. Bürsten)",p:35},{n:"KOBOLD PC7 MONTAGEPLATTE",p:9},{n:"Kobold PC7 Premium Ladegerät",p:119},{n:"KOBOLD SB7 Flexschlauch",p:39,top:1},{n:"KOBOLD SC7 LADEGERÄT",p:29},{n:"KOBOLD SG7 Schultergurt",p:20,top:1},{n:"KOBOLD TD7 Textildüse",p:25},{n:"KOBOLD TR7 Teleskoprohr",p:25},{n:"KOBOLD VD7 Variodüse (inkl. BA7, MB7)",p:25},{n:"KOBOLD VK7 FILTERDECKEL (exkl. Akku)",p:25},{n:"KOBOLD WM7 Wandhalterung",p:15},{n:"KOBOLD Zubehörtasche (Kunden)",p:69}]},
-  {kat:"VM7",artikel:[{n:"BM7 Akku",p:89},{n:"CM7 Wandhalterung (solo)",p:16},{n:"USB-C-Kabel",p:10},{n:"USB-C-Ladegerät (20 Watt)",p:20,top:1},{n:"VM7 2-in-1-Düse",p:25},{n:"VM7 Filter Set",p:19.9},{n:"VM7 Staubbehälter",p:25}]},
-  {kat:"VR 300 Saugroboter",artikel:[{n:"VR300 Basisstation mit Anschlussleitung",p:95},{n:"VR300 Staubfachdeckel",p:12}]},
+  {kat:"VK200 Handstaubsauger",artikel:[{n:"AL VK200 10m 230V DE",p:17},{n:"Anschlusskabel lang zum VK200 (1 Stück)",p:19},{n:"FL-M200 Motorschutzfilter",p:9.9},{n:"FP200 Filtertüte (RB7/VK200) (6x)",p:23,top:1},{n:"VK200 Filterdeckel",p:49}]},
+  {kat:"VK7",artikel:[{n:"Filtertüte FP7",p:23,top:1},{n:"AC7 Zubehör Set",p:99},{n:"AC7 Zubehör Set Box (inkl. SB7, FD7, VD7 (BA7,MB7))",p:89,top:1},{n:"AD7 Anschlussadapter",p:20},{n:"BY7 Akku",p:159,top:1},{n:"CA7 LADESCHALE",p:20,top:1},{n:"CD7 Autodüse",p:25,top:1},{n:"DS7 DISPLAYSCHUTZFOLIE (3 Stk.)",p:9},{n:"EB7 DICHTLIPPE (hi.)",p:8},{n:"EB7 REVISIONSKLAPPE",p:6},{n:"EB7 RUNDBÜRSTEN",p:15,top:1},{n:"EB7 Seitenklappen Set (li.,re.)",p:10},{n:"FD7 Bürstenkranz inkl. Transportschutz",p:12},{n:"FD7 Flächendüse",p:25},{n:"FK7 SET",p:143},{n:"HD7 Borstenträgerplatte",p:25},{n:"HD7 Hardbodendüse",p:89},{n:"HD7 Revisionsklappe",p:6},{n:"MF7 MOTORSCHUTZFILTER",p:9},{n:"MP Noppenscheibe",p:15},{n:"MP7 Matratzenfrischer Aufsatz",p:59},{n:"MR7 Matratzenreinigungs Aufsatz",p:39,top:1},{n:"PB7 Saugschuh (black, inkl. Bürsten)",p:35},{n:"PC7 ANSCHLUSSLEITUNG 230V (EU)",p:5},{n:"PC7 MONTAGEPLATTE",p:9},{n:"PC7 Premium Ladegerät",p:114},{n:"PC7 Premium Ladegerät (Mit Stromkabel)",p:119},{n:"SB7 Flexschlauch",p:39,top:1},{n:"SC7 LADEGERÄT",p:29},{n:"SG7 Schultergurt",p:20,top:1},{n:"TD7 Textildüse",p:25},{n:"TR7 Teleskoprohr",p:25},{n:"VD7 Variodüse (inkl. BA7, MB7)",p:25},{n:"VK7 FILTERDECKEL (exkl. Akku)",p:25},{n:"WM7 Wandhalterung",p:15},{n:"Zubehörtasche (Kunden)",p:69}]},
+  {kat:"VM7",artikel:[{n:"BM7 Akku",p:89},{n:"CM7 Wandhalt./Ladeg./USB-C",p:39},{n:"CM7 Wandhalterung (solo)",p:16},{n:"USB-C-Kabel",p:10},{n:"USB-C-Ladegerät (20 Watt)",p:20,top:1},{n:"VM7 2-in-1-Düse",p:25},{n:"VM7 Filter Set",p:19.9},{n:"VM7 Staubbehälter",p:25}]},
+  {kat:"VR 300 Saugroboter",artikel:[{n:"VR300 Basisstation mit Anschlussleitung",p:95},{n:"VR300 Basisstation ohne Anschlussleitung",p:80},{n:"VR300 Staubfachdeckel",p:12}]},
   {kat:"VR100 Saugroboter",artikel:[{n:"VR100 Filter (1 Stück)",p:19.9,top:1},{n:"VR100 Rundbürste (1 Stück)",p:29.9,top:1},{n:"VR100 Staubbehälter (1 Stück)",p:15}]},
-  {kat:"VR200 Saugroboter",artikel:[{n:"Bürste VR200",p:29.9},{n:"VR200 Basisstation Set (inkl. Netzkabel)",p:95},{n:"VR200 Begrenzungsstreifen (1 Stück)",p:19},{n:"VR200 Fernbedienungung inkl. Batterie (1 Stück)",p:25},{n:"VR200 Staubbehälter (1 Stück)",p:15}]},
-  {kat:"VR7",artikel:[{n:"KOBOLD CB7 Ladestation (inkl. Netzteil)",p:49},{n:"KOBOLD CB7 Netzteil",p:25},{n:"KOBOLD RB7 Abdeckplatte PC7",p:4},{n:"KOBOLD RB7 Abdeckplatte ST7",p:1},{n:"KOBOLD RB7 Anschlussleitung 230V (EU)",p:5},{n:"Kobold RB7 Deckel Filterraum",p:25},{n:"KOBOLD RB7 Motorschutzfilter",p:9.9,top:1},{n:"Kobold ST7 & WM7",p:39},{n:"KOBOLD ST7 Stick (VK7 Halterung für RB7)",p:24},{n:"KOBOLD VR200/VR300VR7 Seitenbürste",p:9.9,top:1},{n:"KOBOLD VR7 Akku",p:129},{n:"KOBOLD VR7 Filter",p:19.9,top:1},{n:"Kobold VR7 Motorschutzfilter",p:9,top:1},{n:"KOBOLD VR7 Rundbürste",p:29.9,top:1},{n:"KOBOLD VR7 Staubbehälter (ohne Filter)",p:20}]},
+  {kat:"VR200 Saugroboter",artikel:[{n:"Bürste VR200",p:29.9},{n:"VR200 Basisstation ohne Netzteil (1 Stück)",p:80},{n:"VR200 Basisstation Set (inkl. Netzkabel)",p:95},{n:"VR200 Begrenzungsstreifen (1 Stück)",p:19},{n:"VR200 Fernbedienungung inkl. Batterie (1 Stück)",p:25},{n:"VR200 Staubbehälter (1 Stück)",p:15},{n:"VR200 USB-Adapter (1 Stück)",p:10}]},
+  {kat:"VR7",artikel:[{n:"CB7 Ladestation (inkl. Netzteil)",p:49},{n:"CB7 Netzteil",p:25},{n:"RB7 Abdeckplatte PC7",p:4},{n:"RB7 Abdeckplatte ST7",p:1},{n:"RB7 Anschlussleitung 230V (EU)",p:5},{n:"RB7 Deckel Filterraum",p:25},{n:"RB7 Motorschutzfilter",p:9.9,top:1},{n:"ST7 & WM7",p:39},{n:"ST7 Stick (VK7 Halterung für RB7)",p:24},{n:"VR200/VR300VR7 Seitenbürste",p:9.9,top:1},{n:"VR7 Akku",p:129},{n:"VR7 Bürstenabdeckung",p:15},{n:"VR7 Filter",p:19.9,top:1},{n:"VR7 Motorschutzfilter",p:9,top:1},{n:"VR7 Rundbürste",p:29.9,top:1},{n:"VR7 Staubbehälter (ohne Filter)",p:20}]},
   {kat:"VT250 / 251 / 252 Bodenstaubsauger",artikel:[{n:"VT251/252 Geruchsfilter (1 Stück)",p:19.9}]},
   {kat:"VT260 / 265 / 270 Bodenstaubsauger",artikel:[{n:"Aktiv-Geruchsfilter (1 Stück)",p:12.9,top:1},{n:"FP 260 Filtertüten",p:23,top:1},{n:"Hygiene-Mikrofilter (1 Stück)",p:16.9,top:1},{n:"VT260 Filterset (FP260, 1 HMF, 1 AGF)",p:48},{n:"VT265/270/300 Motorschutzfilter (1 Stück)",p:9.9,top:1}]},
-  {kat:"VT300 Bodenstaubsauger",artikel:[{n:"FP300 Premium Filtertüte (5 Stück)",p:23,top:1}]}
+  {kat:"VT300 Bodenstaubsauger",artikel:[{n:"FP300 Premium Filtertüte (5 Stück)",p:23,top:1}]},
+  {kat:"Zubehör",artikel:[{n:"Adapter für Kobold für Zubehör mit Wappenanschluss (1 Stück)",p:19},{n:"FD15 Flexodüse (1 Stück)",p:25},{n:"HD60 Hartbodendüse (1 Stück)",p:79},{n:"Frische-Set Teppich",p:29},{n:"SD15 Softdüse (1 Stück)",p:25},{n:"Softdüse 14 (1 Stück)",p:25},{n:"TR15 Teleskoprohr (1 Stück)",p:25},{n:"Variodüse 14 (1 Stück)",p:25},{n:"VD15 Variodüse (1 Stück)",p:25}]}
 ];
 const katalog = {liste: K70_KATALOG};       // Shop-Katalog, überschreibbar über die Datenbank
 const netto = v => v / MWST;
@@ -3562,7 +3568,10 @@ function katalogParsen(text){
     if(teile.length < 2) return;
     if(!aktuell){ aktuell = {kat:"Ohne Kategorie", artikel:[]}; kats.push(aktuell); }
     const eintrag = {n: teile[0].trim(), p: num(teile[1])};
-    if(/top|gut/i.test(teile[2]||"")) eintrag.top = true;
+    teile.slice(2).forEach(t=>{
+      if(/^top$/i.test(t.trim())) eintrag.top = 1;
+      else if(/nicht/i.test(t)) eintrag.hw = t.trim();
+    });
     aktuell.artikel.push(eintrag);
   });
   return kats;
@@ -3601,9 +3610,10 @@ function renderInventur(){
     liste += `<div class="invkat">${k.kat}</div>`;
     liste += (k.artikel||[]).map(a=>{
       const id = artKey(k.kat+'|'+a.n);
-      const such = (a.n + " " + preis(a.p)).toLowerCase();
-      return `<div class="invzeile${a.top?" top":""}" data-such="${such}">
-        <span class="nm">${a.n}</span>
+      const such = (a.n + " " + preis(a.p) + " " + (a.hw||"")).toLowerCase();
+      return `<div class="invzeile${a.top?" top":""}${a.hw?" nichtda":""}" data-such="${such}">
+        ${istAdmin()?`<button type="button" class="markbox${a.top?" an":""}" data-mark="${k.kat}|${a.n}" title="Verkaufsschlager">✓</button>`:""}
+        <span class="nm">${a.n}${a.hw?`<em class="hw">${a.hw}</em>`:""}</span>
         <span class="pr">${preis(a.p)} €</span>
         <span class="stepper">
           <button type="button" data-minus="${id}" aria-label="weniger">−</button>
@@ -3644,6 +3654,17 @@ function renderInventur(){
   });
   box.querySelectorAll('[data-menge]').forEach(el=>{
     el.parentElement.classList.toggle('hat', (+el.textContent||0) > 0);
+  });
+  box.querySelectorAll('[data-mark]').forEach(b=> b.onclick = async ()=>{
+    const [kat,name] = b.dataset.mark.split("|");
+    const k = (katalog.liste||[]).find(x=>x.kat===kat);
+    const a = k && k.artikel.find(x=>x.n===name);
+    if(!a) return;
+    if(a.top) delete a.top; else a.top = 1;
+    b.classList.toggle('an', !!a.top);
+    b.closest('.invzeile').classList.toggle('top', !!a.top);
+    try{ await db.ref('katalog').set(katalog.liste); saveState("gespeichert"); }
+    catch(e){ saveState("Markierung nicht gespeichert", true); }
   });
   const imp = document.getElementById('invImport');
   if(imp) imp.onclick = katalogDialog;
@@ -3726,7 +3747,7 @@ function bestandDialog(){
 }
 function katalogDialog(){
   const jetzt = (katalog.liste||[]).map(k =>
-    "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${preis(a.p)}${a.top?" | top":""}`).join("\n")
+    "# "+k.kat+"\n" + (k.artikel||[]).map(a=>`${a.n} | ${preis(a.p)}${a.top?" | top":""}${a.hw?" | "+a.hw:""}`).join("\n")
   ).join("\n\n");
   simpleDialog("Katalog einfügen", "Kategorien mit #, dann Artikel | Preis | top",
     `<div class="grp"><div class="field"><label for="katText">Katalog</label>
