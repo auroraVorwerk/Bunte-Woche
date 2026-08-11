@@ -31,13 +31,19 @@ body.hell{
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;line-height:1.5;min-height:100vh;
+  -webkit-font-smoothing:antialiased;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,.summary,.name,.tnotiz,.why{-webkit-user-select:text;user-select:text}
+.slot{touch-action:manipulation}
+body.schiebt{overflow:hidden}
+body.schiebt .scroller{overflow:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 button{-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 
 /* Topbar + Menü */
-.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;padding:12px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
+.topbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;
+  padding:calc(12px + env(safe-area-inset-top)) 16px 12px;min-height:calc(68px + env(safe-area-inset-top));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
 .burger{width:44px;height:44px;flex:none;display:grid;place-content:center;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:16px;cursor:pointer}
 .burger span{display:block;width:18px;height:2px;border-radius:2px;background:var(--text);transition:.25s}
 .burger[aria-expanded="true"] span:nth-child(1){transform:translateY(7px) rotate(45deg)}
@@ -50,7 +56,11 @@ button{-webkit-tap-highlight-color:transparent}
 .topbar.scrolled .mark{opacity:1;transform:none}
 .scrim{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s}
 .scrim.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;z-index:50;top:10px;bottom:10px;left:10px;width:min(300px,84vw);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:18px 14px;display:flex;flex-direction:column;gap:4px;transform:translateX(-115%);transition:transform .3s cubic-bezier(.3,.85,.3,1)}
+.drawer{position:fixed;z-index:50;top:10px;bottom:10px;left:10px;width:min(300px,84vw);background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-xl);padding:calc(18px + env(safe-area-inset-top)) 14px 18px;
+  display:flex;flex-direction:column;gap:4px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  transform:translateX(-115%);transition:transform .3s cubic-bezier(.3,.85,.3,1)}
+.navliste.unten{margin-top:24px}
 .drawer.open{transform:none}
 .konto{display:flex;align-items:center;gap:10px;padding:10px 12px 14px;border-bottom:1px solid var(--line);margin-bottom:10px}
 .konto .ktext{flex:1;min-width:0;line-height:1.35}
@@ -70,11 +80,18 @@ button{-webkit-tap-highlight-color:transparent}
 .navlink[aria-current="page"]{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
 
 /* Kopf */
-.wrap{max-width:1320px;margin:0 auto;padding:0 16px 72px}
+.wrap{max-width:1560px;margin:0 auto;padding:0 16px calc(72px + env(safe-area-inset-bottom))}
 .hero{padding:30px 0 20px}
-h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem,9vw,3.6rem)}
-.pagetitle{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:1rem;color:var(--muted)}
-.pagetitle::before{content:"";width:20px;height:3px;border-radius:2px;background:var(--accent)}
+h1{font-weight:800;letter-spacing:-.045em;line-height:.88;font-size:clamp(2.6rem,9vw,4rem);display:flex;flex-direction:column}
+h1 span{color:var(--muted);font-weight:300}
+.streifen{display:flex;gap:5px;margin-top:14px;max-width:260px}
+.streifen i{height:5px;flex:1;border-radius:3px}
+.streifen i:nth-child(1){background:#F26D5B}.streifen i:nth-child(2){background:#F2A65A}
+.streifen i:nth-child(3){background:#E9D16C}.streifen i:nth-child(4){background:#9CC08B}
+.streifen i:nth-child(5){background:#77CDF5}.streifen i:nth-child(6){background:#9A6CE8}
+.streifen i:nth-child(7){background:#E8C4F2}
+.pagetitle{display:inline-block;margin-top:14px;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);background:var(--surface-2);border-radius:999px;padding:7px 16px}
 
 /* Wochenwahl */
 .weekbar{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px;margin-bottom:12px}
@@ -91,7 +108,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 /* Raster */
 .board{background:var(--surface);border-radius:var(--r-xl);padding:10px}
 .scroller{overflow-x:auto;overscroll-behavior-x:contain}
-.grid{display:grid;grid-template-columns:168px repeat(7,minmax(156px,1fr));gap:4px;min-width:1180px}
+.grid{display:grid;grid-template-columns:150px repeat(7,minmax(142px,1fr));gap:4px;min-width:1094px}
 .cell{border-radius:var(--r-sm);padding:8px;font-size:.82rem}
 .corner,.timelbl,.metriclbl{position:sticky;left:0;z-index:2;background:var(--surface)}
 .corner{background:color-mix(in srgb,var(--accent) 22%,var(--surface));border-radius:var(--r);display:flex;flex-direction:column;justify-content:center;padding:10px 14px}
@@ -113,6 +130,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 .slot.col .t2{color:inherit;opacity:.72}
 .slot.col.done .t1::before{color:inherit}
 .slot.done .t1::before{content:"✓ ";color:var(--accent)}
+.slot.halb .t1::before{content:"· ";opacity:.6}
 .slot.blocked{cursor:not-allowed;color:var(--faint);border-color:transparent;
   background:repeating-linear-gradient(135deg,rgba(0,0,0,.14) 0 8px,rgba(0,0,0,0) 8px 16px),var(--bc,var(--z0))}
 .slot.blocked:hover{filter:none}
@@ -156,6 +174,7 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
 @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}}
 .sheet header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;margin:0 -22px 18px;padding:20px 22px 14px;background:var(--surface);border-bottom:1px solid var(--line);border-radius:var(--r-xl) var(--r-xl) 0 0}
 .sheet h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+.sheet .hint,.sheet .hinweis{text-align:center}
 .sheet .when{font-size:.78rem;color:var(--muted);font-family:"JetBrains Mono",monospace;margin-top:2px}
 .x{width:34px;height:34px;flex:none;border:0;border-radius:50%;background:var(--surface-2);cursor:pointer;font-size:1.1rem;line-height:1}
 .x:hover{background:var(--surface-3)}
@@ -172,6 +191,15 @@ h1{font-weight:800;letter-spacing:-.035em;line-height:.95;font-size:clamp(2.4rem
   background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
   background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:38px}
 .grp{background:var(--surface-2);border-radius:var(--r-lg);padding:16px;margin-bottom:14px}
+.nbblock{background:var(--surface-2);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden}
+.nbkopf{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:15px 16px;cursor:pointer;text-align:left}
+.nbtitel{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);flex:none}
+.nbkurz{flex:1;min-width:0;font-size:.84rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.nbpfeil{flex:none;color:var(--faint);font-size:1.1rem;width:16px;text-align:center}
+.nbblock.offen .nbtitel{color:var(--accent)}
+.nbinhalt{padding:0 16px 16px}
+.nbinhalt .field input,.nbinhalt .field select,.nbinhalt .field textarea,
+.nbinhalt .seg button,.nbinhalt .checks button{background-color:var(--surface)}
 .grp>.sect:last-child,.grp>.field:last-child{margin-bottom:0}
 .grp .field input,.grp .field select,.grp .field textarea,.grp .seg button,.grp .checks button,.grp .field .fixed{background-color:var(--surface)}
 .grp .seg button[aria-pressed="true"],.grp .checks button[aria-pressed="true"]{background-color:color-mix(in srgb,var(--accent) 22%,var(--surface))}
@@ -207,22 +235,23 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .sect{margin-bottom:16px}
 .sect.boxed{background:var(--surface-2);border-radius:var(--r-lg);padding:14px}
 .hr{height:1px;background:var(--line);margin:18px 0}
-.h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:20px 0 10px}
+.h4{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:22px 0 12px;text-align:center}
 .h4:first-of-type{margin-top:0}
-.actions{display:flex;gap:8px;margin-top:18px}
-.btn{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:12px;cursor:pointer;font-weight:600}
+.actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:13px;cursor:pointer;font-weight:600;transition:.15s}
 .btn:hover{background:var(--surface-3)}
 .btn.primary{background:var(--text);border-color:var(--text);color:var(--bg)}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.danger{color:var(--warn)}
 .hint{font-size:.75rem;color:var(--faint);margin-top:12px}
-.err{font-size:.78rem;color:var(--warn);margin-top:10px}
+.err{font-size:.8rem;color:var(--warn);margin-top:12px;text-align:center;background:color-mix(in srgb,var(--warn) 12%,transparent);border-radius:var(--r);padding:11px 14px}
 .summary{background:var(--surface-2);border-radius:var(--r);padding:14px 16px;font-size:.86rem;line-height:1.7}
 .summary span{color:var(--muted)}
 
 /* Potenzialliste */
-.plist{display:grid;gap:12px}
-.pcard{background:var(--surface);border-radius:var(--r-lg);padding:18px 20px}
+.plist{display:grid;gap:14px}
+.pcard{background:var(--surface);border-radius:var(--r-lg);padding:20px 22px;transition:transform .15s}
+.pcard:hover{transform:translateY(-1px)}
 .pcard .nm{font-weight:700;font-size:1rem}
 .pcard .meta{font-size:.8rem;color:var(--muted);margin-top:2px}
 .pcard .pot{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
@@ -244,10 +273,10 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
 /* Durchgehende Trennlinien mit Abstand zu den Blöcken */
-.stat td.vsep,.stat th.vsep{width:14px;min-width:14px;padding:0;border:0;border-radius:0;background:
-  linear-gradient(to right,transparent 0 6px,rgba(255,255,255,.34) 6px 8px,transparent 8px 14px)}
-.stat tr.sep td{padding:0;height:10px;border:0;border-radius:0;background:
-  linear-gradient(to bottom,transparent 0 4px,rgba(255,255,255,.34) 4px 6px,transparent 6px 10px)}
+.stat td.vsep,.stat th.vsep{width:13px;min-width:13px;padding:0;border:0;border-radius:0;background:
+  linear-gradient(to right,transparent 0 6px,rgba(255,255,255,.16) 6px 7px,transparent 7px 13px)}
+.stat tr.sep td{padding:0;height:7px;border:0;border-radius:0;background:
+  linear-gradient(to bottom,transparent 0 3px,rgba(255,255,255,.13) 3px 4px,transparent 4px 7px)}
 /* Klebende Spalten */
 .stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
 .stat thead th.sticky{z-index:4;background:var(--surface-3)}
@@ -279,20 +308,25 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .rangebar{background:var(--surface);border-radius:var(--r-xl);padding:16px 18px;margin-bottom:18px}
 .rangebar .rl{display:block;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
 .asec{background:var(--surface);border-radius:var(--r-xl);padding:24px;margin-bottom:20px}
-.asec h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
-.asec .sub{font-size:.8rem;color:var(--muted);margin-bottom:16px}
+.asec h3{font-size:1.2rem;font-weight:800;letter-spacing:-.025em;margin-bottom:5px;position:relative;padding-right:70px;text-align:center}
+.asec h3 .resetbtn{top:0}
+.resetbtn{position:absolute;top:-2px;right:0;width:28px;height:28px;border:0;border-radius:50%;background:var(--surface-2);
+  color:var(--faint);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.resetbtn:hover{color:var(--text);background:var(--surface-3)}
+.resetinfo{position:absolute;top:4px;right:34px;font-size:.66rem;font-weight:400;color:var(--faint);letter-spacing:0;text-transform:none}
+.asec .sub{font-size:.82rem;color:var(--muted);margin-bottom:22px;text-align:center;line-height:1.5}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
-.kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:18px 20px}
-.kpi .kl{display:block;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);line-height:1.35;min-height:2.4em}
-.kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.85rem;font-weight:600;margin-top:6px;letter-spacing:-.02em}
-.kpi .ks{display:block;font-size:.7rem;color:var(--faint);margin-top:2px}
+.kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:20px;text-align:center}
+.kpi .kl{display:block;font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);line-height:1.4;min-height:2.5em}
+.kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.9rem;font-weight:600;margin-top:8px;letter-spacing:-.03em}
+.kpi .ks{display:block;font-size:.72rem;color:var(--faint);margin-top:5px}
 .kpi.hero{background:color-mix(in srgb,var(--accent) 18%,var(--surface-2))}
-.ah4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:24px 0 10px}
+.ah4{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:28px 0 12px;text-align:center}
 .ascroll{overflow-x:auto}
 .atable{width:100%;min-width:460px;border-collapse:separate;border-spacing:0 4px;font-size:.82rem}
 .atable th{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;text-align:right;padding:0 10px 4px;white-space:nowrap}
 .atable th:first-child{text-align:left}
-.atable td{background:var(--surface-2);padding:11px 10px;text-align:right;font-family:"JetBrains Mono",monospace;white-space:nowrap}
+.atable td{background:var(--surface-2);padding:13px 12px;text-align:right;font-family:"JetBrains Mono",monospace;white-space:nowrap}
 .atable td:first-child{text-align:left;font-family:"Manrope",sans-serif;font-weight:600;border-radius:var(--r) 0 0 var(--r)}
 .atable td:last-child{border-radius:0 var(--r) var(--r) 0}
 .atable tr.best td{background:color-mix(in srgb,var(--accent) 22%,var(--surface-2))}
@@ -305,9 +339,10 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .wgrid{display:grid;grid-template-columns:1fr;gap:10px;max-width:430px;margin:0 auto}
 .field.wf{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin:0;text-align:center}
 .field.wf label{font-size:.74rem;color:var(--muted);min-height:0;margin-bottom:7px}
+.field.wf input[readonly]{color:var(--muted);background:var(--surface-2)}
 .field.wf input{background:var(--surface);border:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:1.15rem;font-weight:600;padding:11px 12px;text-align:center}
 .field.wf .unit{display:block;font-size:.68rem;color:var(--faint);margin-top:5px}
-.hinweis{font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.5}
+.hinweis{font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.55}
 .mini{background:var(--surface-3);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.72rem;cursor:pointer;margin-left:6px}
 .mini:hover{border-color:var(--accent)}
 .foot2{margin-top:22px;border-top:1px solid var(--line);padding-top:16px;display:grid;gap:10px;font-size:.79rem;color:var(--muted);line-height:1.5}
@@ -316,6 +351,37 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
   text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
 .mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+/* Zählzeilen */
+.zzeile{display:flex;align-items:center;gap:12px;background:var(--surface);border-radius:var(--r);
+  padding:11px 14px;margin-bottom:8px}
+.zzeile .ztitel{flex:1;font-size:.88rem;color:var(--muted)}
+.zzeile.hat .ztitel{color:var(--text);font-weight:600}
+/* Zählmodus */
+#zaehlflaeche{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;
+  padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
+.zkopf{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.zkopf b{display:block;font-size:1.05rem}
+.zkopf span{font-size:.76rem;color:var(--faint);font-family:"JetBrains Mono",monospace}
+.zkopf .mini{margin:0;padding:10px 16px;background:var(--surface-3)}
+.zgitter{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.zkachel{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;
+  color:var(--text);padding:10px;transition:transform .08s}
+.zkachel:active{transform:scale(.97);background:var(--surface-2)}
+.zk-t{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.zk-n{font-family:"JetBrains Mono",monospace;font-size:3.2rem;font-weight:600;line-height:1}
+.zk-minus{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:1.2rem}
+.zhinweis{text-align:center;font-size:.76rem;color:var(--faint);margin-top:14px}
+.faq{background:var(--surface-2);border-radius:var(--r);margin-bottom:8px;padding:2px}
+.faq summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:600;font-size:.9rem}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";float:right;color:var(--faint)}
+.faq[open] summary::after{content:"–"}
+.faq p{padding:0 16px 15px;font-size:.86rem;color:var(--muted);line-height:1.6}
+.tourpunkte{display:flex;justify-content:center;gap:6px;margin:16px 0 4px}
+.tourpunkte i{width:6px;height:6px;border-radius:50%;background:var(--surface-3)}
+.tourpunkte i.an{background:var(--accent);width:18px;border-radius:3px}
 .wochenaktion{display:flex;gap:10px;justify-content:center;margin-bottom:16px}
 .wochenaktion .todaybtn{margin:0}
 .slot.quelle{outline:2px dashed var(--accent);outline-offset:-3px}
@@ -341,6 +407,17 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .taktion{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .taktion .mini{margin:0;text-decoration:none;color:var(--text);background:var(--surface);padding:7px 14px}
 .thaken{position:absolute;top:12px;right:14px;color:var(--accent);font-weight:800}
+.rufbox{background:color-mix(in srgb,var(--accent) 13%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
+  border-radius:var(--r-xl);padding:16px 18px;margin-bottom:16px}
+.rufbox>b{display:block;margin-bottom:12px;font-size:.9rem}
+.rufzeile{background:var(--surface);border-radius:var(--r-lg);padding:13px 15px;margin-bottom:8px;
+  box-shadow:inset 3px 0 0 var(--accent)}
+.rufzeile.reminder{box-shadow:inset 3px 0 0 #E8C4F2}
+.rufzeile:last-child{margin-bottom:0}
+.rtitel{display:block;font-weight:700;font-size:.9rem}
+.rsub{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}
+.raktion{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.raktion .mini{margin:0;background:var(--surface-2);text-decoration:none;color:var(--text);padding:7px 14px}
 .warnbox{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);
   border-radius:var(--r-xl);padding:16px 18px;margin-bottom:16px;font-size:.88rem}
 .woffen{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
@@ -401,7 +478,9 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .login{position:fixed;inset:0;z-index:80;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px}
 .login[hidden]{display:none}
 .loginbox{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:26px 24px}
-.loginbox .lgmark{font-weight:800;font-size:1.6rem;letter-spacing:-.03em;margin-bottom:20px}
+.loginbox{text-align:center}
+.loginbox .field{text-align:left}
+.loginbox .lgmark{font-weight:800;font-size:1.7rem;letter-spacing:-.04em;margin-bottom:22px}
 .loginbox h2{font-size:1.05rem;font-weight:700;margin-bottom:3px}
 .loginbox .lgsub{font-size:.8rem;color:var(--muted);margin-bottom:18px}
 .loginbox .btn{width:100%;margin-top:6px}
@@ -504,7 +583,8 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <main class="wrap">
   <div class="hero">
-    <h1>Bunte Woche</h1>
+    <h1>Bunte<span>Woche</span></h1>
+    <div class="streifen" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="pagetitle" id="pagetitle">Planer</div>
   </div>
 
@@ -564,6 +644,8 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
     <div id="tmViews"></div>
   </section>
   <section class="page" id="page-inventur"><div id="inventur"></div></section>
+  <section class="page" id="page-jahr"><div id="jahr"></div></section>
+  <section class="page" id="page-faq"><div id="faq"></div></section>
   <section class="page" id="page-profil"><div id="profil"></div></section>
   <section class="page" id="page-kbdelete"><div id="kbdel"></div></section>
   <section class="page" id="page-wunsch">
@@ -585,7 +667,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -757,7 +839,7 @@ function render(){
           ? `<button class="cell slot blocked soft${alt}" style="--bc:${bk.c}" data-day="${day}" data-hour="${hr}" title="privat belegt – Termin trotzdem möglich"></button>`
           : `<div class="cell slot blocked${alt}" style="--bc:${bk.c}" title="durch einen laufenden Termin belegt"></div>`;
       }else if(e){
-        const l = label(e), done = e.status ? " done" : "", c = colorOf(e);
+        const l = label(e), done = e.status ? " done" : (e.nb && Object.keys(e.nb).length ? " halb" : ""), c = colorOf(e);
         const st = c ? ` style="background:${c};border-color:${c};color:${textOn(c)}"` : "";
         h += `<button class="slot filled col${done}${alt}"${st} data-day="${day}" data-hour="${hr}"><span class="t1">${l.t1}</span>${l.t2?`<span class="t2">${l.t2}</span>`:""}</button>`;
       }else{
@@ -805,14 +887,26 @@ function zeigeSchiebeleiste(){
   document.body.appendChild(bar);
   document.getElementById('schiebeStop').onclick = schiebeAus;
 }
+let halteStart = null;
 grid.addEventListener('pointerdown', ev=>{
   const s = ev.target.closest('.slot.filled');
   if(!s || schiebe) return;
+  halteStart = {x:ev.clientX, y:ev.clientY};
   clearTimeout(halteTimer);
-  halteTimer = setTimeout(()=> schiebeAn(s.dataset.day, +s.dataset.hour), 450);
+  halteTimer = setTimeout(()=>{
+    schiebeAn(s.dataset.day, +s.dataset.hour);
+    if(navigator.vibrate) navigator.vibrate(15);
+  }, 420);
 });
-['pointerup','pointercancel','pointermove','scroll'].forEach(t=>
-  grid.addEventListener(t, ()=> clearTimeout(halteTimer), {passive:true}));
+grid.addEventListener('pointermove', ev=>{
+  if(!halteStart) return;
+  if(Math.abs(ev.clientX-halteStart.x) > 8 || Math.abs(ev.clientY-halteStart.y) > 8){
+    clearTimeout(halteTimer); halteStart = null;      // es wird gescrollt, nicht gehalten
+  }
+}, {passive:true});
+['pointerup','pointercancel'].forEach(t=>
+  grid.addEventListener(t, ()=>{ clearTimeout(halteTimer); halteStart = null; }, {passive:true}));
+grid.addEventListener('contextmenu', ev=>{ if(ev.target.closest('.slot')) ev.preventDefault(); });
 
 grid.addEventListener('click', ev=>{
   const ml = ev.target.closest('[data-mclick]');
@@ -919,63 +1013,51 @@ function collect(){
 function repaint(){ const y = sheet.scrollTop; paint(); sheet.scrollTop = y; }
 
 /* ---------- Nachbereitung ---------- */
+/* Ein Block der Nachbereitung – zugeklappt zeigt er nur seine Zusammenfassung */
+function nbBlock(id, titel, inhalt, zusammen, offenWenn){
+  const offen = draft.nb["_zu_"+id] === undefined ? offenWenn : !draft.nb["_zu_"+id];
+  return `<div class="nbblock${offen?" offen":""}">
+    <button type="button" class="nbkopf" data-nbzu="${id}">
+      <span class="nbtitel">${titel}</span>
+      <span class="nbkurz">${offen ? "" : (zusammen || "offen")}</span>
+      <span class="nbpfeil">${offen ? "–" : "+"}</span>
+    </button>
+    ${offen ? `<div class="nbinhalt">${inhalt}</div>` : ""}
+  </div>`;
+}
 function nbForm(){
   const n = draft.nb;
   const geraetLabel = n.kundenstatus==="Neukunde" ? "Welche Marke hat der Kunde aktuell?" : "Welches Gerät hat der Kunde aktuell?";
-  let h = `<div class="h4">Nachbereitung · Kunde</div>
-    <div class="grp">
-      <div class="sect"><span class="lb">Kundenart</span>${seg("kundenstatus",["Neukunde","Bestandskunde"],n.kundenstatus)}</div>
-      <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet",["Festgebiet","Weißgebiet"],n.gebiet)}</div>
-      ${fld("geraet",geraetLabel,n.geraet)}
-    </div>
-
-    <div class="h4">Gespräch</div>
-    <div class="grp">
+  let h = nbBlock("kunde","Kunde",
+    `<div class="sect"><span class="lb">Kundenart</span>${seg("kundenstatus",["Neukunde","Bestandskunde"],n.kundenstatus)}</div>
+     <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet",["Festgebiet","Weißgebiet"],n.gebiet)}</div>
+     ${fld("geraet",geraetLabel,n.geraet)}`,
+    [n.kundenstatus, n.gebiet].filter(Boolean).join(" · "),
+    !(n.kundenstatus && n.gebiet)) +
+  nbBlock("zeit","Echte Zeiten",
+    `<div class="row2">
+       ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
+       ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
+     </div>`,
+    (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "",
+    true) +
+  nbBlock("gespraech","Gespräch", `
       <div class="sect"><span class="lb">Nach Empfehlungen gefragt?</span>${seg("empf",["Ja","Nein"],n.empf)}
         ${n.empf==="Ja"?fld("empfAnzahl","Wie viele bekommen?",n.empfAnzahl,"number",'min="0" inputmode="numeric"'):""}</div>
-      ${n.empf==="Ja" ? (n.empfListe||[{}]).map((e,i)=>`
-        <div class="empkarte">
-          <div class="ekopf"><span>Empfehlung ${i+1}</span>
-            ${(n.empfListe||[]).length>1?`<button type="button" class="mini" data-empdel="${i}">entfernen</button>`:""}</div>
-          <div class="row2">
-            <div class="field"><label>Vorname</label><input data-emp="${i}|vor" value="${e.vor||""}" autocomplete="off"></div>
-            <div class="field"><label>Nachname</label><input data-emp="${i}|nach" value="${e.nach||""}" autocomplete="off"></div>
-          </div>
-          <div class="row2">
-            <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
-              <input id="emp${i}_str" data-emp="${i}|str" data-adr="emp${i}" value="${e.str||""}" autocomplete="off">
-              <div class="vorschlaege" id="emp${i}_vorschlaege" hidden></div></div>
-            <div class="field" style="flex:0 0 30%"><label>Nr.</label>
-              <input id="emp${i}_hnr" data-emp="${i}|hnr" value="${e.hnr||""}" autocomplete="off"></div>
-          </div>
-          <div class="row2">
-            <div class="field" style="flex:0 0 42%"><label>PLZ</label>
-              <input id="emp${i}_plz" data-emp="${i}|plz" value="${e.plz||""}" inputmode="numeric" maxlength="5"></div>
-            <div class="field"><label>Ort</label>
-              <input id="emp${i}_ort" data-emp="${i}|ort" value="${e.ort||""}" autocomplete="off"></div>
-          </div>
-          <div class="field"><label>Telefon (freiwillig)</label><input data-emp="${i}|tel" value="${e.tel||""}" autocomplete="off"></div>
-          <div class="field"><label>Notiz</label><textarea data-emp="${i}|notiz" style="min-height:60px">${e.notiz||""}</textarea></div>
-        </div>`).join("") + `<div class="actions"><button type="button" class="btn" id="empPlus">+ weitere Empfehlung</button></div>` : ""}
+      ${n.empf==="Ja" ? `<div class="actions"><button type="button" class="btn" id="empOeffnen">
+        ${(n.empfListe||[]).filter(x=>x && (x.nach||"").trim()).length} von ${+n.empfAnzahl||0} erfasst — jetzt eintragen</button></div>` : ""}
       <div class="sect"><span class="lb">Nach Jobticket gefragt?</span>${seg("job",["Ja","Nein"],n.job)}
-        ${n.job==="Ja"?fld("jobAnzahl","Wie viele bekommen?",n.jobAnzahl,"number",'min="0" inputmode="numeric"'):""}</div>
-    </div>
-
-    <div class="h4">Vorführung</div>
-    <div class="grp">
-      <div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[],"stack")}</div>
-      ${fld("demotuecher","Wie viele Demotücher gezogen?",n.demotuecher,"number",'min="0" inputmode="numeric"')}
-      ${n.kundenstatus==="Neukunde" ? "" : `<div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>`}
-    </div>
-
-    <div class="h4">Echte Zeiten</div>
-    <div class="grp">
-      <div class="row2">
-        ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
-        ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
-      </div>
-    </div>
-    <div class="h4">Abschluss</div>
+        ${n.job==="Ja"?fld("jobAnzahl","Wie viele bekommen?",n.jobAnzahl,"number",'min="0" inputmode="numeric"'):""}</div>`,
+    [n.empf==="Ja"?`${n.empfAnzahl||0} Empfehlungen`:"", n.job==="Ja"?`${n.jobAnzahl||0} Jobtickets`:""].filter(Boolean).join(" · ")
+      || (n.empf && n.job ? "keine" : ""),
+    !(n.empf && n.job)) +
+  nbBlock("vorfuehrung","Vorführung",
+    `<div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[],"stack")}</div>
+     ${fld("demotuecher","Wie viele Demotücher gezogen?",n.demotuecher,"number",'min="0" inputmode="numeric"')}
+     ${n.kundenstatus==="Neukunde" ? "" : `<div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>`}`,
+    (n.vorgefuehrt||[]).length ? `${(n.vorgefuehrt||[]).length} Geräte` : "",
+    !(n.vorgefuehrt||[]).length) +
+  `<div class="h4">Abschluss</div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
       ${n.verkauft==="Ja"?`<div class="row2">${fld("einheiten","Einheiten",n.einheiten,"number",'min="0" inputmode="numeric"')}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}</div>
@@ -1017,13 +1099,12 @@ function nbForm(){
 function nbPremiumForm(){
   const n = draft.nb;
   return `<div class="h4">Nachbereitung · Premium CheckIn</div>
-    <div class="h4">Echte Zeiten</div>
-    <div class="grp">
-      <div class="row2">
-        ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
-        ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
-      </div>
-    </div>
+    ${nbBlock("zeit","Echte Zeiten",
+      `<div class="row2">
+         ${fld("realStart","Gestartet",n.realStart||`${pad(draft.hour)}:00`,"time",'step="300"')}
+         ${fld("realEnde","Geendet",n.realEnde||`${pad(Math.min(draft.hour+2,23))}:00`,"time",'step="300"')}
+       </div>`,
+      (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "", true)}
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde etwas nachgekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
       ${n.verkauft==="Ja" ? `
@@ -1052,8 +1133,8 @@ function nbTermForm(e){
     : [["tueren","Türen geklingelt"],["erreicht","Erreicht"],["termine","Termine"],["rueck","Rückmeldungstermine"]];
   return `<div class="h4">Nachbereitung · ${e.quelle}</div>
     <div class="grp">
-      <div class="row2">${fld(zahlen[0][0],zahlen[0][1],n[zahlen[0][0]],"number",'min="0" inputmode="numeric"')}${fld(zahlen[1][0],zahlen[1][1],n[zahlen[1][0]],"number",'min="0" inputmode="numeric"')}</div>
-      <div class="row2">${fld(zahlen[2][0],zahlen[2][1],n[zahlen[2][0]],"number",'min="0" inputmode="numeric"')}${fld(zahlen[3][0],zahlen[3][1],n[zahlen[3][0]],"number",'min="0" inputmode="numeric"')}</div>
+      ${zahlen.map(([id,t])=>zaehlZeile(id,t,n[id])).join("")}
+      <div class="actions"><button type="button" class="btn" id="zaehlStart">Zählmodus öffnen</button></div>
     </div>
     <div class="h4">Echte Zeiten</div>
     <div class="grp">
@@ -1090,10 +1171,39 @@ function saveNbTerm(e){
   closeModal(); renderAll();
 }
 
+function nbZwischen(e){
+  collect();
+  e.nb = {...draft.nb};
+  delete e.status;                       // bleibt in der Erinnerungsliste
+  closeModal(); renderAll();
+}
 function saveNb(e){
   collect();
   const n = draft.nb;
-  if(!n.kundenstatus || !n.gebiet){ error="Bitte Neukunde/Bestandskunde und Gebiet angeben."; repaint(); return; }
+  const fehlt = [];
+  if(!n.kundenstatus) fehlt.push("Kundenart");
+  if(!n.gebiet) fehlt.push("Gebiet");
+  if(!(n.geraet||"").trim()) fehlt.push(n.kundenstatus==="Neukunde" ? "aktuelle Marke" : "aktuelles Gerät");
+  if(!n.realStart || !n.realEnde) fehlt.push("echte Zeiten");
+  if(!n.empf) fehlt.push("Empfehlungen gefragt");
+  if(n.empf==="Ja" && !(+n.empfAnzahl >= 0 && String(n.empfAnzahl||"").length)) fehlt.push("Anzahl Empfehlungen");
+  if(n.empf==="Ja" && +n.empfAnzahl > 0 && !(n.empfListe||[]).some(x=>x && (x.nach||"").trim())) fehlt.push("Namen der Empfehlungen");
+  if(!n.job) fehlt.push("Jobticket gefragt");
+  if(n.job==="Ja" && !String(n.jobAnzahl||"").length) fehlt.push("Anzahl Jobtickets");
+  if(!String(n.demotuecher||"").length) fehlt.push("Demotücher");
+  if(n.kundenstatus!=="Neukunde" && !n.wartung) fehlt.push("Wartungsservice");
+  if(!n.k70) fehlt.push("K70 aus dem Kofferraum");
+  if(n.k70==="Ja" && num(n.k70betrag) <= 0) fehlt.push("Betrag K70");
+  if(n.verkauft==="Ja"){
+    if(!String(n.einheiten||"").length) fehlt.push("Einheiten");
+    if(num(n.umsatz) <= 0) fehlt.push("Bruttoumsatz");
+    if(!n.datiert) fehlt.push("späteres Lieferdatum");
+  }
+  if(fehlt.length){
+    error = "Es fehlt noch: " + fehlt.join(", ") + ".";
+    ["kunde","zeit","gespraech","vorfuehrung"].forEach(b=> delete draft.nb["_zu_"+b]);
+    repaint(); return;
+  }
   if(!n.verkauft){ error="Bitte angeben, ob der Kunde gekauft hat."; repaint(); return; }
   if(n.realStart && n.realEnde && toDec(n.realEnde) <= toDec(n.realStart)){
     error="Die Endzeit muss nach der Startzeit liegen."; repaint(); return;
@@ -1157,7 +1267,12 @@ function terminAusPotenzial(p, quelle){
       if(!tag){ err.textContent="Bitte ein Datum wählen."; err.hidden=false; return; }
       if(entries[key(tag,std)]){ err.textContent="Auf diesem Platz steht schon ein Eintrag."; err.hidden=false; return; }
       entries[key(tag,std)] = {kind:"kunde", quelle:document.getElementById('ptQuelle').value,
-        vorname:p.vorname, nachname:p.nachname, strasse:p.strasse||"", plz:p.plz||"", ort:p.ort||"", telefon:p.telefon||""};
+        vorname:p.vorname, nachname:p.nachname, strasse:p.strasse||"", plz:p.plz||"", ort:p.ort||"", telefon:p.telefon||"",
+        str:p.str||"", hnr:p.hnr||"", notiz:p.notiz||""};
+      const i = empfehlungen.findIndex(x=>x.id===p.id);   // aus der Empfehlungsliste entfernen
+      if(i>=0) empfehlungen.splice(i,1);
+      const j = potenzial.findIndex(x=>x.id===p.id);      // Potenzialeintrag bleibt, Wiedervorlage entfällt
+      if(j>=0) delete potenzial[j].wieder;
       closeModal(); renderAll();
     }, "Termin eintragen");
 }
@@ -1183,19 +1298,24 @@ function potDrucken(liste, wer){
       </tr>`).join("")}</tbody>
     </table>`;
   document.body.classList.add('drucke-pot');
-  setTimeout(()=>{
-    window.print();
-    setTimeout(()=> document.body.classList.remove('drucke-pot'), 400);
-  }, 120);
+  const fertig = ()=>{ document.body.classList.remove('drucke-pot'); removeEventListener('afterprint', fertig); };
+  addEventListener('afterprint', fertig);
+  setTimeout(()=> window.print(), 150);
+}
+function empfNeu(){
+  const leer = {id:"", vorname:"", nachname:"", str:"", hnr:"", plz:"", ort:"", telefon:"", notiz:"", von:"", datum:dk(new Date())};
+  kontaktBearbeiten(leer, empfehlungen, false, true);
 }
 function renderEmpfehlung(){
   const el = document.getElementById('elist');
   if(!el) return;
+  const knopf = `<div class="asec"><div class="actions"><button class="btn primary" id="empNeu">Empfehlung hinzufügen</button></div></div>`;
   if(!empfehlungen.length){
-    el.innerHTML = `<div class="placeholder">Noch keine Empfehlungen. Sie erscheinen hier, sobald du sie in einer Nachbereitung namentlich einträgst.</div>`;
+    el.innerHTML = knopf + `<div class="placeholder">Noch keine Empfehlungen. Sie erscheinen hier automatisch aus der Nachbereitung — oder du trägst sie oben von Hand ein.</div>`;
+    document.getElementById('empNeu').onclick = empfNeu;
     return;
   }
-  el.innerHTML = `<div class="plist">` + empfehlungen.slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||"")).map(p=>`
+  el.innerHTML = knopf + `<div class="plist">` + empfehlungen.slice().sort((a,b)=>(b.datum||"").localeCompare(a.datum||"")).map(p=>`
     <div class="pcard">
       <div class="nm">${p.vorname} ${p.nachname}</div>
       <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
@@ -1209,6 +1329,7 @@ function renderEmpfehlung(){
         <button class="btn danger" data-edel="${p.id}">Löschen</button>
       </div>
     </div>`).join("") + `</div>`;
+  document.getElementById('empNeu').onclick = empfNeu;
   el.querySelectorAll('[data-edel]').forEach(b=> b.onclick = ()=>{
     const i = empfehlungen.findIndex(x=>x.id===b.dataset.edel);
     if(i>=0) empfehlungen.splice(i,1); renderAll();
@@ -1223,8 +1344,9 @@ function renderEmpfehlung(){
   });
 }
 /* Kundendaten, Notiz und bei der Potenzialliste auch die Geräte ändern */
-function kontaktBearbeiten(p, liste, mitGeraeten){
-  simpleDialog("Eintrag bearbeiten", `${p.vorname} ${p.nachname}`,
+function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
+  simpleDialog(istNeu ? "Empfehlung hinzufügen" : "Eintrag bearbeiten",
+    istNeu ? "" : `${p.vorname} ${p.nachname}`,
     `<div class="grp">
        <div class="row2">
          <div class="field"><label>Vorname</label><input id="kbVor" value="${p.vorname||""}"></div>
@@ -1241,6 +1363,7 @@ function kontaktBearbeiten(p, liste, mitGeraeten){
          <div class="field"><label>Ort</label><input id="kb_ort" value="${p.ort||""}"></div>
        </div>
        <div class="field"><label>Telefon</label><input id="kbTel" value="${p.telefon||""}"></div>
+       ${mitGeraeten?"":`<div class="field"><label>Empfohlen von</label><input id="kbVon" value="${p.von||""}" placeholder="Name des Kunden"></div>`}
        ${mitGeraeten?`<div class="field"><label>Potenzial (mit Komma trennen)</label>
          <input id="kbPot" value="${(p.potenzial||[]).join(", ")}"></div>`:""}
        <div class="field"><label for="kbWieder">Wieder ansprechen am</label>
@@ -1256,6 +1379,12 @@ function kontaktBearbeiten(p, liste, mitGeraeten){
       if(mitGeraeten){ p.potenzial = w('kbPot').split(",").map(x=>x.trim()).filter(Boolean); p.grund = w('kbNotiz'); }
       else p.notiz = w('kbNotiz');
       if(w('kbWieder')) p.wieder = w('kbWieder'); else delete p.wieder;
+      if(!mitGeraeten && document.getElementById('kbVon')) p.von = w('kbVon');
+      if(istNeu){
+        if(!p.nachname){ return; }
+        p.id = [p.vorname,p.nachname,p.str,p.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
+        if(!liste.some(x=>x.id===p.id)) liste.push(p);
+      }
       closeModal(); renderAll();
     }, "Speichern");
 }
@@ -1371,7 +1500,8 @@ function paint(){
     let extra = "", saveBtn = "", ohneLoeschen = false;
     if(e.kind==="terminieren"){
       extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"");
-      saveBtn = `<button class="btn primary" id="saveNbT">Nachbereitung speichern</button>`;
+      saveBtn = `<button class="btn" id="nbZwischen">Zwischenspeichern</button>
+        <button class="btn primary" id="saveNbT">Abschließen</button>`;
     }
     if(e.kind==="kunde" || e.kind==="premium"){
       const st = draft.nb.status || e.status || "";
@@ -1379,7 +1509,8 @@ function paint(){
         ${seg("status",["Stattgefunden","Verschoben","Abgesagt"], st, st==="Abgesagt"?"danger":"")}`;
       if(st==="Stattgefunden"){
         extra += (e.kind==="premium" ? nbPremiumForm() : nbForm()) + (error?`<div class="err">${error}</div>`:"");
-        saveBtn = `<button class="btn primary" id="saveNb">Nachbereitung speichern</button>`;
+        saveBtn = `<button class="btn" id="nbZwischen">Zwischenspeichern</button>
+          <button class="btn primary" id="saveNb">Abschließen</button>`;
       }
       if(st==="Verschoben") extra += `<div class="sect boxed" style="margin-top:14px">
           ${fld("vsDatum","Neues Datum",draft.nb.vsDatum||draft.day,"date")}
@@ -1407,6 +1538,7 @@ function paint(){
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
     const eb = document.getElementById('editBtn'); if(eb) eb.onclick = ()=> startEdit(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
+    const nz = document.getElementById('nbZwischen'); if(nz) nz.onclick = ()=> nbZwischen(e);
     const dc = document.getElementById('doCancel');
     if(dc) dc.onclick = ()=>{
       verlauf.push({datum:draft.day, art:"abgesagt"});
@@ -1553,6 +1685,49 @@ function paint(){
     return;
   }
 
+  if(step==="empf"){
+    const n = draft.nb;
+    sheet.innerHTML = head("Empfehlungen") +
+      (n.empfListe||[{}]).map((e,i)=>`
+        <div class="empkarte">
+          <div class="ekopf"><span>Empfehlung ${i+1}</span>
+            ${(n.empfListe||[]).length>1?`<button type="button" class="mini" data-empdel="${i}">entfernen</button>`:""}</div>
+          <div class="row2">
+            <div class="field"><label>Vorname</label><input data-emp="${i}|vor" value="${e.vor||""}" autocomplete="off"></div>
+            <div class="field"><label>Nachname</label><input data-emp="${i}|nach" value="${e.nach||""}" autocomplete="off"></div>
+          </div>
+          <div class="row2">
+            <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
+              <input id="emp${i}_str" data-emp="${i}|str" data-adr="emp${i}" value="${e.str||""}" autocomplete="off">
+              <div class="vorschlaege" id="emp${i}_vorschlaege" hidden></div></div>
+            <div class="field" style="flex:0 0 30%"><label>Nr.</label>
+              <input id="emp${i}_hnr" data-emp="${i}|hnr" value="${e.hnr||""}" autocomplete="off"></div>
+          </div>
+          <div class="row2">
+            <div class="field" style="flex:0 0 42%"><label>PLZ</label>
+              <input id="emp${i}_plz" data-emp="${i}|plz" value="${e.plz||""}" inputmode="numeric" maxlength="5"></div>
+            <div class="field"><label>Ort</label>
+              <input id="emp${i}_ort" data-emp="${i}|ort" value="${e.ort||""}" autocomplete="off"></div>
+          </div>
+          <div class="field"><label>Telefon (freiwillig)</label><input data-emp="${i}|tel" value="${e.tel||""}" autocomplete="off"></div>
+          <div class="field"><label>Notiz</label><textarea data-emp="${i}|notiz" style="min-height:60px">${e.notiz||""}</textarea></div>
+        </div>`).join("") +
+      `<div class="actions"><button type="button" class="btn" id="empPlus">+ weitere Empfehlung</button></div>
+       ${error?`<div class="err">${error}</div>`:""}
+       <div class="actions"><button class="btn primary" id="empFertig">Übernehmen</button></div>
+       <div class="hint">Mindestens der Nachname muss ausgefüllt sein, sonst wird die Empfehlung nicht gespeichert.</div>`;
+    wireSegs();
+    document.getElementById('empFertig').onclick = ()=>{
+      collect();
+      const gueltig = (draft.nb.empfListe||[]).filter(x=>x && (x.nach||"").trim());
+      if(+draft.nb.empfAnzahl > 0 && !gueltig.length){
+        error = "Bitte mindestens eine Empfehlung mit Namen eintragen."; repaint(); return;
+      }
+      error = ""; step = "view"; paint();
+    };
+    return;
+  }
+
   if(step==="eigen"){
     const n = draft.nb;
     sheet.innerHTML = head("Eigenkauf") +
@@ -1687,6 +1862,29 @@ function paint(){
 const backBtn = to => `<div class="actions"><button class="btn" data-back="${to}">Zurück</button></div>`;
 function wireBack(){ sheet.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=>{ error=""; step=b.dataset.back; paint(); }); }
 function wireSegs(){
+  sheet.querySelectorAll('[data-zplus],[data-zminus]').forEach(b=> b.onclick = ()=>{
+    collect();
+    const id = b.dataset.zplus || b.dataset.zminus;
+    const neu = Math.max(0, (+draft.nb[id] || 0) + (b.dataset.zplus ? 1 : -1));
+    draft.nb[id] = neu;
+    const a = sheet.querySelector(`[data-zwert="${id}"]`);
+    if(a){ a.textContent = neu; a.parentElement.classList.toggle('hat', neu>0);
+           a.closest('.zzeile').classList.toggle('hat', neu>0); }
+  });
+  const zs = sheet.querySelector('#zaehlStart');
+  if(zs) zs.onclick = ()=>{ const e = entries[key(draft.day,draft.hour)]; if(e) zaehlModus(e); };
+  sheet.querySelectorAll('[data-nbzu]').forEach(b=> b.onclick = ()=>{
+    collect();
+    const id = "_zu_"+b.dataset.nbzu;
+    draft.nb[id] = !draft.nb[id];
+    repaint();
+  });
+  const oeffnen = sheet.querySelector('#empOeffnen');
+  if(oeffnen) oeffnen.onclick = ()=>{
+    collect();
+    draft.nb.empfListe = (draft.nb.empfListe && draft.nb.empfListe.length) ? draft.nb.empfListe : [{}];
+    step = "empf"; error = ""; paint();
+  };
   const plus = sheet.querySelector('#empPlus');
   if(plus) plus.onclick = ()=>{ collect(); draft.nb.empfListe = [...(draft.nb.empfListe||[{}]), {}]; repaint(); };
   sheet.querySelectorAll('[data-empdel]').forEach(b=> b.onclick = ()=>{
@@ -1883,7 +2081,8 @@ document.addEventListener('click', ev=>{
 const MWST = 1.19;
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
-const wunsch = {einkommen:0, tage:5, proAuftrag:0, quote:0};
+const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
+const wunsch = {einkommen:0, tage:5, proAuftrag:270, quote:0};   // 270 € je Auftrag ist fest
 const einkaeufe = [];                       // K70-Einkauf: {datum, brutto}
 const inventur = {};                        // Artikelnummer -> Stückzahl
 const K70_KATALOG = [
@@ -1894,7 +2093,7 @@ const K70_KATALOG = [
   {kat:"PB420 / 430 Polsterboy",artikel:[{n:"PB420 Ersatzschuh inkl. Bürsten (1 Stück)",p:39,hw:"nicht lieferbar"},{n:"PB430 Ersatzschuh inkl. Bürsten (1 Stück)",p:35}]},
   {kat:"PBB100",artikel:[{n:"MP Noppenscheibe",p:15},{n:"MR100 Matratzen-Saugaufsatz",p:39},{n:"PB(B) Ersatzschuh inkl. Bürsten",p:39}]},
   {kat:"SB100 Saugschlauch",artikel:[{n:"SB100 Saugschlauch",p:49}]},
-  {kat:"Serviceartikel",artikel:[{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9,hw:"nicht verfügbar"},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"EB400/100 Revisionsklappe",p:6},{n:"EBB100 Rundbürste",p:19.9},{n:"GP EB370 Matratzenbürsten (10 Stück)",p:150},{n:"GP EB370 Rundbürsten (10 Stück)",p:150},{n:"GP Koboclear (12 Stück)",p:108,hw:"zur Zeit nicht lieferbar"},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"MF520/530 Reinigungstücher-Set",p:93},{n:"TS7 Tücherset",p:49},{n:"VA7 Groß Set 3 (2 x)",p:15},{n:"VA7 Medium Set 2 (3 x)",p:12},{n:"VA7 Universal Set 1 (3 x Mix)",p:15},{n:"VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Kobotex, 200 ml (2 Stück)",p:15.9,hw:"zur Zeit nicht lieferbar"},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Rundbürsten zur ET340, EB350/351 (10 Paar)",p:150},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VR300 Hauptbürste neu",p:29.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
+  {kat:"Serviceartikel",artikel:[{n:"ADF Adapter Fremdgeräte (1 Stück)",p:12},{n:"Aktiv-Filtersystem VT251-252 (1 Stück)",p:89.9,hw:"nicht verfügbar"},{n:"Bodenplatte EB400",p:29},{n:"EB360 Frontdichtlippen Set",p:9},{n:"EB360 Revisionsklappe",p:6},{n:"EB370 Frontdichtlippen Set",p:9},{n:"EB370 Revisionsklappe",p:6},{n:"EB370/EB360 Rundbürsten (1 Stück)",p:19.9,top:1},{n:"EB400 Dichtlippe (hinten)",p:9},{n:"EB400 Tierhaarbürste",p:29.9,top:1},{n:"EB400/100 Revisionsklappe",p:6},{n:"GP EB370 Matratzenbürsten (10 Stück)",p:150},{n:"GP EB370 Rundbürsten (10 Stück)",p:150},{n:"GP Koboclear (12 Stück)",p:108,hw:"zur Zeit nicht lieferbar"},{n:"HD50 Borstenträger (eco)",p:12},{n:"HD50 Revisionsklappe",p:6},{n:"HD60 Revisionsklappe",p:4},{n:"HD60 Borstenträgerplatte (1 Stück)",p:19},{n:"MF520/530 Reinigungstücher-Set",p:93},{n:"TS7 Tücherset",p:49},{n:"VA7 Groß Set 3 (2 x)",p:15},{n:"VA7 Medium Set 2 (3 x)",p:12},{n:"VA7 Universal Set 1 (3 x Mix)",p:15},{n:"VG100/VG100+ Tankverschluss",p:8},{n:"Kobolin Wachsemulsion 1l (1 Stück)",p:14.9},{n:"Kobosan active 2,5kg (5 x 500g)",p:19.9},{n:"Kobotex, 200 ml (2 Stück)",p:15.9,hw:"zur Zeit nicht lieferbar"},{n:"Lavenia 720 g (6 x 120 g)",p:15.9},{n:"MB370 Matratzenbürsten (1 Stück)",p:15},{n:"Motorschutzfilter VK135 (1 Stück)",p:9.9,top:1},{n:"PB440 Saugschuh inkl. Bürsten",p:35},{n:"Radiatorbürste (1 Stück)",p:10},{n:"Rundbürsten EB400 medium (1 Stück)",p:29.9,top:1},{n:"Rundbürsten EB400 soft (1 Stück)",p:29.9},{n:"Rundbürsten ET340, EB350/351 (1 Stück)",p:19.9,top:1},{n:"Rundbürsten zur ET340, EB350/351 (10 Paar)",p:150},{n:"SG15 Schultergurt (1 Stück)",p:20},{n:"SP520 Dichtlippenrahmen Set",p:12},{n:"SP530 Dichtlippenrahmen Set",p:12},{n:"SP530 Seitenklappe",p:12},{n:"Stiel zum VK136 ohne Kabel (1 Stück)",p:33},{n:"VC100 Staubkammer",p:19},{n:"VF200 Dosiereinheit",p:39},{n:"VF200 Rundbürste",p:19},{n:"VK140/150 Motorschutzfilter (1 Stück)",p:9.9,top:1},{n:"VK200 Blende Filterraum",p:18},{n:"VK200 Kabelhaken (unten)",p:5},{n:"VR200 Anschlussleitung (1 Stück)",p:15},{n:"VR200 Staubfachdeckel",p:12},{n:"VR200/VR300 Filter (1 Stück)",p:19.9,top:1},{n:"VR300 Hauptbürste neu",p:29.9,top:1},{n:"VT270 Griff (einteilig)",p:9}]},
   {kat:"SP520 / 530 Hartbodenreiniger",artikel:[{n:"MF Dry (2 Stück)",p:29.9},{n:"MF Parkett (3 Stück)",p:39.9},{n:"MF Universal (3 Stück)",p:39.9},{n:"MF Universal Soft (3 Stück)",p:39.9},{n:"SP Dosierflasche (1 Stück)",p:20},{n:"SP Zubehörtasche (1 Stück)",p:29},{n:"SP520/530 Tuchträger (1 Stück)",p:25}]},
   {kat:"SP600 Hartbodenreiniger",artikel:[{n:"Dichtlippen-Set SP600",p:19},{n:"SP600 Wassertank",p:30},{n:"Tuchträgerplatte kpl SP600, verp.",p:25}]},
   {kat:"SP7",artikel:[{n:"SP7 TUCHTRÄGERRAHMEN",p:22},{n:"SP7 WASSERTANK (kompl.)",p:30},{n:"SPB100/7 Dichtlippenset",p:19}]},
@@ -2044,8 +2243,20 @@ function jahresUebersicht(vmJetzt){
       const vj = mondayOfISOWeek(jahr-1, startW);
       const vmV = vertriebsmonat(vj);
       const uV = umsatz(vmV.fromK, vmV.toK);
-      zeilen.push({vorjahr:uV.fg+uV.wg+uV.k70ein, name:`${q+1}. Quartal · ${idx}`, kw:`${vm.startW}–${vm.endW}`,
-        brutto:u.fg+u.wg+u.k70ein, einheiten, stufe:p.stufe, prov:p.prov,
+      let ehV = 0;
+      Object.keys(entries).forEach(k=>{
+        const n = entries[k].nb;
+        if(!n || n.fremd==="Ja") return;
+        const tag = abrechnungsTag(k.split("|")[0], n);
+        if(tag >= vmV.fromK && tag <= vmV.toK) ehV += +n.einheiten || 0;
+      });
+      const nach = (nachtrag[jahr] && nachtrag[jahr][startW]) || null;
+      const nachV = (nachtrag[jahr-1] && nachtrag[jahr-1][startW]) || null;
+      zeilen.push({nach, nachV, vorjahrNetto:netto(uV.fg+uV.wg+uV.k70ein) + (nachV?+nachV.umsatz||0:0),
+                   vorjahrEh: ehV + (nachV?+nachV.einheiten||0:0), startW, name:`${q+1}. Quartal · ${idx}`, kw:`${vm.startW}–${vm.endW}`,
+        nettoU: netto(u.fg+u.wg+u.k70ein) + (nach?+nach.umsatz||0:0),
+        einheiten: einheiten + (nach?+nach.einheiten||0:0),
+        auftraege: nach?+nach.auftraege||0:0, stufe:p.stufe, prov:p.prov,
         aktuell: vm.startW === vmJetzt.startW});
     });
   }
@@ -2146,13 +2357,6 @@ function renderProv(){
         }).join("")}</tbody></table></div>
       <p class="hinweis">Bewertet wird der Nettoumsatz im Festgebiet einschließlich K70-Einkauf: aktuell ${eur(p.basis)} €.</p>
 
-      <div class="ah4">Vertriebsmonate ${vm.year}</div>
-      <div class="ascroll"><table class="atable">
-        <thead><tr><th>Monat</th><th>KW</th><th>Umsatz brutto</th><th>Vorjahr</th><th>Einheiten</th><th>Bonus</th><th>Provision</th></tr></thead>
-        <tbody>${jahresUebersicht(vm).map(j=>`<tr class="${j.aktuell?"best":""}">
-          <td>${j.name}</td><td>${j.kw}</td><td>${eur(j.brutto)}</td><td>${eur(j.vorjahr)}</td><td>${j.einheiten||"–"}</td>
-          <td>${j.stufe}</td><td>${eur(j.prov)}</td></tr>`).join("")}</tbody></table></div>
-
       <div class="ah4">Arbeitszeit</div>
       <div class="kpis">
         ${kpi("Arbeitsstunden", dec(std,1)+" h", "ohne Meetings")}
@@ -2180,7 +2384,7 @@ function renderProv(){
 /* ================= Provisionswunsch ================= */
 const WF = [
   {id:"einkommen",  t:"Gewünschtes Einkommen", e:"€ brutto je Vertriebsmonat"},
-  {id:"proAuftrag", t:"Einkommen pro Auftrag",  e:"€"},
+  {id:"proAuftrag", t:"Einkommen pro Auftrag",  e:"€ — fest hinterlegt", fix:true},
   {id:"abschluesse",t:"Erfolgreiche Abschlüsse nötig", e:"Aufträge"},
   {id:"quote",      t:"Abschlussquote",         e:"% der Termine"},
   {id:"tMonat",     t:"Termine pro Vertriebsmonat", e:"Termine"},
@@ -2224,7 +2428,7 @@ function renderWunsch(){
   document.getElementById('wunschForm').innerHTML =
     `<div class="wgrid">${WF.map(f=>`
       <div class="field wf"><label for="w_${f.id}">${f.t}</label>
-        <input id="w_${f.id}" data-wf="${f.id}" inputmode="decimal" value="${val(f.id)}" placeholder="–">
+        <input id="w_${f.id}" data-wf="${f.id}" inputmode="decimal" value="${val(f.id)}" placeholder="–"${f.fix?" readonly":""}>
         <span class="unit">${f.e}</span></div>`).join("")}</div>
      ${eigene ? `<p class="hinweis">Deine tatsächliche Abschlussquote der letzten ${rangeWeeks} Wochen liegt bei ${eigene} %.
         <button class="mini" id="useQuote">Übernehmen</button></p>` : ""}`;
@@ -2276,7 +2480,7 @@ function rangeKeys(weeks){
   const from = mondayOf(new Date()); from.setDate(from.getDate() - (weeks-1)*7);
   return {from:dk(from), to:dk(to), fromD:from, toD:to};
 }
-function pick(weeks,filter){
+function pick(weeks,filter,bereich){
   const {from,to} = rangeKeys(weeks);
   const out = [];
   Object.keys(entries).forEach(k=>{
@@ -2285,14 +2489,22 @@ function pick(weeks,filter){
     const e = entries[k];
     if(filter(e)) out.push({day,h:+h,e,n:e.nb||{},wd:(fromDk(day).getDay()+6)%7});
   });
+  if(bereich) return out.filter(x=> nachReset(bereich, x.day));
   return out;
 }
 
 /* Kennzahlen, die auch andere Seiten nutzen können */
+const resetAb = bereich => (settings.reset && settings.reset[bereich]) || "";
+const nachReset = (bereich, tag) => { const r = resetAb(bereich); return !r || tag >= r; };
+function resetKnopf(bereich, titel){
+  const r = resetAb(bereich);
+  return `<button class="resetbtn" data-reset="${bereich}" title="${r ? "Zählt seit "+fmt(fromDk(r))+" – klicken zum Aufheben" : "Zählung ab heute neu starten"}">${RESET_PFEIL}</button>
+    ${r ? `<span class="resetinfo">seit ${fmtShort(fromDk(r))}</span>` : ""}`;
+}
 function quoten(weeks = rangeWeeks){
-  const fgb = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Festgebietsbegehung" && e.nb && e.nb.realStart);
-  const pro = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Promotion" && e.nb && e.nb.realStart);
-  const kt  = pick(weeks, e=>e.kind==="kunde");
+  const fgb = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Festgebietsbegehung" && e.nb && e.nb.realStart, "fgb");
+  const pro = pick(weeks, e=>e.kind==="terminieren" && e.quelle==="Promotion" && e.nb && e.nb.realStart, "promo");
+  const kt  = pick(weeks, e=>e.kind==="kunde", "termine");
   const gem = kt.filter(x=>x.e.status==="stattgefunden");
   const {from,to} = rangeKeys(weeks);
   const bewegt = verlauf.filter(v=>v.datum>=from && v.datum<=to);
@@ -2363,7 +2575,7 @@ function renderAusw(){
   const f = q.fgb, p = q.promo, t = q.termine;
   const serie = zielSerie();
 
-  const s1 = `<div class="asec"><h3>Festgebietsbegehung</h3>
+  const s1 = `<div class="asec"><h3>Festgebietsbegehung${resetKnopf("fgb")}</h3>
     <p class="sub">${f.n} Einsätze · ${dec(f.std)} Stunden im gewählten Zeitraum</p>
     <div class="kpis">
       ${kpi("Türen pro Stunde", dec(f.std?f.tueren/f.std:0), `${f.tueren||0} Türen gesamt`,"hero")}
@@ -2378,7 +2590,7 @@ function renderAusw(){
     </div>
     ${fazit(f.list,"Festgebietsbegehung")}</div>`;
 
-  const s2 = `<div class="asec"><h3>Promotion</h3>
+  const s2 = `<div class="asec"><h3>Promotion${resetKnopf("promo")}</h3>
     <p class="sub">${p.n} Einsätze · ${dec(p.std)} Stunden im gewählten Zeitraum</p>
     <div class="kpis">
       ${kpi("Ansprachen pro Stunde", dec(p.std?p.ansprachen/p.std:0), `${p.ansprachen||0} gesamt`,"hero")}
@@ -2395,7 +2607,7 @@ function renderAusw(){
 
   const demoCount = d => t.list.filter(x=>(x.n.vorgefuehrt||[]).includes(d)).length;
   const maxDemo = Math.max(1,...DEMO.map(demoCount));
-  const s3 = `<div class="asec"><h3>Kundentermine</h3>
+  const s3 = `<div class="asec"><h3>Kundentermine${resetKnopf("termine")}</h3>
     <p class="sub">${t.gesamt} Termine im gewählten Zeitraum, davon ${t.stattgefunden} nachbereitet</p>
     <div class="kpis">
       ${kpi("Stattgefunden", `${t.stattgefunden}`, pct(t.stattgefunden,t.gesamt),"hero")}
@@ -2423,6 +2635,15 @@ function renderAusw(){
     </div></div>` : "";
   document.getElementById('ausw').innerHTML = s0 + s1 + s2 + s3 + meldungHTML(monday);
 }
+document.getElementById('ausw').addEventListener('click', ev=>{
+  const b = ev.target.closest('[data-reset]');
+  if(!b) return;
+  const bereich = b.dataset.reset;
+  settings.reset = settings.reset || {};
+  if(settings.reset[bereich]) delete settings.reset[bereich];
+  else settings.reset[bereich] = dk(new Date());
+  saveData(); renderAusw();
+});
 document.getElementById('rangeSeg').addEventListener('click', ev=>{
   const b = ev.target.closest('[data-rw]');
   if(!b) return;
@@ -2487,7 +2708,7 @@ async function userSet(u){
 
 /* Alle Daten eines Benutzers als ein Paket */
 function dataBlob(){
-  return {entries, potenzial, empfehlungen, papierkorb, verlauf, einkaeufe, inventur, settings, wunsch, ts:Date.now()};
+  return {entries, potenzial, empfehlungen, papierkorb, nachtrag, verlauf, einkaeufe, inventur, settings, wunsch, ts:Date.now()};
 }
 function applyData(d){
   Object.keys(entries).forEach(k=>delete entries[k]);
@@ -2500,9 +2721,12 @@ function applyData(d){
   einkaeufe.length = 0; ((d && d.einkaeufe) || []).forEach(x=>einkaeufe.push(x));
   Object.keys(inventur).forEach(k=>delete inventur[k]);
   Object.assign(inventur, (d && d.inventur) || {});
+  Object.keys(nachtrag).forEach(k=>delete nachtrag[k]);
+  Object.assign(nachtrag, (d && d.nachtrag) || {});
   bestandUmstellen();
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
-  Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:0,quote:0}, (d && d.wunsch) || {});
+  Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:270,quote:0}, (d && d.wunsch) || {});
+  wunsch.proAuftrag = 270;
 }
 /* Der neuere Stand gewinnt – ist dort ein Bereich leer, springt der ältere ein.
    Verhindert, dass ein Teil der Daten durch einen halben Speichervorgang verschwindet. */
@@ -2578,7 +2802,7 @@ function flushSave(){
   const neuE = blob.entries || {}, altE = shadow.entries || {};
   Object.keys(neuE).forEach(k=>{ if(!gleich(neuE[k], altE[k])) updates[basis+'entries/'+k] = neuE[k]; });
   Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
-  ["potenzial","empfehlungen","papierkorb","verlauf","einkaeufe","inventur","settings","wunsch"].forEach(f=>{
+  ["potenzial","empfehlungen","papierkorb","nachtrag","verlauf","einkaeufe","inventur","settings","wunsch"].forEach(f=>{
     if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
   });
   if(!Object.keys(updates).length){ saveState("gespeichert"); return; }
@@ -2795,7 +3019,8 @@ async function lgWeiter(){
       await userSet(u);
       await pinSpeichern(pin, dk, lg.pw);
       try{ await db.ref('secret/'+dk).set({pin}); }catch(e){}   // im Profil einsehbar
-      return starteSitzung(u);
+      await starteSitzung(u);
+      return tourStart(true);
     }
 
     if(lgStep === "forgot"){
@@ -2883,6 +3108,7 @@ async function starteSitzung(u){
   if(db){
     try{ const k = (await db.ref('katalog').once('value')).val(); if(k && k.length) katalog.liste = k; }catch(e){}
   }
+  if(me.thema) themaSetzen(me.thema);
   me.lastLogin = Date.now();
   store.set('bw-lastseen', Date.now());
   if(db){ db.ref('users/'+u.dk+'/lastLogin').set(me.lastLogin).catch(()=>{}); }
@@ -3135,9 +3361,9 @@ async function renderProfil(){
       </div>
       <p class="err" id="pfErr" hidden></p>
       <div class="ah4">Erscheinungsbild</div>
-      <div class="grp"><div class="sect">${
-        ["Dunkel","Hell"].map(t=>`<button type="button" class="segbtn" data-thema="${t}"
-          aria-pressed="${(store.get('bw-thema')||'Dunkel')===t}">${t}</button>`).join("")}</div>
+      <div class="grp"><div class="seg">${
+        ["Dunkel","Hell"].map(t=>`<button type="button" data-thema="${t}"
+          aria-pressed="${themaJetzt()===t}">${t}</button>`).join("")}</div>
         <p class="hinweis" style="margin-top:6px">Hell ist draußen bei Sonne besser lesbar.</p></div>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
       <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
@@ -3152,18 +3378,21 @@ async function renderProfil(){
         </div>
         <div class="actions">
           <a class="btn abo google" target="_blank" rel="noopener"
-             href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent(KALENDER_BASIS + "/kalender/" + me.feedToken + ".ics")}">
+             href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent("webcal://" + KALENDER_BASIS.replace(/^https?:\/\//,"") + "/kalender/" + me.feedToken + ".ics")}">
             <span class="logo">${GOOGLE_LOGO}</span>Im Google Kalender abonnieren</a>
         </div>
         <div class="actions"><button class="btn" id="pfFeedCopy">Adresse kopieren</button></div>
-        <p class="hinweis">Google aktualisiert abonnierte Kalender nur alle paar Stunden — Apple lässt sich auf fünf Minuten stellen.</p>
+        <p class="hinweis">Passiert beim Antippen nichts, öffne diese Seite in <b>Safari</b> statt in der installierten App —
+          aus der App heraus darf iOS den Kalender nicht starten. Alternativ Adresse kopieren und im Kalender
+          unter „Neues Kalenderabo“ einfügen.<br>
+          Google aktualisiert abonnierte Kalender nur alle paar Stunden — Apple lässt sich auf fünf Minuten stellen.</p>
       </div>` : ""}
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
     </div>`;
   document.getElementById('pfSave').onclick = profilSpeichern;
-  box.querySelectorAll('[data-thema]').forEach(b=> b.onclick = ()=>{ themaSetzen(b.dataset.thema); renderProfil(); });
+  box.querySelectorAll('[data-thema]').forEach(b=> b.onclick = ()=>{ themaSetzen(b.dataset.thema, true); renderProfil(); });
   document.getElementById('pfPinNeu').onclick = pinDialog;
   const fc = document.getElementById('pfFeedCopy');
   if(fc) fc.onclick = ()=>{
@@ -3776,6 +4005,8 @@ const IC = {
   inventur:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/>',
   wunsch:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
   provision:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M16 11h0M8 15h2M12 15h2M16 15v2"/>',
+  faq:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.2a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .9-1 1.6v.4"/><path d="M12 17h.01"/>',
+  jahr:'<path d="M3 20V4M3 20h18"/><path d="M7 16l4-5 3.5 3L21 7"/><circle cx="21" cy="7" r="1.4"/>',
   profil:'<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/>',
   team:'<circle cx="8.5" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M2.5 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2"/><path d="M16 14.2c2.9 0 5.5 1.5 5.5 4.3"/>',
   kbdelete:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>'
@@ -3784,7 +4015,7 @@ const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const MENUE = [
   ["heute","Heute"],["planer","Planer"],["statistik","Statistik"],["auswertungen","Auswertungen"],
   ["potenzial","Potenzialliste"],["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
-  ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["profil","Profil"]
+  ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
 ];
 const MENUE_TL = [["team","Teammitglieder"],["kbdelete","KB Delete"]];
 function renderMenu(){
@@ -3846,11 +4077,38 @@ function offeneNachbereitung(){
     const [tag,h] = k.split("|");
     const e = entries[k];
     if(!["kunde","premium","terminieren"].includes(e.kind)) return;
-    if(e.status || (e.nb && Object.keys(e.nb).length)) return;
+    if(e.status) return;                              // nur abgeschlossene verschwinden
     if(tag > heute || (tag === heute && +h + 2 > stunde)) return;
     offen.push({tag, h:+h, e});
   });
   return offen.sort((a,b)=> a.tag === b.tag ? a.h - b.h : a.tag.localeCompare(b.tag));
+}
+/* Anrufe, die heute anstehen: Happy Call und Terminbestätigung */
+function offeneAnrufe(){
+  const heute = dk(new Date());
+  const liste = [];
+  Object.keys(entries).forEach(k=>{
+    const [tag,h] = k.split("|");
+    const e = entries[k], n = e.nb || {};
+    /* Happy Call: 21 Tage nach der Lieferung */
+    if(n.verkauft === "Ja" && e.status === "stattgefunden" && !e.happyErledigt){
+      const basis = (n.datiert === "Ja" && n.lieferdatum) ? n.lieferdatum : tag;
+      const faellig = plusTage(basis, 21);
+      if(faellig <= heute)
+        liste.push({art:"happy", tag, h:+h, e, faellig,
+          titel:`Happy Call · ${e.vorname||""} ${e.nachname||""}`.trim(),
+          sub:`gekauft am ${fmt(fromDk(basis))} · zufrieden? Empfehlungen holen`});
+    }
+    /* Terminbestätigung: 5 Tage vor einem Premium CheckIn */
+    if(e.kind === "premium" && !e.status && !e.bestaetigt){
+      const ab = plusTage(tag, -5);
+      if(ab <= heute && tag >= heute)
+        liste.push({art:"reminder", tag, h:+h, e,
+          titel:`Termin bestätigen · ${e.vorname||""} ${e.nachname||""}`.trim(),
+          sub:`Premium CheckIn am ${fmt(fromDk(tag))} um ${pad(+h)} Uhr`});
+    }
+  });
+  return liste.sort((a,b)=> a.tag.localeCompare(b.tag));
 }
 function renderHeute(){
   const box = document.getElementById('heute');
@@ -3880,7 +4138,18 @@ function renderHeute(){
     </div>`;
   };
 
+  const anrufe = offeneAnrufe();
   box.innerHTML = `
+    ${anrufe.length ? `<div class="rufbox">
+      <b>${anrufe.length} ${anrufe.length===1?"Anruf steht an":"Anrufe stehen an"}</b>
+      ${anrufe.map(a=>`<div class="rufzeile ${a.art}">
+        <div class="rinfo"><span class="rtitel">${a.titel}</span><span class="rsub">${a.sub}</span></div>
+        <div class="raktion">
+          ${a.e.telefon?`<a class="mini" href="${telLink(a.e.telefon)}">Anrufen</a>`:""}
+          <button class="mini" data-rufauf="${a.tag}|${a.h}">Öffnen</button>
+          <button class="mini" data-rufweg="${a.art}|${a.tag}|${a.h}">Erledigt</button>
+        </div></div>`).join("")}
+    </div>` : ""}
     ${offen.length ? `<div class="warnbox">
       <b>${offen.length} ${offen.length===1?"Termin wartet":"Termine warten"} auf Nachbereitung</b>
       <div class="woffen">${offen.slice(0,6).map(o=>
@@ -3894,6 +4163,18 @@ function renderHeute(){
       ${liste.map(karte).join("")}
     </div>`;
 
+  box.querySelectorAll('[data-rufauf]').forEach(b=> b.onclick = ()=>{
+    const [tag,h] = b.dataset.rufauf.split("|");
+    monday = mondayOf(fromDk(tag)); render(); openSlot(tag, +h);
+  });
+  box.querySelectorAll('[data-rufweg]').forEach(b=> b.onclick = ()=>{
+    const [art,tag,h] = b.dataset.rufweg.split("|");
+    const e = entries[key(tag,+h)];
+    if(!e) return;
+    if(art === "happy") e.happyErledigt = dk(new Date());
+    else e.bestaetigt = dk(new Date());
+    renderAll();
+  });
   box.querySelectorAll('[data-oeffne]').forEach(b=> b.onclick = ()=>{
     const [tag,h] = b.dataset.oeffne.split("|");
     monday = mondayOf(fromDk(tag));
@@ -3907,17 +4188,231 @@ if("serviceWorker" in navigator){
   addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
 
-function themaSetzen(t){
+function themaJetzt(){ return (me && me.thema) || store.get('bw-thema') || "Dunkel"; }
+function themaSetzen(t, sichern){
   store.set('bw-thema', t);
+  if(sichern && me){ me.thema = t; userSet(me).catch(()=>{}); }
   document.body.classList.toggle('hell', t === "Hell");
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content', t === "Hell" ? "#f5f4f1" : "#262624");
 }
 themaSetzen(store.get('bw-thema') || "Dunkel");
 
+
+/* ================= Jahresrückblick ================= */
+const nachtrag = {};      // {jahr: {startKW: {einheiten, umsatz, auftraege}}}
+function renderJahr(){
+  const box = document.getElementById('jahr');
+  if(!box || !me) return;
+  const vm = vertriebsmonat(monday);
+  const z = jahresUebersicht(vm);
+  const sum = (f) => z.reduce((n,x)=> n + (+x[f]||0), 0);
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Jahresrückblick ${vm.year}</h3>
+      <p class="sub">Alle Vertriebsmonate, Beträge netto. Vergleich mit ${vm.year-1}.</p>
+      <div class="kpis">
+        ${kpi("Nettoumsatz", eur(sum('nettoU'))+" €", `Vorjahr ${eur(sum('vorjahrNetto'))} €`,"hero")}
+        ${kpi("Einheiten", sum('einheiten')||"–", `Vorjahr ${sum('vorjahrEh')||"–"}`)}
+        ${kpi("Provision", eur(sum('prov'))+" €", "ohne Versicherungsbonus")}
+      </div>
+      <div class="ah4">Vertriebsmonate</div>
+      <div class="ascroll"><table class="atable">
+        <thead><tr><th>Monat</th><th>KW</th><th>Netto</th><th>Einheiten</th><th>Vorjahr netto</th><th>Vorjahr Einh.</th><th>Bonus</th><th></th></tr></thead>
+        <tbody>${z.map(j=>`<tr class="${j.aktuell?"best":""}">
+          <td>${j.name}</td><td>${j.kw}</td><td>${eur(j.nettoU)}</td><td>${j.einheiten||"–"}</td>
+          <td>${eur(j.vorjahrNetto)}</td><td>${j.vorjahrEh||"–"}</td><td>${j.stufe}</td>
+          <td><button class="mini" data-nach="${vm.year}|${j.startW}">nachtragen</button></td></tr>`).join("")}</tbody></table></div>
+      <p class="hinweis">Nachgetragene Zahlen werden zu den erfassten addiert — für Zeiten, in denen noch nicht mit der App gearbeitet wurde.</p>
+    </div>`;
+  box.querySelectorAll('[data-nach]').forEach(b=> b.onclick = ()=>{
+    const [jahr,kw] = b.dataset.nach.split("|");
+    nachtragDialog(+jahr, +kw);
+  });
+}
+function nachtragDialog(jahr, startW){
+  const vorhanden = (nachtrag[jahr] && nachtrag[jahr][startW]) || {};
+  simpleDialog("Nachtragen", `Ab KW ${startW} · ${jahr}`,
+    `<div class="grp">
+       ${fld("ntEinheiten","Einheiten",vorhanden.einheiten||"","number",'min="0" inputmode="numeric"')}
+       ${fld("ntUmsatz","Nettoumsatz €",vorhanden.umsatz||"","text",'inputmode="decimal"')}
+       ${fld("ntAuftraege","Anzahl Aufträge",vorhanden.auftraege||"","number",'min="0" inputmode="numeric"')}
+     </div>
+     <p class="hinweis">Für welches Jahr nachgetragen wird, steht oben. Leere Felder löschen den Nachtrag.</p>`,
+    ()=>{
+      const w = id => document.getElementById(id).value.trim();
+      nachtrag[jahr] = nachtrag[jahr] || {};
+      if(!w('ntEinheiten') && !w('ntUmsatz') && !w('ntAuftraege')) delete nachtrag[jahr][startW];
+      else nachtrag[jahr][startW] = {einheiten:+w('ntEinheiten')||0, umsatz:num(w('ntUmsatz')), auftraege:+w('ntAuftraege')||0};
+      closeModal(); saveData(); renderJahr();
+    }, "Speichern");
+}
+
+
+/* ================= Hilfe und Tutorial ================= */
+const FAQ = [
+  ["Heute", "Zeigt die Termine des heutigen Tages mit Adresse, Notiz und Knöpfen zum Anrufen und Navigieren. Ganz oben warnt ein Kasten, wenn Termine noch keine Nachbereitung haben — ein Tipp darauf öffnet den Termin."],
+  ["Planer", "Das Wochenraster. Ein Tipp auf ein freies Feld legt einen Termin an, ein Tipp auf einen Termin öffnet ihn. Einen Termin gedrückt halten und dann ein freies Feld antippen verschiebt ihn. Unten stehen die Kennzahlen ist/soll — auf „K70 Einkauf“ tippen erfasst eine Bestellung, auf „K70 Verkauf“ setzt den Bestellrahmen."],
+  ["Terminarten", "Kundentermin mit Quelle und Kundendaten · Eigenkauf ohne Kundendaten · Premium CheckIn · Meeting mit eigener Uhrzeit · Terminieren aus Festgebietsbegehung oder Promotion · Privat und Individuell blockieren die Zeit nur optisch."],
+  ["Nachbereitung", "Nach dem Termin auf den Eintrag tippen und den Status wählen. Bei „Stattgefunden“ folgen die Fragen zum Gespräch. Alles, was du hier einträgst, landet in Statistik, Auswertungen und Provisionsrechner."],
+  ["Datierte Aufträge", "Verkaufst du heute, der Kunde bekommt aber erst später geliefert, trägst du unter „Späteres Lieferdatum“ das Datum ein. Der Umsatz zählt sofort in die Statistik, aber erst im Vertriebsmonat der Lieferung in die Provision."],
+  ["Potenzialliste", "Kunden ohne Kauf landen hier automatisch mit dem, was ihnen noch fehlt. „Wieder ansprechen am“ holt sie zum richtigen Zeitpunkt nach oben. Aus jedem Eintrag lässt sich direkt ein Termin anlegen."],
+  ["Empfehlungsliste", "Empfehlungen, die du namentlich erfasst hast. Zeigt auch, wer wen empfohlen hat."],
+  ["Statistik", "Die Wochentabelle nach dem Buchkalender. Jeder nachbereitete Kundentermin wird eine Zeile. Der PDF-Knopf oben links druckt die Woche auf eine Querseite."],
+  ["Auswertungen", "Kennzahlen über den gewählten Zeitraum, dazu eine Aussage, wann du am erfolgreichsten terminierst. Der kleine Pfeil oben rechts an jedem Block startet dessen Zählung neu."],
+  ["Wochenmeldung", "Steht unten in den Auswertungen. Füllt sich selbst und lässt sich als Text kopieren, um sie dem Teamleiter zu schicken."],
+  ["K70 Inventur", "Der komplette Shop in Originalreihenfolge. Bestand über Plus und Minus zählen, oben suchen nach Artikel oder Preis. Der Warenbestand fließt in den Provisionsrechner."],
+  ["Provisionswunsch", "Trag ein, was du verdienen willst — die App rechnet daraus Abschlüsse und nötige Termine. Jedes Feld lässt sich überschreiben, dann rechnet es rückwärts. Daraus entstehen die Soll-Werte im Planer."],
+  ["Provisionsrechner", "Rechnet den laufenden Vertriebsmonat: 20 % auf Weißgebiet, 20 % plus Bonus auf Festgebiet, 26 % plus Bonus auf K70-Einkauf, am Ende 14 % Versicherungsbonus. Der K70-Einkauf wird netto als Warenkredit abgezogen."],
+  ["Jahresrückblick", "Alle Vertriebsmonate des Jahres netto, mit Vergleich zum Vorjahr. Über „nachtragen“ kannst du Zahlen aus der Zeit vor der App ergänzen."],
+  ["Anrufe", "Auf der Heute-Seite erscheinen zwei Erinnerungen von selbst: der Happy Call 21 Tage nach der Lieferung, um nach Zufriedenheit und Empfehlungen zu fragen, und die Terminbestätigung fünf Tage vor jedem Premium CheckIn. Mit „Erledigt“ verschwindet der Eintrag."],
+  ["Zählmodus", "Beim Terminieren öffnest du in der Nachbereitung den Zählmodus. Vier große Flächen zum Antippen zählen Türen, Erreichte, Termine und Rückmeldungen mit — Start- und Endzeit schreibt die App selbst. Beim Beenden landen alle Zahlen im Formular."],
+  ["Zwischenspeichern", "Eine Nachbereitung lässt sich jederzeit zwischenspeichern, auch unvollständig. Der Termin bleibt dann in der Erinnerungsliste stehen. Erst „Abschließen“ prüft, ob alles ausgefüllt ist."],
+  ["Kalender", "Im Profil abonnierst du deine Termine für Apple oder Google Kalender. Das Abo aktualisiert sich selbst — am Mac eingerichtet innerhalb weniger Minuten."],
+  ["Offline", "Über „Zum Home-Bildschirm“ wird die App installiert und funktioniert auch ohne Empfang. Sobald wieder Netz da ist, gleicht sie sich ab. Oben rechts steht immer, ob gespeichert wurde."]
+];
+function renderFaq(){
+  const box = document.getElementById('faq');
+  if(!box) return;
+  box.innerHTML = `<div class="asec">
+      <h3>Hilfe</h3>
+      <p class="sub">Alle Funktionen zum Nachlesen.</p>
+      ${FAQ.map(([t,x])=>`<details class="faq"><summary>${t}</summary><p>${x}</p></details>`).join("")}
+      <div class="actions" style="margin-top:20px"><button class="btn" id="faqTour">Rundgang noch einmal ansehen</button></div>
+    </div>`;
+  document.getElementById('faqTour').onclick = ()=> tourStart(false);
+}
+
+/* ---------- Rundgang für neue Zugänge ---------- */
+const TOUR = [
+  ["Willkommen", "Diese App ersetzt deinen Wochenplaner aus Papier. In zwei Minuten zeige ich dir, was wo liegt. Am Ende starten wir mit leeren Daten."],
+  ["Heute", "Deine Startseite: die Termine des Tages mit Anrufen und Route, dazu eine Erinnerung an offene Nachbereitungen."],
+  ["Planer", "Das Wochenraster mit den Fächerterminen. Feld antippen legt an, Termin antippen öffnet ihn, gedrückt halten verschiebt ihn."],
+  ["Nachbereitung", "Nach jedem Kundentermin Status setzen und die Fragen beantworten. Das ist der wichtigste Schritt — daraus entsteht alles Weitere."],
+  ["Listen", "Kunden ohne Kauf landen in der Potenzialliste, Empfehlungen in der Empfehlungsliste. Aus beiden legst du direkt neue Termine an."],
+  ["Zahlen", "Statistik zeigt die Woche, Auswertungen die Entwicklung, der Provisionsrechner deinen laufenden Vertriebsmonat."],
+  ["Ziele", "Trag im Provisionswunsch ein, was du verdienen willst. Der Planer zeigt dir dann täglich, wie viel Umsatz noch fehlt."],
+  ["Anrufe", "Auf der Heute-Seite erscheinen zwei Erinnerungen von selbst: der Happy Call 21 Tage nach der Lieferung, um nach Zufriedenheit und Empfehlungen zu fragen, und die Terminbestätigung fünf Tage vor jedem Premium CheckIn. Mit „Erledigt“ verschwindet der Eintrag."],
+  ["Zählmodus", "Beim Terminieren öffnest du in der Nachbereitung den Zählmodus. Vier große Flächen zum Antippen zählen Türen, Erreichte, Termine und Rückmeldungen mit — Start- und Endzeit schreibt die App selbst. Beim Beenden landen alle Zahlen im Formular."],
+  ["Zwischenspeichern", "Eine Nachbereitung lässt sich jederzeit zwischenspeichern, auch unvollständig. Der Termin bleibt dann in der Erinnerungsliste stehen. Erst „Abschließen“ prüft, ob alles ausgefüllt ist."],
+  ["Kalender", "Im Profil abonnierst du deine Termine für den Apple oder Google Kalender — dann stehen sie auch im Widget."],
+  ["Los geht’s", "Das war’s. Wenn du jetzt auf Fertig tippst, werden alle Beispieldaten gelöscht und du startest sauber. Die Hilfe im Menü erklärt jederzeit alles noch einmal."]
+];
+let tourSchritt = 0, tourLoescht = false;
+function tourStart(mitReset){
+  tourSchritt = 0; tourLoescht = !!mitReset;
+  tourZeigen();
+}
+function tourZeigen(){
+  const [titel, text] = TOUR[tourSchritt];
+  const letzte = tourSchritt === TOUR.length-1;
+  draft = {nb:{}}; step = "tour"; error = "";
+  modal.classList.add('open');
+  sheet.innerHTML = `<header><div><h3>${titel}</h3>
+      <div class="when">Schritt ${tourSchritt+1} von ${TOUR.length}</div></div>
+      ${letzte?"":`<button class="x" id="tourWeg" aria-label="Überspringen">✕</button>`}</header>
+    <div class="grp"><p style="font-size:.92rem;line-height:1.6">${text}</p></div>
+    <div class="tourpunkte">${TOUR.map((_,i)=>`<i class="${i===tourSchritt?"an":""}"></i>`).join("")}</div>
+    <div class="actions">
+      ${tourSchritt?`<button class="btn" id="tourZurueck">Zurück</button>`:""}
+      <button class="btn primary" id="tourWeiter">${letzte ? (tourLoescht?"Fertig und aufräumen":"Fertig") : "Weiter"}</button>
+    </div>`;
+  const weg = document.getElementById('tourWeg');
+  if(weg) weg.onclick = ()=> closeModal();
+  const zur = document.getElementById('tourZurueck');
+  if(zur) zur.onclick = ()=>{ tourSchritt--; tourZeigen(); };
+  document.getElementById('tourWeiter').onclick = ()=>{
+    if(!letzte){ tourSchritt++; tourZeigen(); return; }
+    if(tourLoescht){
+      applyData(null);
+      dataReady = true;
+      clearTimeout(saveTimer); flushSave();
+    }
+    closeModal(); renderAll();
+  };
+}
+
+
+/* ================= Zählen ================= */
+const ZAEHLER = {
+  Promotion: [["ansprachen","Ansprachen"],["gespraeche","Gespräche"],["termine","Termine"],["kontakte","Kontakte"]],
+  Festgebietsbegehung: [["tueren","Türen"],["erreicht","Erreicht"],["termine","Termine"],["rueck","Rückmeldung"]]
+};
+function zaehlZeile(id, titel, wert){
+  const n = +wert || 0;
+  return `<div class="zzeile${n?" hat":""}">
+    <span class="ztitel">${titel}</span>
+    <span class="stepper${n?" hat":""}">
+      <button type="button" data-zminus="${id}" aria-label="weniger">−</button>
+      <b data-zwert="${id}">${n}</b>
+      <button type="button" data-zplus="${id}" aria-label="mehr">+</button>
+    </span>
+  </div>`;
+}
+/* Vollbild-Zähler während des Einsatzes */
+let zaehlDaten = null;
+function zaehlModus(e){
+  collect();
+  const felder = ZAEHLER[e.quelle] || ZAEHLER.Festgebietsbegehung;
+  zaehlDaten = {
+    felder,
+    werte: Object.fromEntries(felder.map(([id])=>[id, +draft.nb[id] || 0])),
+    start: draft.nb.realStart || uhrJetzt(),
+    tag: draft.day, stunde: draft.hour, quelle: e.quelle
+  };
+  zaehlZeichnen();
+}
+const uhrJetzt = () => { const d = new Date(); return pad(d.getHours())+":"+pad(d.getMinutes()); };
+function zaehlZeichnen(){
+  const z = zaehlDaten;
+  let box = document.getElementById('zaehlflaeche');
+  if(!box){
+    box = document.createElement('div');
+    box.id = 'zaehlflaeche';
+    document.body.appendChild(box);
+  }
+  box.innerHTML = `
+    <div class="zkopf">
+      <div><b>${z.quelle}</b><span>gestartet um ${z.start} Uhr</span></div>
+      <button class="mini" id="zaehlEnde">Einsatz beenden</button>
+    </div>
+    <div class="zgitter">
+      ${z.felder.map(([id,t])=>`
+        <button class="zkachel" data-ztipp="${id}">
+          <span class="zk-t">${t}</span>
+          <span class="zk-n">${z.werte[id]}</span>
+          <span class="zk-minus" data-zab="${id}">−</span>
+        </button>`).join("")}
+    </div>
+    <p class="zhinweis">Tippen zählt hoch, das kleine Minus zieht ab. Start- und Endzeit werden mitgeschrieben.</p>`;
+  box.querySelectorAll('[data-ztipp]').forEach(b=> b.onclick = ev=>{
+    if(ev.target.closest('[data-zab]')) return;
+    z.werte[b.dataset.ztipp]++;
+    b.querySelector('.zk-n').textContent = z.werte[b.dataset.ztipp];
+    if(navigator.vibrate) navigator.vibrate(8);
+  });
+  box.querySelectorAll('[data-zab]').forEach(b=> b.onclick = ev=>{
+    ev.stopPropagation();
+    const id = b.dataset.zab;
+    z.werte[id] = Math.max(0, z.werte[id]-1);
+    b.parentElement.querySelector('.zk-n').textContent = z.werte[id];
+  });
+  document.getElementById('zaehlEnde').onclick = zaehlBeenden;
+}
+function zaehlBeenden(){
+  const z = zaehlDaten;
+  Object.keys(z.werte).forEach(id=> draft.nb[id] = z.werte[id]);
+  draft.nb.realStart = z.start;
+  draft.nb.realEnde = uhrJetzt();
+  zaehlDaten = null;
+  document.getElementById('zaehlflaeche')?.remove();
+  saveData();
+  repaint();
+}
+
 /* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderHeute(); renderPapierkorb(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
+function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
