@@ -20,13 +20,13 @@
   --bg:#262624;--surface:#2f2e2b;--surface-2:#353330;--surface-3:#3d3b36;
   --line:#403e39;--line-soft:#37352f;--text:#ecebe5;--muted:#a5a29a;--faint:#7a776f;
   --accent:#7fa88c;--warn:#e0806f;
-  --z0:#2e2c29;--z1:#35332f;--tick:#3a3833;
+  --z0:#2e2c29;--z1:#35332f;--tick:#3a3833;--linie:rgba(255,255,255,.30);
   --r-xl:26px;--r-lg:20px;--r:14px;--r-sm:10px;
 }
 body.hell{
   --bg:#f5f4f1;--surface:#fff;--surface-2:#f1efeb;--surface-3:#e6e3dd;
   --line:#e2dfd9;--line-soft:#ecead5;--text:#23221f;--muted:#6c6963;--faint:#95918a;
-  --z0:#fbfaf8;--z1:#f2f0ec;--tick:#eceae5;
+  --z0:#fbfaf8;--z1:#f2f0ec;--tick:#eceae5;--linie:rgba(0,0,0,.22);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none!important}
@@ -260,28 +260,28 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .pcard .pact{display:flex;gap:8px;margin-top:14px}
 .pcard .pact .btn{padding:9px 14px;font-size:.8rem}
 /* Statistik */
-.stat{border-collapse:separate;border-spacing:0;width:100%;min-width:1460px;font-size:.8rem}
+.stat{--sw1:76px;--sw2:200px;border-collapse:separate;border-spacing:0;width:100%;min-width:1460px;font-size:.8rem}
 .stat th,.stat td{border:2px solid var(--surface);border-radius:10px;background-clip:padding-box;background:var(--surface-2);padding:9px 8px;text-align:center;font-weight:500;vertical-align:middle}
 .stat thead th{background:var(--surface-3);font-weight:700;color:var(--text)}
 .stat thead tr.grp th{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);background:var(--surface);padding:6px 8px}
 .stat thead tr.grp th.empty{background:transparent;border-color:transparent}
 .stat th.vh{height:158px;padding:10px 2px;font-size:.7rem;font-weight:600;white-space:nowrap}
 .stat th.vh span{writing-mode:vertical-rl;transform:rotate(180deg);display:inline-block}
-.stat .col-time{width:78px}
-.stat .col-name{width:206px}
+.stat .col-time{width:var(--sw1);min-width:var(--sw1);max-width:var(--sw1)}
+.stat .col-name{width:var(--sw2);min-width:var(--sw2);max-width:var(--sw2)}
 .stat .col-alt{width:120px}
 .stat .col-num{width:96px}
 .stat .col-tick{width:38px}
 /* Durchgehende Trennlinien mit Abstand zu den Blöcken */
-.stat td.vsep,.stat th.vsep{width:11px;min-width:11px;padding:0;border:0;border-radius:0;background:
-  linear-gradient(to right,transparent 0 5px,rgba(255,255,255,.22) 5px 6px,transparent 6px 11px)}
-.stat thead tr.grp th.vsep{background:linear-gradient(to right,transparent 0 5px,rgba(255,255,255,.22) 5px 6px,transparent 6px 11px)}
+.stat td.vsep,.stat th.vsep{width:9px;min-width:9px;max-width:9px;padding:0;border:0;border-radius:0;
+  background:linear-gradient(to right,transparent 0 4px,var(--linie) 4px 5px,transparent 5px 9px)!important}
 .stat tbody tr.z0 td,.stat tbody tr.z1 td{border-top-width:1px;border-bottom-width:1px}
 /* Klebende Spalten */
 .stat td.sticky,.stat th.sticky{position:sticky;z-index:2}
 .stat thead th.sticky{z-index:4;background:var(--surface-3)}
 .stat thead tr.grp th.sticky{background:var(--surface)}
-.stat .s1{left:0}.stat .s2{left:78px}
+.stat .s1{left:0}
+.stat .s2{left:var(--sw1)}
 /* Zeilenwechsel + Hervorhebung */
 .stat tbody tr.z0 td{background:var(--z0)}
 .stat tbody tr.z1 td{background:var(--z1)}
@@ -308,12 +308,12 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .rangebar{background:var(--surface);border-radius:var(--r-xl);padding:16px 18px;margin-bottom:18px}
 .rangebar .rl{display:block;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}
 .asec{background:var(--surface);border-radius:var(--r-xl);padding:24px;margin-bottom:20px}
-.asec h3{font-size:1.2rem;font-weight:800;letter-spacing:-.025em;margin-bottom:5px;position:relative;padding-right:70px;text-align:center}
+.asec h3{font-size:1.2rem;font-weight:800;letter-spacing:-.025em;margin-bottom:5px;position:relative;padding:0 44px;text-align:center}
 .asec h3 .resetbtn{top:0}
 .resetbtn{position:absolute;top:-2px;right:0;width:28px;height:28px;border:0;border-radius:50%;background:var(--surface-2);
   color:var(--faint);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .resetbtn:hover{color:var(--text);background:var(--surface-3)}
-.resetinfo{position:absolute;top:4px;right:34px;font-size:.66rem;font-weight:400;color:var(--faint);letter-spacing:0;text-transform:none}
+.resetinfo{position:absolute;top:34px;right:0;font-size:.66rem;font-weight:400;color:var(--faint);letter-spacing:0;text-transform:none}
 .asec .sub{font-size:.82rem;color:var(--muted);margin-bottom:22px;text-align:center;line-height:1.5}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
 .kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:20px;text-align:center}
@@ -351,6 +351,12 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
   text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:var(--faint)}
 .mlbl:hover{color:var(--accent)}
 .aempty{color:var(--muted);font-size:.86rem;padding:6px 0 2px}
+.jahrleiste{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin-bottom:14px;
+  justify-content:center;scrollbar-width:none}
+.jahrleiste::-webkit-scrollbar{display:none}
+.jahrleiste button{flex:none;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;
+  padding:9px 16px;font-size:.84rem;font-weight:600;cursor:pointer;color:var(--text)}
+.jahrleiste button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,var(--surface-2))}
 .balken{display:flex;align-items:flex-end;gap:6px;height:150px;padding:0 2px}
 .bgruppe{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
 .bpaar{flex:1;display:flex;align-items:flex-end;gap:2px;width:100%;justify-content:center}
@@ -393,6 +399,19 @@ i.bvor{background:var(--surface-3)}
 .faq summary::after{content:"+";float:right;color:var(--faint)}
 .faq[open] summary::after{content:"–"}
 .faq p{padding:0 16px 15px;font-size:.86rem;color:var(--muted);line-height:1.6}
+#tourkarte{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:95;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:18px 20px;
+  box-shadow:0 16px 44px rgba(0,0,0,.5);max-width:520px;margin:0 auto;animation:pop .25s cubic-bezier(.2,.9,.3,1)}
+#tourkarte b{display:block;font-size:1.05rem;font-weight:800;margin-bottom:5px;text-align:center}
+#tourkarte p{font-size:.87rem;line-height:1.55;color:var(--muted);text-align:center}
+.tk-kopf{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tk-zahl{font-size:.68rem;letter-spacing:.14em;color:var(--faint);font-family:"JetBrains Mono",monospace}
+.tk-weg{background:none;border:0;color:var(--faint);font-size:.74rem;cursor:pointer;padding:2px 4px}
+.tk-weg:hover{color:var(--text)}
+body.tourlaeuft .wrap{padding-bottom:280px}
+.tourziel{position:relative;z-index:2;outline:2px solid var(--accent);outline-offset:6px;border-radius:var(--r-lg);
+  animation:pulsen 1.6s ease-in-out infinite}
+@keyframes pulsen{0%,100%{outline-color:color-mix(in srgb,var(--accent) 55%,transparent)}50%{outline-color:var(--accent)}}
 .tourpunkte{display:flex;justify-content:center;gap:6px;margin:16px 0 4px}
 .tourpunkte i{width:6px;height:6px;border-radius:50%;background:var(--surface-3)}
 .tourpunkte i.an{background:var(--accent);width:18px;border-radius:3px}
@@ -4254,7 +4273,8 @@ function renderJahr(){
   if(!box || !me) return;
   const heuteJahr = isoWeek(new Date()).year;
   if(!jahrAnsicht) jahrAnsicht = heuteJahr;
-  const jahre = [heuteJahr-3, heuteJahr-2, heuteJahr-1, heuteJahr];
+  const jahre = [];
+  for(let j = 2020; j <= heuteJahr; j++) jahre.push(j);
   const z = jahresUebersicht(jahrAnsicht);
   const sum = f => z.reduce((n,x)=> n + (+x[f]||0), 0);
   const maxWert = Math.max(1, ...z.map(x=>Math.max(x.nettoU, x.vorjahrNetto)));
@@ -4263,7 +4283,7 @@ function renderJahr(){
     <div class="asec">
       <h3>Jahresrückblick</h3>
       <p class="sub">Alle Vertriebsmonate, Beträge netto. Vergleich mit ${jahrAnsicht-1}.</p>
-      <div class="seg" style="max-width:420px;margin:0 auto 22px">${jahre.map(j=>
+      <div class="jahrleiste">${jahre.map(j=>
         `<button type="button" data-jahr="${j}" aria-pressed="${j===jahrAnsicht}">${j}</button>`).join("")}</div>
       <div class="kpis">
         ${kpi("Nettoumsatz", eur(sum('nettoU'))+" €", `Vorjahr ${eur(sum('vorjahrNetto'))} €`,"hero")}
@@ -4298,7 +4318,7 @@ function renderJahr(){
       <div class="grp" style="max-width:460px;margin:0 auto">
         <div class="row2">
           <div class="field"><label for="ntJahr">Jahr</label>
-            <select id="ntJahr">${[heuteJahr-4,heuteJahr-3,heuteJahr-2,heuteJahr-1,heuteJahr].map(j=>
+            <select id="ntJahr">${jahre.slice().reverse().map(j=>
               `<option value="${j}" ${j===jahrAnsicht?"selected":""}>${j}</option>`).join("")}</select></div>
           <div class="field"><label for="ntMonat">Vertriebsmonat</label>
             <select id="ntMonat">${z.map(j=>
@@ -4458,44 +4478,93 @@ function renderFaq(){
   document.getElementById('faqTour').onclick = ()=> tourStart(false);
 }
 const TOUR = [
-  ["Willkommen", "Diese App ersetzt deinen Wochenplaner aus Papier. In zwei Minuten zeige ich dir, was wo liegt. Am Ende starten wir mit leeren Daten."],
-  ["Heute", "Deine Startseite: die Termine des Tages mit Anrufen und Route, dazu Erinnerungen an offene Nachbereitungen und anstehende Anrufe."],
-  ["Planer", "Das Wochenraster mit den Fächerterminen. Feld antippen legt an, Termin antippen öffnet ihn, gedrückt halten verschiebt ihn."],
-  ["Nachbereitung", "Nach jedem Kundentermin Status setzen und die Fragen beantworten. Das ist der wichtigste Schritt — daraus entsteht alles Weitere."],
-  ["Listen", "Kunden ohne Kauf landen in der Potenzialliste, Empfehlungen in der Empfehlungsliste. Aus beiden legst du direkt neue Termine an."],
-  ["Zahlen", "Statistik zeigt die Woche, Auswertungen die Entwicklung, der Provisionsrechner deinen laufenden Vertriebsmonat."],
-  ["Ziele", "Trag im Provisionswunsch ein, was du verdienen willst. Der Planer zeigt dir dann täglich, wie viel Umsatz noch fehlt."],
-  ["Kalender", "Im Profil abonnierst du deine Termine für den Apple oder Google Kalender — dann stehen sie auch im Widget."],
-  ["Los geht’s", "Das war’s. Wenn du jetzt auf Fertig tippst, werden alle Beispieldaten gelöscht und du startest sauber. Die Hilfe im Menü erklärt jederzeit alles noch einmal."]
+  {seite:"heute", ziel:null, t:"Willkommen",
+   x:"Diese App ersetzt deinen Wochenplaner aus Papier. Ich führe dich einmal durch alle Bereiche — am Ende starten wir mit leeren Daten."},
+  {seite:"heute", ziel:"#heute .asec", t:"Heute",
+   x:"Deine Startseite zeigt die Termine des Tages mit Adresse, Notiz und Knöpfen zum Anrufen und Navigieren. Ganz oben stehen anstehende Anrufe und Termine, die noch nachbereitet werden müssen."},
+  {seite:"planer", ziel:"#grid", t:"Der Planer",
+   x:"Das Wochenraster mit den Fächerterminen von 7 bis 24 Uhr. Ein Tipp auf ein freies Feld legt einen Termin an, ein Tipp auf einen Termin öffnet ihn. Gedrückt halten und dann ein freies Feld antippen verschiebt ihn."},
+  {seite:"planer", ziel:"#grid .metriclbl", t:"Deine Zahlen im Blick",
+   x:"Unten im Planer stehen Festgebiet, Weißgebiet und K70 als Ist und Soll. Der farbige Punkt zeigt, ob du im Plan liegst. Auf „K70 Einkauf“ tippen erfasst eine Bestellung."},
+  {seite:"statistik", ziel:"#statTable", t:"Statistik",
+   x:"Jeder nachbereitete Kundentermin wird hier eine Zeile — genau wie im Buchkalender. Der PDF-Knopf oben links druckt die Woche auf eine Querseite."},
+  {seite:"auswertungen", ziel:"#ausw .asec", t:"Auswertungen",
+   x:"Hier siehst du deine Quoten über den gewählten Zeitraum und wann du am erfolgreichsten terminierst. Ganz unten steht die Wochenmeldung für deinen Teamleiter."},
+  {seite:"potenzial", ziel:"#plist", t:"Potenzialliste",
+   x:"Kunden, die nicht gekauft haben, landen hier automatisch mit dem, was ihnen noch fehlt. Über „Wieder ansprechen am“ kommen sie zum richtigen Zeitpunkt wieder nach oben."},
+  {seite:"empfehlung", ziel:"#elist", t:"Empfehlungsliste",
+   x:"Alle Empfehlungen, die du in der Nachbereitung namentlich erfasst hast — oder hier von Hand einträgst. Aus jedem Eintrag legst du direkt einen Termin an."},
+  {seite:"inventur", ziel:"#inventur .asec", t:"K70 Inventur",
+   x:"Der komplette Shop in Originalreihenfolge. Bestand über Plus und Minus zählen, oben nach Artikel oder Preis suchen. Der Warenbestand fließt in den Provisionsrechner."},
+  {seite:"wunsch", ziel:"#wunschForm", t:"Provisionswunsch",
+   x:"Trag ein, was du verdienen willst. Die App rechnet daraus, wie viele Termine du brauchst — und der Planer weiß dann täglich, wie viel Umsatz noch fehlt."},
+  {seite:"provision", ziel:"#prov .kpis", t:"Provisionsrechner",
+   x:"Rechnet deinen laufenden Vertriebsmonat mit allen Sätzen und Boni, zieht den K70-Warenkredit ab und zeigt, was überwiesen wird."},
+  {seite:"jahr", ziel:"#jahr .balken", t:"Jahresrückblick",
+   x:"Alle Vertriebsmonate im Vergleich zum Vorjahr. Unten kannst du Zahlen aus der Zeit vor der App nachtragen."},
+  {seite:"profil", ziel:"#profil .asec", t:"Profil",
+   x:"Hier änderst du deinen Namen, siehst deinen PIN, schaltest zwischen hell und dunkel um — und abonnierst deine Termine für den Apple oder Google Kalender."},
+  {seite:"faq", ziel:null, t:"Alles nachlesbar",
+   x:"Unter Hilfe steht jede Funktion noch einmal erklärt. Von dort kannst du diesen Rundgang jederzeit wiederholen."},
+  {seite:"heute", ziel:null, t:"Los geht’s",
+   x:"Das war’s. Mit „Fertig“ werden alle Beispieldaten gelöscht und du startest sauber."}
 ];
 let tourSchritt = 0, tourLoescht = false;
-function tourStart(mitReset){ tourSchritt = 0; tourLoescht = !!mitReset; tourZeigen(); }
+function tourStart(mitReset){
+  tourSchritt = 0; tourLoescht = !!mitReset;
+  closeModal();
+  document.body.classList.add('tourlaeuft');
+  tourZeigen();
+}
+function tourEnde(aufraeumen){
+  document.body.classList.remove('tourlaeuft');
+  document.querySelectorAll('.tourziel').forEach(el=>el.classList.remove('tourziel'));
+  document.getElementById('tourkarte')?.remove();
+  if(aufraeumen){ applyData(null); dataReady = true; clearTimeout(saveTimer); flushSave(); renderAll(); }
+}
 function tourZeigen(){
-  const [titel, text] = TOUR[tourSchritt];
+  const t = TOUR[tourSchritt];
   const letzte = tourSchritt === TOUR.length-1;
-  draft = {nb:{}}; step = "tour"; error = "";
-  modal.classList.add('open');
-  sheet.innerHTML = `<header><div><h3>${titel}</h3>
-      <div class="when">Schritt ${tourSchritt+1} von ${TOUR.length}</div></div>
-      ${letzte?"":`<button class="x" id="tourWeg" aria-label="Überspringen">✕</button>`}</header>
-    <div class="grp"><p style="font-size:.92rem;line-height:1.6">${text}</p></div>
+  location.hash = "#" + t.seite;
+  show(t.seite);
+  setMenu(false);
+
+  document.querySelectorAll('.tourziel').forEach(el=>el.classList.remove('tourziel'));
+  if(t.ziel){
+    const el = document.querySelector(t.ziel);
+    if(el){
+      el.classList.add('tourziel');
+      setTimeout(()=> el.scrollIntoView({block:"center", behavior:"smooth"}), 60);
+    }
+  }else{
+    scrollTo({top:0, behavior:"smooth"});
+  }
+
+  let karte = document.getElementById('tourkarte');
+  if(!karte){ karte = document.createElement('div'); karte.id = 'tourkarte'; document.body.appendChild(karte); }
+  karte.innerHTML = `
+    <div class="tk-kopf">
+      <span class="tk-zahl">${tourSchritt+1} / ${TOUR.length}</span>
+      ${letzte?"":`<button class="tk-weg" id="tourWeg">überspringen</button>`}
+    </div>
+    <b>${t.t}</b>
+    <p>${t.x}</p>
     <div class="tourpunkte">${TOUR.map((_,i)=>`<i class="${i===tourSchritt?"an":""}"></i>`).join("")}</div>
     <div class="actions">
       ${tourSchritt?`<button class="btn" id="tourZurueck">Zurück</button>`:""}
       <button class="btn primary" id="tourWeiter">${letzte ? (tourLoescht?"Fertig und aufräumen":"Fertig") : "Weiter"}</button>
     </div>`;
   const weg = document.getElementById('tourWeg');
-  if(weg) weg.onclick = ()=> closeModal();
+  if(weg) weg.onclick = ()=> tourEnde(false);
   const zur = document.getElementById('tourZurueck');
   if(zur) zur.onclick = ()=>{ tourSchritt--; tourZeigen(); };
   document.getElementById('tourWeiter').onclick = ()=>{
-    if(!letzte){ tourSchritt++; tourZeigen(); return; }
-    if(tourLoescht){ applyData(null); dataReady = true; clearTimeout(saveTimer); flushSave(); }
-    closeModal(); renderAll();
+    if(letzte){ tourEnde(tourLoescht); return; }
+    tourSchritt++; tourZeigen();
   };
 }
 
-/* ================= Rahmen ================= */
+/* ================= Rahmen ================= *//* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
 function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
