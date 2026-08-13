@@ -318,7 +318,10 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .resetbtn:hover{color:var(--text);background:var(--surface-3)}
 .resetinfo{position:absolute;top:34px;right:0;font-size:.66rem;font-weight:400;color:var(--faint);letter-spacing:0;text-transform:none}
 .asec .sub{font-size:.82rem;color:var(--muted);margin-bottom:22px;text-align:center;line-height:1.5}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:12px}
+.kpis{display:flex;flex-wrap:wrap;gap:12px}
+.kpis > .kpi{flex:1 1 190px;min-width:0}
+.kpis.zwei{display:grid;grid-template-columns:1fr 1fr}
+.kpis.zwei > .kpi{flex:none}
 .kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:20px;text-align:center}
 .kpi .kl{display:block;font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);line-height:1.4;min-height:2.5em}
 .kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.9rem;font-weight:600;margin-top:8px;letter-spacing:-.03em}
@@ -557,7 +560,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .viewbanner b{font-weight:700}
 .viewbanner button{margin-left:auto;background:var(--surface);border:1px solid var(--line);color:var(--text);
   border-radius:999px;padding:7px 14px;font-size:.76rem;cursor:pointer}
-.teambar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.teambar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center}
 .teambar .btn{flex:0 0 auto}
 .teambar select{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:11px 16px;
   min-width:210px;color:var(--text);-webkit-appearance:none;appearance:none}
@@ -625,6 +628,25 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .zherkunft b{display:block;font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--text);margin-top:3px}
 .jahrwahl{max-width:280px;margin:0 auto 16px}
 .sicherung{opacity:.6;text-align:center;margin-top:20px}
+/* Einheitliche Abstände in den Auswertungsblöcken */
+.asec > .sub + .actions,.asec > .sub + .kpis{margin-top:18px}
+.asec > .kpis + .actions,.asec > .actions + .kpis{margin-top:14px}
+.asec > .kpis + .hinweis,.asec > .kpis + .ah4{margin-top:16px}
+.asec > .hinweis + .actions{margin-top:12px}
+.asec > .jahrwahl + .kpis{margin-top:4px}
+.wquote{text-align:center;max-width:560px;margin:14px auto 0}
+.okpuls{background:var(--accent)!important;color:var(--bg)!important;border-color:transparent!important}
+/* Bekannter Kunde beim Anlegen */
+.kdhinweis{background:color-mix(in srgb,var(--accent) 16%,var(--surface-2));border-radius:var(--r-lg);
+  padding:13px 14px;margin-bottom:16px}
+.kdhinweis.uebernommen{font-size:.8rem;color:var(--muted);text-align:center}
+.kdh1{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+.kdvorschlag{display:block;width:100%;text-align:left;background:var(--surface);border:0;border-radius:var(--r);
+  padding:11px 13px;margin-bottom:7px;cursor:pointer;color:var(--text)}
+.kdvorschlag:last-child{margin-bottom:0}
+.kdn{display:block;font-weight:700;font-size:.88rem}
+.kdm{display:block;font-size:.74rem;color:var(--muted);margin-top:2px}
+.kdu{display:inline-block;font-size:.7rem;color:var(--accent);font-weight:700;margin-top:7px}
 /* ---------- Kundenliste ---------- */
 .kcard .kzahlen{display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;padding-top:11px;border-top:1px solid var(--line-soft)}
 .kcard .kzahlen span{display:flex;flex-direction:column}
@@ -1334,8 +1356,7 @@ function blockVoll(id, n){
   if(id==="zeit")        return !!(n.realStart && n.realEnde);
   if(id==="gespraech")   return !!(n.empf && n.job
                                 && (n.empf!=="Ja" || empfZahl(n) > 0));
-  if(id==="vorfuehrung") return !!((n.vorgefuehrt||[]).length
-                                && (n.kundenstatus==="Neukunde" || n.wartung));
+  if(id==="vorfuehrung") return !!(n.kundenstatus==="Neukunde" || n.wartung);
   return false;
 }
 function blockZustaende(){
@@ -1357,6 +1378,7 @@ function nbBlock(id, titel, inhalt, zusammen, offenWenn){
 }
 function nbForm(){
   const n = draft.nb;
+  if(n.datiert === undefined) n.datiert = "Nein";     // der Normalfall
   const geraetLabel = n.kundenstatus==="Neukunde" ? "Welche Marke hat der Kunde aktuell?" : "Welches Gerät hat der Kunde aktuell?";
   let h = nbBlock("kunde","Kunde",
     `<div class="sect"><span class="lb">Kundenart</span>${seg("kundenstatus",["Neukunde","Bestandskunde"],n.kundenstatus)}</div>
@@ -1385,8 +1407,8 @@ function nbForm(){
     `<div class="sect"><span class="lb">Was wurde vorgeführt?</span>${checks("vorgefuehrt",DEMO,n.vorgefuehrt||[],"stack")}</div>
      ${zaehlZeile("demotuecher","Wie viele Demotücher gezogen?",n.demotuecher)}
      ${n.kundenstatus==="Neukunde" ? "" : `<div class="sect"><span class="lb">Wartungsservice gemacht?</span>${seg("wartung",["Ja","Nein"],n.wartung)}</div>`}`,
-    (n.vorgefuehrt||[]).length ? `${(n.vorgefuehrt||[]).length} Geräte` : "",
-    !(n.vorgefuehrt||[]).length) +
+    (n.vorgefuehrt||[]).length ? `${(n.vorgefuehrt||[]).length} Geräte` : "nichts vorgeführt",
+    !(n.kundenstatus==="Neukunde" || n.wartung)) +
   `<div class="h4">Abschluss</div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
@@ -1520,7 +1542,6 @@ function saveNb(e){
   f(!n.empf, "Empfehlungen gefragt", '[data-seg="empf"]', "gespraech");
   f(n.empf==="Ja" && !empfZahl(n), "Namen der Empfehlungen", "#empOeffnen", "gespraech");
   f(!n.job, "Jobticket gefragt", '[data-seg="job"]', "gespraech");
-  f(!(n.vorgefuehrt||[]).length, "vorgeführte Geräte", '[data-chk="vorgefuehrt"]', "vorfuehrung");
   f(n.kundenstatus!=="Neukunde" && !n.wartung, "Wartungsservice", '[data-seg="wartung"]', "vorfuehrung");
   f(!n.verkauft, "gekauft ja oder nein", '[data-seg="verkauft"]', null);
   f(!n.k70, "K70 aus dem Kofferraum", '[data-seg="k70"]', null);
@@ -1939,7 +1960,8 @@ function paint(){
   if(step==="kunde"){
     const n = draft.nb;
     sheet.innerHTML = head(draft.kind==="premium"?"Premium CheckIn":"Kundendaten") +
-      `<div class="row2">${fld("f_vor","Vorname",n.f_vor)}${fld("f_nach","Nachname",n.f_nach)}</div>
+      `<div id="kdTreffer"></div>
+       <div class="row2">${fld("f_vor","Vorname",n.f_vor)}${fld("f_nach","Nachname",n.f_nach)}</div>
        <div class="field"><label for="f_anrede">Anrede</label>
          <select id="f_anrede">${["","Herr","Frau","Divers"].map(a=>
            `<option value="${a}" ${(n.f_anrede||"")===a?"selected":""}>${a||"kein Eintrag"}</option>`).join("")}</select></div>
@@ -1961,6 +1983,11 @@ function paint(){
        <div class="actions"><button class="btn" id="spaeter">Später nachtragen</button></div>
        <div class="hint">Später nachtragen speichert nur die Namen — Adresse und Telefonnummer kannst du jederzeit über „Bearbeiten“ ergänzen.</div>`;
     wireBack();
+    kundenTreffer();
+    ['f_nach','f_plz','f_str'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('input', ()=> kundenTreffer());
+    });
     const speichere = (streng) => {
       collect();
       const g = id => (draft.nb[id]||"").trim();
@@ -2113,7 +2140,7 @@ function paint(){
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="kind">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
        <div class="hint">Wird als Festgebietsumsatz gewertet und fließt mit Bonus in die Provision ein.</div>`;
-    wireBack();
+    wireBack(); wireSegs();
     document.getElementById('save').onclick = ()=>{
       collect();
       if(num(draft.nb.umsatz) <= 0 && !(+draft.nb.einheiten > 0)){
@@ -2756,13 +2783,13 @@ function renderProv(){
     <div class="asec">
       <h3>Provisionsrechner</h3>
       <p class="sub">Vertriebsmonat ${vm.idx} im ${vm.quartal}. Quartal · KW ${vm.startW}–${vm.endW} · ${vm.weeks} Wochen · ${fmt(vm.from)} – ${fmt(vm.to)}</p>
-      <div class="kpis">
-        ${kpi("Gesamte Überweisung", eur(p.gesamt)+" €", p.uebertrag ? "nichts zur Auszahlung" : "Provision + Bonus − Warenkredit","hero")}
-        ${kpi("Provision inkl. Bonus", eur(p.prov+p.vers)+" €", `${eur(p.prov)} € plus ${eur(p.vers)} € Versicherungsbonus`,"hero")}
+      <div class="kpis zwei">
         ${kpi("Festgebietsbonus", p.stufe, p.next ? `noch ${eur(p.next.fehlt)} € netto bis ${p.next.pct} %` : "höchste Stufe erreicht")}
+        ${kpi("K70 Warenkredit", p.warenkredit ? "−"+eur(p.warenkredit)+" €" : "–", `netto aus ${eur(u.k70ein)} € brutto`)}
+        ${kpi("Provision inkl. Bonus", eur(p.prov+p.vers)+" €", `${eur(p.prov)} € plus ${eur(p.vers)} € Bonus`,"hero")}
+        ${kpi("Gesamte Überweisung", eur(p.gesamt)+" €", p.uebertrag ? "nichts zur Auszahlung" : "abzüglich Warenkredit","hero")}
       </div>
-      ${(p.warenkredit || p.minus || p.uebertrag) ? `<div class="kpis">
-        ${kpi("K70 Warenkredit", "−"+eur(p.warenkredit)+" €", `netto aus ${eur(u.k70ein)} € brutto`)}
+      ${(p.minus || p.uebertrag) ? `<div class="kpis">
         ${p.minus ? kpi("Minus aus dem Vormonat", "−"+eur(p.minus)+" €") : ""}
         ${p.uebertrag ? kpi("Übertrag in den Folgemonat", "−"+eur(p.uebertrag)+" €", "im nächsten Monat eintragen") : ""}
       </div>` : ""}
@@ -2886,7 +2913,7 @@ function renderWunsch(){
       <div class="field wf"><label for="w_${f.id}">${f.t}</label>
         <input id="w_${f.id}" data-wf="${f.id}" inputmode="decimal" value="${val(f.id)}" placeholder="–">
         <span class="unit">${f.e}</span></div>`).join("")}</div>
-     ${eigene ? `<p class="hinweis">Deine tatsächliche Abschlussquote der letzten ${rangeWeeks} Wochen liegt bei ${eigene} %.
+     ${eigene ? `<p class="hinweis wquote">Deine tatsächliche Abschlussquote der letzten ${rangeWeeks} Wochen liegt bei ${eigene} %.
         <button class="mini" id="useQuote">Übernehmen</button></p>` : ""}
      <div class="ah4">Daraus ergibt sich</div>
      <div class="wergibt">${ergibt.map(f=> wunschEdit===f.id && !f.fix
@@ -3878,7 +3905,16 @@ async function renderProfil(){
       <p class="hinweis sicherung"><button type="button" class="mini" id="pfBackup">Daten sichern</button>
         legt eine Datei mit allen deinen Einträgen auf dem Gerät ab.</p>
     </div>`;
-  document.getElementById('pfSave').onclick = profilSpeichern;
+  document.getElementById('pfSave').onclick = ()=>{
+    profilSpeichern();
+    const b = document.getElementById('pfSave');
+    if(b && !b.dataset.laeuft){
+      b.dataset.laeuft = "1";
+      const alt = b.textContent;
+      b.textContent = "Gespeichert ✓"; b.classList.add('okpuls');
+      setTimeout(()=>{ b.textContent = alt; b.classList.remove('okpuls'); delete b.dataset.laeuft; }, 1800);
+    }
+  };
   const bk = document.getElementById('pfBackup');
   if(bk) bk.onclick = ()=>{
     const daten = JSON.stringify({dk:me.dk, name:`${me.vorname} ${me.nachname}`, stand:new Date().toISOString(),
@@ -4990,6 +5026,41 @@ function renderFahrten(){
 }
 var fbMonat = "";
 
+/* Zeigt beim Anlegen an, wenn dieser Kunde schon einmal erfasst war */
+function kundenTreffer(){
+  const box = document.getElementById('kdTreffer');
+  if(!box) return;
+  const w = id => (document.getElementById(id)?.value || "").trim();
+  const nach = w('f_nach');
+  if(nach.length < 3){ box.innerHTML = ""; return; }
+  const plz = w('f_plz'), str = w('f_str');
+  const alle = kundenListe().filter(r=>{
+    if(norm(r.nachname) !== norm(nach)) return false;
+    if(plz && norm(r.plz) && norm(r.plz) !== norm(plz)) return false;
+    if(str && norm(r.str||r.strasse) && !norm(r.str||r.strasse).includes(norm(str))) return false;
+    return true;
+  }).slice(0,3);
+  if(!alle.length){ box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="kdhinweis">
+    <div class="kdh1">${alle.length===1?"Diesen Kunden gibt es schon":"Diese Kunden gibt es schon"}</div>
+    ${alle.map((r,i)=>`<button type="button" class="kdvorschlag" data-kduebernehmen="${i}">
+      <span class="kdn">${[r.vorname,r.nachname].filter(Boolean).join(" ")}</span>
+      <span class="kdm">${[r.strasse,[r.plz,r.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")||"ohne Adresse"}</span>
+      <span class="kdm">${r.termine.length} Termin${r.termine.length>1?"e":""} · zuletzt ${fmt(fromDk(r.letzterTermin))}${
+        r.kunde?" · hat gekauft":""}</span>
+      <span class="kdu">Daten übernehmen</span></button>`).join("")}
+  </div>`;
+  box.querySelectorAll('[data-kduebernehmen]').forEach(b=> b.onclick = ()=>{
+    const r = alle[+b.dataset.kduebernehmen];
+    const setz = (id, wert) => { const el = document.getElementById(id); if(el && wert) el.value = wert; };
+    setz('f_vor', r.vorname); setz('f_nach', r.nachname);
+    setz('f_str', r.str || (r.strasse||"").replace(/\s*\d+\s*[a-zA-Z]?$/,""));
+    setz('f_hnr', r.hnr); setz('f_plz', r.plz); setz('f_ort', r.ort); setz('f_tel', r.telefon);
+    const an = document.getElementById('f_anrede'); if(an && r.anrede) an.value = r.anrede;
+    box.innerHTML = `<div class="kdhinweis uebernommen">Daten von ${[r.vorname,r.nachname].filter(Boolean).join(" ")} übernommen.</div>`;
+  });
+}
+
 /* ================= Kundenliste ================= */
 /* Erkennt denselben Kunden auch bei abweichender Schreibweise:
    Nachname, Postleitzahl und Straße reichen – der Vorname wird oft anders erfasst. */
@@ -5577,38 +5648,69 @@ function renderFaq(){
 }
 const TOUR = [
   {seite:"heute", ziel:null, t:"Willkommen",
-   x:"Diese App ersetzt deinen Wochenplaner aus Papier. Ich führe dich einmal durch alle Bereiche — am Ende starten wir mit leeren Daten."},
+   x:"Diese App ersetzt deinen Wochenplaner aus Papier. Sie erfasst Termine und rechnet daraus Statistik, Provision und Ziele. Ich zeige dir einmal alles — am Ende startest du mit leeren Daten."},
+
   {seite:"heute", ziel:"#heute .asec", t:"Heute",
-   x:"Deine Startseite zeigt die Termine des Tages mit Adresse, Notiz und Knöpfen zum Anrufen und Navigieren. Ganz oben stehen anstehende Anrufe und Termine, die noch nachbereitet werden müssen."},
+   x:"Deine Startseite: die Termine des Tages mit Adresse und Notiz, dazu Knöpfe zum Anrufen und Navigieren. Ganz oben stehen fällige Anrufe und Termine, die noch nachbereitet werden müssen."},
+
   {seite:"planer", ziel:"#grid", t:"Der Planer",
-   x:"Das Wochenraster mit den Fächerterminen von 7 bis 24 Uhr. Ein Tipp auf ein freies Feld legt einen Termin an, ein Tipp auf einen Termin öffnet ihn. Gedrückt halten und dann ein freies Feld antippen verschiebt ihn."},
+   x:"Das Wochenraster mit den Fächerterminen von 7 bis 24 Uhr. Auf dem Handy siehst du einen Tag — oben über der Leiste Mo bis So wechselst du. Ein Tipp auf ein freies Feld legt einen Termin an, ein Tipp auf einen Termin öffnet ihn. Gedrückt halten und dann ein freies Feld antippen verschiebt ihn."},
+
+  {seite:"planer", ziel:"#grid", t:"Termin anlegen",
+   x:"Erst die Art wählen, dann bei Kundenterminen die Quelle, dann die Kundendaten. Die Adresse vervollständigt sich beim Tippen von selbst. Wenn du den Kunden schon einmal hattest, erscheint er über den Feldern zum Übernehmen — so entstehen keine Doppelten."},
+
+  {seite:"planer", ziel:"#grid", t:"Nachbereitung",
+   x:"Beim Öffnen eines Kundentermins setzt du oben mit einem Tipp Start- und Endzeit und danach den Status. Darunter füllst du die Blöcke aus. „Zwischenspeichern“ sichert ohne Prüfung, „Abschließen“ prüft alle Pflichtfelder und springt zum ersten, das fehlt. Wer nicht kauft, landet über ein eigenes Fenster in der Potenzialliste."},
+
   {seite:"planer", ziel:"#grid .metriclbl", t:"Deine Zahlen im Blick",
-   x:"Unten im Planer stehen Festgebiet, Weißgebiet und K70 als Ist und Soll. Der farbige Punkt zeigt, ob du im Plan liegst. Auf „K70 Einkauf“ tippen erfasst eine Bestellung."},
+   x:"Unten im Planer stehen Festgebiet, Weißgebiet und K70 als Ist und Soll. Der farbige Punkt zeigt, ob du im Plan liegst. Ein Tipp auf „K70 Einkauf“ erfasst eine Bestellung, „K70 Verkauf“ setzt den Bestellrahmen."},
+
   {seite:"statistik", ziel:"#statTable", t:"Statistik",
-   x:"Jeder nachbereitete Kundentermin wird hier eine Zeile — genau wie im Buchkalender. Der PDF-Knopf oben links druckt die Woche auf eine Querseite."},
+   x:"Jeder nachbereitete Kundentermin wird eine Zeile — genau wie im Buchkalender. Auf dem Handy siehst du stattdessen eine Karte je Termin. Der PDF-Knopf druckt die Woche auf eine Querseite."},
+
   {seite:"auswertungen", ziel:"#ausw .asec", t:"Auswertungen",
-   x:"Hier siehst du deine Quoten über den gewählten Zeitraum und wann du am erfolgreichsten terminierst. Ganz unten steht die Wochenmeldung für deinen Teamleiter."},
-  {seite:"potenzial", ziel:"#plist", t:"Potenzialliste",
-   x:"Kunden, die nicht gekauft haben, landen hier automatisch mit dem, was ihnen noch fehlt. Über „Wieder ansprechen am“ kommen sie zum richtigen Zeitpunkt wieder nach oben."},
-  {seite:"empfehlung", ziel:"#elist", t:"Empfehlungsliste",
-   x:"Alle Empfehlungen, die du in der Nachbereitung namentlich erfasst hast — oder hier von Hand einträgst. Aus jedem Eintrag legst du direkt einen Termin an."},
+   x:"Deine Quoten über eine Woche bis zu einem Jahr, dazu wann und wo du am erfolgreichsten terminierst. Ganz unten steht die Wochenmeldung zum Kopieren für deinen Teamleiter."},
+
+  {seite:"kunden", ziel:"#kunden .asec", t:"Kundenliste",
+   x:"Baut sich von selbst aus allen Terminen auf. Jeder Kunde steht genau einmal drin, auch wenn der Name mal anders geschrieben wurde. Mit Verlauf, Umsatz, vorhandenen Geräten und einem Knopf für den nächsten Termin."},
+
+  {seite:"potenzial", ziel:"#plist", t:"Potenzial und Empfehlungen",
+   x:"Wer nicht gekauft hat, landet automatisch in der Potenzialliste mit dem, was ihm noch fehlt, und einer Wiedervorlage. Direkt daneben liegt die Empfehlungsliste mit allen Namen aus deinen Nachbereitungen — aus beiden legst du mit einem Tipp einen Termin an."},
+
   {seite:"inventur", ziel:"#inventur .asec", t:"K70 Inventur",
-   x:"Der komplette Shop in Originalreihenfolge. Bestand über Plus und Minus zählen, oben nach Artikel oder Preis suchen. Der Warenbestand fließt in den Provisionsrechner."},
+   x:"Der komplette Shop in Originalreihenfolge. Kategorien lassen sich zuklappen, das merkt sich die App. Bestand über Plus und Minus zählen, oben nach Artikel oder Preis suchen. Der Warenbestand fließt in den Provisionsrechner."},
+
   {seite:"wunsch", ziel:"#wunschForm", t:"Provisionswunsch",
-   x:"Trag ein, was du verdienen willst. Die App rechnet daraus, wie viele Termine du brauchst — und der Planer weiß dann täglich, wie viel Umsatz noch fehlt."},
+   x:"Drei Angaben genügen: Wunscheinkommen, Abschlussquote und Arbeitstage. Darunter steht, wie viele Termine du dafür pro Monat, Woche und Tag brauchst — und der Planer weiß dann täglich, wie viel noch fehlt."},
+
   {seite:"provision", ziel:"#prov .kpis", t:"Provisionsrechner",
-   x:"Rechnet deinen laufenden Vertriebsmonat mit allen Sätzen und Boni, zieht den K70-Warenkredit ab und zeigt, was überwiesen wird."},
-  {seite:"jahr", ziel:"#jahr .balken", t:"Jahresrückblick",
-   x:"Alle Vertriebsmonate im Vergleich zum Vorjahr. Unten kannst du Zahlen aus der Zeit vor der App nachtragen."},
+   x:"Rechnet deinen laufenden Vertriebsmonat mit allen Sätzen und Boni, zieht den K70-Warenkredit ab und zeigt, was überwiesen wird. Die Blöcke darunter zeigen auf Wunsch den ganzen Rechenweg."},
+
+  {seite:"ziele", ziel:"#ziele .zsec", t:"Ziele",
+   x:"Club of Excellence, Kobold Club und die Goldene Nadel mit Fortschrittsbalken. Jeder Weg zum Ziel steht einzeln da, erreicht reicht einer. Die Nadel zählt über deine ganze Zeit, nicht nur über dieses Jahr."},
+
+  {seite:"jobtickets", ziel:"#jobt .asec", t:"Jobtickets",
+   x:"Geschriebene Jobtickets kommen automatisch aus deinen Kundenterminen. Wird daraus eine qualifizierte Anmeldung — angestellt und die ersten 5.000 Euro netto geschrieben — trägst du sie hier ein. Sie zählt direkt bei den Zielen mit."},
+
+  {seite:"fahrten", ziel:"#fahrtenbuch .asec", t:"Fahrtenbuch",
+   x:"Jede Fahrt einzeln: Zeiten, Start- und Zieladresse, Tachostand und ob geschäftlich oder privat. Das Datum setzt sich von selbst. Am Monatsende gibt es eine Tabelle mit getrennten Summen."},
+
+  {seite:"jahr", ziel:"#jahr .asec", t:"Jahresrückblick",
+   x:"Alle Vertriebsmonate im Vergleich zum Vorjahr. Warst du vor der App schon dabei, trag deine Zahlen hier nach — sie zählen für die Goldene Nadel mit."},
+
   {seite:"profil", ziel:"#profil .asec", t:"Profil",
-   x:"Hier änderst du deinen Namen, siehst deinen PIN, schaltest zwischen hell und dunkel um — und abonnierst deine Termine für den Apple oder Google Kalender."},
-  {seite:"faq", ziel:null, t:"Alles nachlesbar",
-   x:"Unter Hilfe steht jede Funktion noch einmal erklärt. Von dort kannst du diesen Rundgang jederzeit wiederholen."},
-  {seite:"heute", ziel:null, t:"Los geht’s",
-   x:"Das war’s. Mit „Fertig“ werden alle Beispieldaten gelöscht und du startest sauber."}
+   x:"Name, PIN, hell oder dunkel und das Kalenderabo für Apple oder Google. Wichtig für die Ziele: trag dein Einstellungsdatum ein. Wer weniger als 52 Wochen dabei ist, gilt als Berufseinsteiger. Ganz unten sicherst du bei Bedarf deine Daten."},
+
+  {seite:"teamumsatz", ziel:"#tumsatz .asec", nur:"tl", t:"Nur für Teamleiter",
+   x:"Unter Teamumsatz trägst du je Vertriebsmonat den Umsatz deines Teams ein und getrennt davon den deiner Berufseinsteiger — beides zählt bei deinen Zielen. Unter Teammitglieder siehst du die Woche jedes Beraters."},
+
+  {seite:"faq", ziel:null, t:"Los geht’s",
+   x:"Unter Hilfe steht jede Funktion noch einmal in Ruhe erklärt, und von dort kannst du diesen Rundgang jederzeit wiederholen. Mit „Fertig“ werden alle Beispieldaten gelöscht und du startest sauber."}
 ];
+var tourListe = TOUR;
 let tourSchritt = 0, tourLoescht = false;
 function tourStart(mitReset){
+  tourListe = TOUR.filter(t=> t.nur !== "tl" || istTeamleiter());
   tourSchritt = 0; tourLoescht = !!mitReset;
   closeModal();
   document.body.classList.add('tourlaeuft');
@@ -5621,8 +5723,8 @@ function tourEnde(aufraeumen){
   if(aufraeumen){ applyData(null); dataReady = true; clearTimeout(saveTimer); flushSave(); renderAll(); }
 }
 function tourZeigen(){
-  const t = TOUR[tourSchritt];
-  const letzte = tourSchritt === TOUR.length-1;
+  const t = tourListe[tourSchritt];
+  const letzte = tourSchritt === tourListe.length-1;
   location.hash = "#" + t.seite;
   show(t.seite);
   setMenu(false);
@@ -5642,12 +5744,12 @@ function tourZeigen(){
   if(!karte){ karte = document.createElement('div'); karte.id = 'tourkarte'; document.body.appendChild(karte); }
   karte.innerHTML = `
     <div class="tk-kopf">
-      <span class="tk-zahl">${tourSchritt+1} / ${TOUR.length}</span>
+      <span class="tk-zahl">${tourSchritt+1} / ${tourListe.length}</span>
       ${letzte?"":`<button class="tk-weg" id="tourWeg">überspringen</button>`}
     </div>
     <b>${t.t}</b>
     <p>${t.x}</p>
-    <div class="tourpunkte">${TOUR.map((_,i)=>`<i class="${i===tourSchritt?"an":""}"></i>`).join("")}</div>
+    <div class="tourpunkte">${tourListe.map((_,i)=>`<i class="${i===tourSchritt?"an":""}"></i>`).join("")}</div>
     <div class="actions">
       ${tourSchritt?`<button class="btn" id="tourZurueck">Zurück</button>`:""}
       <button class="btn primary" id="tourWeiter">${letzte ? (tourLoescht?"Fertig und aufräumen":"Fertig") : "Weiter"}</button>
