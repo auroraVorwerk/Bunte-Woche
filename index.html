@@ -398,7 +398,15 @@ i.bvor{background:var(--surface-3)}
 .zk-n{font-family:"JetBrains Mono",monospace;font-size:3.2rem;font-weight:600;line-height:1}
 .zk-minus{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;background:var(--surface-2);
   display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:1.2rem}
-.zhinweis{text-align:center;font-size:.76rem;color:var(--faint);margin-top:14px}
+.zhinweis{text-align:center;font-size:.76rem;color:var(--faint);margin-top:14px;margin-bottom:0;min-height:1.2em}
+.zhinweis.gut{color:var(--accent);font-weight:600}
+.zfuss{display:flex;gap:9px;margin-top:14px}
+.zfuss .btn{flex:1 1 0;min-width:0;padding:15px 8px;font-size:.82rem}
+.zfuss.drei .btn{font-size:.76rem;padding:15px 6px}
+.zform{flex:1;overflow-y:auto;margin-top:4px;padding-right:2px}
+.zform .field{margin-bottom:12px}
+.zform .row2{margin-bottom:0}
+.zfhinweis{font-size:.78rem;color:var(--muted);line-height:1.5;margin:0 0 16px}
 .faq{background:var(--surface-2);border-radius:var(--r);margin-bottom:8px;padding:2px}
 .faq summary{list-style:none;cursor:pointer;padding:13px 16px;font-weight:600;font-size:.9rem}
 .faq summary::-webkit-details-marker{display:none}
@@ -995,7 +1003,8 @@ const CATS = [
 /* ================= Datum ================= */
 const pad = n => String(n).padStart(2,"0");
 const dk  = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-const fromDk = s => {const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d);};
+const fromDk = s => {const [y,m,d]=String(s||"").split("-").map(Number);
+  return (y && m && d) ? new Date(y,m-1,d) : new Date();};
 const fmt = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
 const fmtShort = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.`;
 function mondayOf(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d;}
@@ -1531,7 +1540,8 @@ function nbTermForm(e){
   return `<div class="h4">Nachbereitung · ${e.quelle}</div>
     <div class="grp">
       ${zahlen.map(([id,t])=>zaehlZeile(id,t,n[id])).join("")}
-      <div class="actions"><button type="button" class="btn primary" id="zaehlStart">Einsatz starten</button></div>
+      <div class="actions"><button type="button" class="btn primary" id="zaehlStart">${
+        n.realStart && !n.realEnde ? `Einsatz fortsetzen · läuft seit ${n.realStart} Uhr` : "Einsatz starten"}</button></div>
     </div>
     <div class="h4">Echte Zeiten</div>
     <div class="grp">
@@ -2589,7 +2599,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v11 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v13 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -2772,7 +2782,7 @@ function jahresUebersicht(jahr){
         nettoU: netto(u.fg+u.wg+u.k70ein) + (nach?+nach.umsatz||0:0),
         einheiten: einheiten + (nach?+nach.einheiten||0:0),
         auftraege: auftraege + (nach?+nach.auftraege||0:0), stufe:p.stufe, prov:p.prov,
-        spanne:`${zz(vm.from.getDate())}.${zz(vm.from.getMonth()+1)}–${zz(vm.to.getDate())}.${zz(vm.to.getMonth()+1)}`,
+        spanne:`${pad(vm.from.getDate())}.${pad(vm.from.getMonth()+1)}–${pad(vm.to.getDate())}.${pad(vm.to.getMonth()+1)}`,
         wochen: vm.weeks,
         kurz:`${q+1}Q${idx}`, aktuell: vm.startW === vmJetzt.startW && jahr === vmJetzt.year});
     });
@@ -5634,8 +5644,11 @@ function zaehlModus(e){
   zaehlDaten = {
     felder,
     werte: Object.fromEntries(felder.map(([id])=>[id, +draft.nb[id] || 0])),
-    start: uhrJetzt(),
-    quelle: e.quelle
+    start: draft.nb.realStart || uhrJetzt(),      // ein bereits gestarteter Einsatz behält seine Zeit
+    quelle: e.quelle,
+    modus: "zaehlen",
+    gemerkt: 0,
+    hinweis: ""
   };
   zaehlZeichnen();
 }
@@ -5643,11 +5656,64 @@ function zaehlZeichnen(){
   const z = zaehlDaten;
   let box = document.getElementById('zaehlflaeche');
   if(!box){ box = document.createElement('div'); box.id = 'zaehlflaeche'; document.body.appendChild(box); }
-  box.innerHTML = `
-    <div class="zkopf">
-      <div><b>${z.quelle}</b><span>läuft seit ${z.start} Uhr</span></div>
-      <button class="mini" id="zaehlEnde">Einsatz beenden</button>
-    </div>
+
+  const kopf = `<div class="zkopf">
+      <div><b>${z.quelle}</b><span>läuft seit ${z.start} Uhr${z.gemerkt?` · ${z.gemerkt} gemerkt`:""}</span></div>
+    </div>`;
+
+  if(z.modus === "kontakt"){
+    const naechster = new Date();
+    naechster.setMonth(naechster.getMonth()+1, 1);
+    box.innerHTML = kopf + `
+      <div class="zform">
+        <p class="zfhinweis">Für alle, die später noch einmal angesprochen werden wollen.
+          Der Eintrag landet in deiner Potenzialliste.</p>
+        <div class="row2">
+          <div class="field"><label for="zkVor">Vorname</label><input id="zkVor"></div>
+          <div class="field"><label for="zkNach">Nachname</label><input id="zkNach"></div>
+        </div>
+        <div class="row2">
+          <div class="field" style="flex:1 1 65%"><label for="zkStr">Straße</label><input id="zkStr"></div>
+          <div class="field" style="flex:0 0 30%"><label for="zkHnr">Nr.</label><input id="zkHnr"></div>
+        </div>
+        <div class="row2">
+          <div class="field" style="flex:0 0 42%"><label for="zkPlz">PLZ</label><input id="zkPlz" inputmode="numeric" maxlength="5"></div>
+          <div class="field"><label for="zkOrt">Ort</label><input id="zkOrt"></div>
+        </div>
+        <div class="field"><label for="zkTel">Telefon</label><input id="zkTel" inputmode="tel"></div>
+        <div class="field"><label for="zkWieder">Wieder ansprechen am</label>
+          <input id="zkWieder" type="date" value="${dk(naechster)}"></div>
+        <div class="field"><label for="zkNotiz">Notiz</label><input id="zkNotiz" placeholder="z. B. melden im Oktober"></div>
+        <p class="err" id="zkErr" hidden></p>
+      </div>
+      <div class="zfuss">
+        <button class="btn" id="zkZurueck">Zurück</button>
+        <button class="btn primary" id="zkSichern">In die Potenzialliste</button>
+      </div>`;
+    document.getElementById('zkZurueck').onclick = ()=>{ z.modus = "zaehlen"; z.hinweis = ""; zaehlZeichnen(); };
+    document.getElementById('zkSichern').onclick = ()=>{
+      const w = id => (document.getElementById(id).value||"").trim();
+      const err = document.getElementById('zkErr');
+      if(!w('zkNach')){ err.textContent = "Ohne Nachnamen geht es nicht."; err.hidden = false; return; }
+      const p = {vorname:w('zkVor'), nachname:w('zkNach'), str:w('zkStr'), hnr:w('zkHnr'),
+                 strasse:[w('zkStr'),w('zkHnr')].filter(Boolean).join(" "),
+                 plz:w('zkPlz'), ort:w('zkOrt'), telefon:w('zkTel'),
+                 potenzial:[...BESITZ], grund:w('zkNotiz') || `Angesprochen bei ${z.quelle}`,
+                 quelle:z.quelle, datum:dk(new Date())};
+      if(w('zkWieder')) p.wieder = w('zkWieder');
+      p.id = [p.vorname,p.nachname,p.str,p.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
+      if(!potenzial.some(x=>x.id===p.id)) potenzial.push(p);
+      z.gemerkt++;
+      z.modus = "zaehlen";
+      z.hinweis = `${[p.vorname,p.nachname].filter(Boolean).join(" ")} steht in der Potenzialliste.`;
+      saveData();
+      zaehlZeichnen();
+    };
+    document.getElementById('zkVor').focus();
+    return;
+  }
+
+  box.innerHTML = kopf + `
     <div class="zgitter">
       ${z.felder.map(([id,t])=>`
         <button class="zkachel" data-ztipp="${id}">
@@ -5656,7 +5722,14 @@ function zaehlZeichnen(){
           <span class="zk-minus" data-zab="${id}">−</span>
         </button>`).join("")}
     </div>
-    <p class="zhinweis">Tippen zählt hoch, das kleine Minus zieht ab. Start- und Endzeit werden mitgeschrieben.</p>`;
+    <p class="zhinweis${z.hinweis?" gut":""}" id="zMeldung">${z.hinweis ||
+      "„Kurz raus“ sichert den Stand — beim Fortsetzen läuft die Zeit weiter."}</p>
+    <div class="zfuss drei">
+      <button class="btn" id="zaehlKontakt">Kontakt merken</button>
+      <button class="btn" id="zaehlPause">Kurz raus</button>
+      <button class="btn primary" id="zaehlEnde">Einsatz beenden</button>
+    </div>`;
+
   box.querySelectorAll('[data-ztipp]').forEach(b=> b.onclick = ev=>{
     if(ev.target.closest('[data-zab]')) return;
     z.werte[b.dataset.ztipp]++;
@@ -5669,7 +5742,22 @@ function zaehlZeichnen(){
     z.werte[id] = Math.max(0, z.werte[id]-1);
     b.parentElement.querySelector('.zk-n').textContent = z.werte[id];
   });
+  document.getElementById('zaehlKontakt').onclick = ()=>{ z.modus = "kontakt"; zaehlZeichnen(); };
+  document.getElementById('zaehlPause').onclick = zaehlSichern;
   document.getElementById('zaehlEnde').onclick = zaehlBeenden;
+  z.hinweis = "";
+}
+/* Zahlen sichern, ohne den Einsatz zu beenden – die Startzeit bleibt stehen */
+function zaehlSichern(){
+  const z = zaehlDaten;
+  Object.keys(z.werte).forEach(id=> draft.nb[id] = z.werte[id]);
+  draft.nb.realStart = z.start;
+  const e = entries[key(draft.day,draft.hour)];
+  if(e) e.nb = {...draft.nb};
+  zaehlDaten = null;
+  document.getElementById('zaehlflaeche')?.remove();
+  saveData();
+  repaint();                                   // zurück in den Termin – die Endzeit bleibt offen
 }
 function zaehlBeenden(){
   const z = zaehlDaten;
@@ -5690,7 +5778,7 @@ const FAQ = [
   ["Terminarten", "Kundentermin mit Quelle · Eigenkauf ohne Kundendaten · Premium CheckIn · Meeting · Terminieren aus Festgebietsbegehung oder Promotion · Privat und Individuell blockieren die Zeit nur optisch."],
   ["Nachbereitung", "Nach dem Termin auf den Eintrag tippen und den Status wählen. Die Blöcke klappen zu, sobald sie vollständig sind. „Zwischenspeichern“ sichert auch unvollständig, „Abschließen“ prüft auf Vollständigkeit."],
   ["Termin starten", "Im Block „Echte Zeiten“ setzen zwei Knöpfe Start- und Endzeit auf die aktuelle Uhrzeit — dadurch stimmt die Stundenauswertung ohne Schätzen."],
-  ["Zählmodus", "Beim Terminieren öffnet „Einsatz starten“ vier große Zählflächen. Ein Tipp zählt hoch, das kleine Minus zieht ab. Beim Beenden landen die Zahlen samt Start- und Endzeit im Formular."],
+  ["Zählmodus", "Beim Terminieren öffnet „Einsatz starten“ vier große Zählflächen. Ein Tipp zählt hoch, das kleine Minus zieht ab. „Kurz raus“ sichert den Stand und schließt die Zählfläche, damit du zwischendurch einen Termin eintragen kannst. Der Knopf heißt danach „Einsatz fortsetzen“ und die Startzeit bleibt stehen — überschrieben wird sie nie. „Kontakt merken“ legt jemanden, der später noch einmal angesprochen werden will, direkt in die Potenzialliste. Erst „Einsatz beenden“ schreibt die Endzeit."],
   ["Datierte Aufträge", "Verkaufst du heute, wird aber später geliefert, trägst du unter „Späteres Lieferdatum“ das Datum ein. Der Umsatz zählt sofort in die Statistik, aber erst im Vertriebsmonat der Lieferung in die Provision."],
   ["Anrufe", "Der Happy Call erscheint 21 Tage nach der Lieferung, die Terminbestätigung fünf Tage vor jedem Premium CheckIn. Mit „Erledigt“ verschwindet der Eintrag."],
   ["Potenzialliste", "Kunden ohne Kauf landen hier mit dem, was ihnen fehlt. „Wieder ansprechen am“ holt sie zum richtigen Zeitpunkt nach oben."],
@@ -5835,7 +5923,14 @@ function tourZeigen(){
 
 /* ================= Rahmen ================= *//* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); renderZiele(); renderJobtickets(); renderTeamumsatz(); renderFahrten(); renderKunden(); saveData(); }
+function renderAll(){
+  /* Jede Seite einzeln zeichnen: stolpert eine, bleiben die anderen trotzdem gefüllt */
+  [render, renderHeute, renderFaq, renderPapierkorb, renderJahr, renderStat, renderPotenzial,
+   renderEmpfehlung, renderAusw, renderProv, renderWunsch, renderTeam, renderProfil, renderDelete,
+   renderInventur, renderZiele, renderJobtickets, renderTeamumsatz, renderFahrten, renderKunden]
+    .forEach(f=>{ try{ f(); }catch(e){ console.error("Fehler beim Zeichnen von " + (f.name||"?") + ":", e); } });
+  saveData();
+}
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
