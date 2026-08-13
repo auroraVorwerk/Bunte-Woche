@@ -842,8 +842,9 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
     border-radius:0!important;text-align:left!important;width:auto}
   .meld td:first-child{flex:1 1 auto;min-width:0;font-size:.82rem;color:var(--text);
     overflow-wrap:anywhere;line-height:1.35}
-  .meld td.v{flex:0 1 auto;min-width:0;font-family:"JetBrains Mono",monospace;
-    font-size:clamp(.85rem,4vw,1.05rem);font-weight:600;white-space:nowrap;letter-spacing:-.03em;text-align:right!important}
+  .meld td.v,.atable.meld td.v{flex:0 1 auto;min-width:0;width:auto!important;
+    font-family:"JetBrains Mono",monospace;font-size:clamp(.74rem,3.3vw,.92rem);font-weight:700;
+    white-space:nowrap;letter-spacing:-.03em;text-align:right!important}
   .meld td.x{flex:1 1 100%;order:3;font-size:.73rem;color:var(--faint);line-height:1.45;margin-top:2px}
   .meld td.x:empty{display:none}
   .meldung .ah4{margin-top:20px}
@@ -1797,7 +1798,8 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
        <div class="field"><label for="kbWieder">Wieder ansprechen am</label>
          <input id="kbWieder" type="date" value="${p.wieder||""}"></div>
        <div class="field"><label>Notiz</label><textarea id="kbNotiz" style="min-height:70px">${p.notiz||p.grund||""}</textarea></div>
-     </div>`,
+     </div>
+     <p class="err" id="kbErr" hidden></p>`,
     ()=>{
       const w = id => (document.getElementById(id)||{value:""}).value.trim();
       p.vorname = w('kbVor'); p.nachname = w('kbNach');
@@ -1812,7 +1814,11 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
       if(w('kbWieder')) p.wieder = w('kbWieder'); else delete p.wieder;
       if(!mitGeraeten && document.getElementById('kbVon')) p.von = w('kbVon');
       if(istNeu){
-        if(!p.nachname){ return; }
+        if(!p.nachname){
+          const e = document.getElementById('kbErr');
+          if(e){ e.textContent = "Ohne Nachnamen geht es nicht."; e.hidden = false; }
+          return;
+        }
         p.id = [p.vorname,p.nachname,p.str,p.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
         if(!p.datum) p.datum = dk(new Date());
         if(!liste.some(x=>x.id===p.id)) liste.push(p);
@@ -1846,8 +1852,10 @@ function renderPotenzial(){
       <div class="nm">${p.vorname} ${p.nachname}${p.wieder ? `<span class="wieder">${
         p.wieder <= heute ? "fällig" : "ab "+fmtShort(fromDk(p.wieder))}</span>` : ""}</div>
       <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
-      <div class="meta">${p.telefon?p.telefon+" · ":""}Letzter Besuch: ${fmt(fromDk(p.letzterBesuch))}</div>
-      <div class="pot">${p.potenzial.map(x=>`<span>${x}</span>`).join("")}</div>
+      <div class="meta">${p.telefon?p.telefon+" · ":""}${p.letzterBesuch
+        ? "Letzter Besuch: "+fmt(fromDk(p.letzterBesuch))
+        : "Von Hand angelegt"+(p.datum?" am "+fmt(fromDk(p.datum)):"")}</div>
+      <div class="pot">${(p.potenzial||[]).map(x=>`<span>${x}</span>`).join("")}</div>
       ${p.grund?`<div class="why">${p.grund}</div>`:""}
       <div class="pact">
         <button class="btn" data-ptermin="${p.id}">Termin anlegen</button>
@@ -1871,6 +1879,7 @@ function renderPotenzial(){
     const p = potenzial.find(x=>x.id===b.dataset.pedit);
     if(p) kontaktBearbeiten(p, potenzial, true);
   });
+  verdrahten();                                  // gilt auch für die gefüllte Liste
 }
 
 /* ---------- Dialogschritte ---------- */
@@ -2629,7 +2638,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v19 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v20 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4964,6 +4973,32 @@ function renderZiele(){
     ]);
   }else{
     const ef = einsteigerFenster();
+    /* Berufseinsteiger: eigener Block ganz oben, solange das Fenster läuft */
+    if(!settings.einstellung){
+      h += `<div class="asec zsec offen">
+        <h3>Berufseinsteiger</h3>
+        <p class="sub">Trag im Profil dein Einstellungsdatum ein — wer weniger als 52 Wochen dabei ist,
+          hat zusätzliche Ziele, die hier erscheinen.</p></div>`;
+    }else if(istBerufseinsteiger() && ef){
+      const heuteK = dk(new Date());
+      const erreicht26 = zielNettoZeitraum(ef.von, ef.bis);
+      const restTage = Math.max(0, Math.round((fromDk(ef.bis) - fromDk(heuteK)) / 86400000));
+      const wochenDabei = Math.floor((Date.now() - fromDk(settings.einstellung).getTime()) / (7*86400000));
+      const imFenster = heuteK <= ef.bis;
+      h += `<div class="asec zsec${erreicht26 >= 100000 ? " gewonnen" : ""}">
+        <h3>Als Berufseinsteiger${erreicht26 >= 100000 ? ' <span class="zhaken">erreicht</span>' : ""}</h3>
+        <p class="sub">Seit ${fmt(fromDk(settings.einstellung))} dabei — Woche ${wochenDabei + 1} von 52.
+          ${imFenster
+            ? `Das Fenster für die ersten 26 Wochen läuft noch ${restTage} Tage, bis zum ${fmt(fromDk(ef.bis))}.`
+            : `Das Fenster für die ersten 26 Wochen endete am ${fmt(fromDk(ef.bis))}.`}</p>
+        ${zielBalken("100.000 € netto in den ersten 26 Wochen", erreicht26, 100000, "€",
+          imFenster && erreicht26 < 100000 && restTage
+            ? `noch ${eur(Math.max(0, 100000 - erreicht26) / Math.max(1, restTage/7))} € netto pro Woche nötig`
+            : "")}
+        <p class="hinweis">Damit qualifizierst du dich für den Club of Excellence, ohne die 250.000 € im
+          Vertriebsjahr zu brauchen. Nach 52 Wochen gelten für dich die normalen Kundenberaterziele.</p>
+      </div>`;
+    }
     const ceWege = [];
     if(ef && istBerufseinsteiger())
       ceWege.push(zielBalken("Als Berufseinsteiger in den ersten 26 Wochen",
@@ -5734,7 +5769,6 @@ function renderJahr(){
       <div class="kpis">
         ${kpi("Nettoumsatz", eur(sum('nettoU'))+" €", `Vorjahr ${eur(sum('vorjahrNetto'))} €`,"hero")}
         ${kpi("Einheiten", sum('einheiten')||"–", `Vorjahr ${sum('vorjahrEh')||"–"}`)}
-        ${kpi("Provision", eur(sum('prov'))+" €", "ohne Versicherungsbonus")}
         ${kpi("Qualifizierte Anmeldungen", String(jt(jahrAnsicht).qualifiziert), "aus dem Menüpunkt Jobtickets")}
       </div>
 
