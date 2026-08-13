@@ -639,6 +639,10 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .sicherung .hinweis{margin:0 0 10px}
 .sicherung .hinweis:last-child{margin-bottom:0}
 .mini.gefahr{color:var(--warn)}
+.standzeile{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface-2);
+  border-radius:var(--r);padding:11px 14px;margin-bottom:8px}
+.standzeile span{font-size:.8rem;font-family:"JetBrains Mono",monospace;color:var(--muted)}
+.standzeile .mini{margin:0}
 .buildzeile{text-align:center;font-size:.66rem;color:var(--faint);font-family:"JetBrains Mono",monospace;margin-top:14px;opacity:.7}
 /* Einheitliche Abstände in den Auswertungsblöcken */
 .asec > .sub + .actions,.asec > .sub + .kpis{margin-top:18px}
@@ -824,12 +828,16 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   .meldung .ascroll{overflow-x:visible}
   .meld{min-width:0!important;display:block}
   .meld tbody,.meld tr,.meld td{display:block;width:auto}
-  .meld tr{padding:11px 0;border-bottom:1px solid var(--line-soft)}
-  .meld tr:last-child{border-bottom:0}
-  .meld td{padding:0!important;border:0!important;text-align:left!important}
-  .meld td.v{font-family:"JetBrains Mono",monospace;font-size:1.02rem;margin-top:3px}
-  .meld td.x{font-size:.72rem;color:var(--faint);margin-top:3px;line-height:1.4}
+  .meld tr{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px;
+    background:var(--surface-2);border-radius:var(--r);padding:13px 15px;margin-bottom:8px;border:0}
+  .meld tr:last-child{margin-bottom:0}
+  .meld td{display:block;background:none!important;padding:0!important;border:0!important;
+    border-radius:0!important;text-align:left!important;width:auto}
+  .meld td:first-child{flex:1 1 auto;font-size:.84rem;color:var(--text)}
+  .meld td.v{flex:0 0 auto;font-family:"JetBrains Mono",monospace;font-size:1.05rem;font-weight:600;white-space:nowrap}
+  .meld td.x{flex:1 1 100%;order:3;font-size:.73rem;color:var(--faint);line-height:1.45;margin-top:2px}
   .meld td.x:empty{display:none}
+  .meldung .ah4{margin-top:20px}
 
   /* Ziele und Fahrtenbuch */
   .zsec .zziel{padding:13px 14px}
@@ -1754,7 +1762,7 @@ function renderEmpfehlung(){
 }
 /* Kundendaten, Notiz und bei der Potenzialliste auch die Geräte ändern */
 function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
-  simpleDialog(istNeu ? "Empfehlung hinzufügen" : "Eintrag bearbeiten",
+  simpleDialog(istNeu ? (mitGeraeten ? "Person hinzufügen" : "Empfehlung hinzufügen") : "Eintrag bearbeiten",
     istNeu ? "" : `${p.vorname} ${p.nachname}`,
     `<div class="grp">
        <div class="row2">
@@ -1797,6 +1805,7 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
       if(istNeu){
         if(!p.nachname){ return; }
         p.id = [p.vorname,p.nachname,p.str,p.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
+        if(!p.datum) p.datum = dk(new Date());
         if(!liste.some(x=>x.id===p.id)) liste.push(p);
       }
       closeModal(); renderAll();
@@ -1806,14 +1815,23 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
 }
 function renderPotenzial(){
   const el = document.getElementById('plist');
+  const neuKnopf = `<div class="asec"><div class="actions">
+    <button class="btn primary" id="potNeu">Person hinzufügen</button></div>
+    <p class="hinweis">Für alle, die dich später noch einmal sehen wollen — auch beim Terminieren an der Tür.</p></div>`;
+  const verdrahten = ()=>{
+    const b = document.getElementById('potNeu');
+    if(b) b.onclick = ()=> kontaktBearbeiten({potenzial:[...BESITZ], datum:dk(new Date())}, potenzial, true, true);
+  };
   if(!potenzial.length){
-    el.innerHTML = `<div class="placeholder">Noch keine Einträge. Kunden landen hier, sobald ein Termin ohne Kauf nachbereitet wird.</div>`;
+    el.innerHTML = neuKnopf + `<div class="placeholder">Noch keine Einträge. Kunden landen hier automatisch,
+      sobald ein Termin ohne Kauf nachbereitet wird.</div>`;
+    verdrahten();
     return;
   }
   const heute = dk(new Date());
   const rang = p => (p.wieder && p.wieder <= heute) ? 0 : (p.wieder ? 1 : 2);
-  el.innerHTML = `<div class="plist">` + potenzial.slice().sort((a,b)=>
-      rang(a) - rang(b) || (rang(a)===2 ? b.letzterBesuch.localeCompare(a.letzterBesuch)
+  el.innerHTML = neuKnopf + `<div class="plist">` + potenzial.slice().sort((a,b)=>
+      rang(a) - rang(b) || (rang(a)===2 ? (b.letzterBesuch||b.datum||"").localeCompare(a.letzterBesuch||a.datum||"")
                                         : (a.wieder||"").localeCompare(b.wieder||""))).map(p=>`
     <div class="pcard${p.wieder && p.wieder <= heute ? " faellig" : ""}">
       <div class="nm">${p.vorname} ${p.nachname}${p.wieder ? `<span class="wieder">${
@@ -2602,7 +2620,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v14 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v17 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -3304,14 +3322,62 @@ function applyData(d){
 }
 /* Der neuere Stand gewinnt – ist dort ein Bereich leer, springt der ältere ein.
    Verhindert, dass ein Teil der Daten durch einen halben Speichervorgang verschwindet. */
+/* Führt zwei Stände zusammen, ohne dass ein Gerät die Arbeit des anderen verwirft.
+   Termine werden einzeln verglichen, gelöschte bleiben gelöscht (der Papierkorb ist der Nachweis). */
 function mische(wolke, lokal){
-  const neuer = (wolke.ts||0) >= (lokal.ts||0) ? {...wolke} : {...lokal};
-  const alt   = (wolke.ts||0) >= (lokal.ts||0) ? lokal : wolke;
+  const wNeuer = (wolke.ts||0) >= (lokal.ts||0);
+  const neuer = wNeuer ? wolke : lokal;
+  const alt   = wNeuer ? lokal : wolke;
+  const out = {...neuer};
   const leer = v => !v || (Array.isArray(v) ? !v.length : !Object.keys(v).length);
-  ["entries","inventur","potenzial","empfehlungen","papierkorb","einkaeufe","verlauf","archiv","fahrten","jobtickets","teamumsatz"].forEach(f=>{
-    if(leer(neuer[f]) && !leer(alt[f])) neuer[f] = alt[f];
+
+  /* Termine: alles aus beiden Ständen, bei Dopplung gewinnt der zuletzt geänderte */
+  const eN = neuer.entries || {}, eA = alt.entries || {};
+  const korbZeit = blob => {
+    const m = {};
+    (blob.papierkorb || []).forEach(x=>{
+      if(!x || !x.tag) return;
+      const k = x.tag + "|" + x.h;
+      m[k] = Math.max(m[k] || 0, +x.weg || 0);
+    });
+    return m;
+  };
+  const kN = korbZeit(neuer), kA = korbZeit(alt);
+  const ent = {};
+  const alleKeys = new Set([...Object.keys(eN), ...Object.keys(eA)]);
+  alleKeys.forEach(k=>{
+    const a = eA[k], n = eN[k];
+    if(a && n){ ent[k] = ((+a.mts||0) > (+n.mts||0)) ? a : n; return; }
+    const da = a || n;
+    const eigen = a ? (+a.mts || 0) : (+n.mts || 0);
+    const geloescht = a ? (kN[k] || 0) : (kA[k] || 0);   // hat die andere Seite ihn weggeworfen?
+    if(geloescht && geloescht >= eigen) return;
+    ent[k] = da;
   });
-  return neuer;
+  out.entries = ent;
+
+  /* Listen mit Kennung: zusammenlegen statt ersetzen */
+  const nachId = (feld, idFeld) => {
+    const map = new Map();
+    (alt[feld] || []).forEach(x=> x && map.set(x[idFeld] || JSON.stringify(x), x));
+    (neuer[feld] || []).forEach(x=> x && map.set(x[idFeld] || JSON.stringify(x), x));
+    out[feld] = [...map.values()];
+  };
+  nachId("potenzial", "id");
+  nachId("empfehlungen", "id");
+  nachId("fahrten", "id");
+
+  /* Objekte je Schlüssel zusammenlegen, der neuere Stand gewinnt bei Dopplung */
+  ["nachtrag","jobtickets","teamumsatz","inventur"].forEach(f=>{
+    if(leer(alt[f])) return;
+    out[f] = {...(alt[f] || {}), ...(neuer[f] || {})};
+  });
+
+  /* Der Rest: nur einspringen, wenn der neuere Stand dort nichts hat */
+  ["papierkorb","einkaeufe","verlauf","archiv","settings","wunsch"].forEach(f=>{
+    if(leer(out[f]) && !leer(alt[f])) out[f] = alt[f];
+  });
+  return out;
 }
 async function loadData(dk, fremd){
   const lokal = fremd ? null : store.get('bw-data-'+dk);
@@ -3378,7 +3444,13 @@ function flushSave(){
   const basis = 'data/'+zielDk+'/';
   const updates = {};
   const neuE = blob.entries || {}, altE = shadow.entries || {};
-  Object.keys(neuE).forEach(k=>{ if(!gleich(neuE[k], altE[k])) updates[basis+'entries/'+k] = neuE[k]; });
+  const stempel = Date.now();
+  Object.keys(neuE).forEach(k=>{
+    if(gleich(neuE[k], altE[k])) return;
+    neuE[k] = {...neuE[k], mts: stempel};          // wann dieser Termin zuletzt geändert wurde
+    if(entries[k]) entries[k].mts = stempel;       // damit der nächste Vergleich ruhig bleibt
+    updates[basis+'entries/'+k] = neuE[k];
+  });
   Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
   ["potenzial","empfehlungen","papierkorb","nachtrag","verlauf","archiv","einkaeufe","inventur","settings","wunsch","fahrten","jobtickets","teamumsatz"].forEach(f=>{
     if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
@@ -4019,7 +4091,7 @@ async function renderProfil(){
         <p class="hinweis"><button type="button" class="mini" id="pfBackup">Daten sichern</button>
           legt eine Datei mit allen deinen Einträgen auf dem Gerät ab.</p>
         <p class="hinweis"><button type="button" class="mini" id="pfRestore">Sicherung einspielen</button>
-          ersetzt alle Einträge durch den Stand aus einer solchen Datei.
+          ersetzt alle Einträge durch den Stand aus einer solchen Datei — auch aus einer Serversicherung.
           <input type="file" id="pfDatei" accept=".json,application/json" hidden></p>
         <p class="hinweis"><button type="button" class="mini gefahr" id="pfLeeren">Alle Einträge zurücksetzen</button>
           löscht Termine, Listen und Zahlen — Profil, PIN und Kalender bleiben.</p>
@@ -5370,6 +5442,37 @@ function kundenVerlauf(r){
         <span class="hinfo">${info}</span></div>`;
     }).join("")}</div>`, ()=> closeModal(), "Schließen");
 }
+
+/* ================= Abgleich zwischen Geräten ================= */
+/* Beim Zurückkehren in die App den Stand aus der Cloud holen und zusammenführen,
+   damit iPhone und iPad nicht auseinanderlaufen. */
+var abgleichLaeuft = false, letzterAbgleich = 0;
+async function abgleichen(){
+  if(!me || !db || !dataReady || fremdAktiv || abgleichLaeuft) return;
+  if(Date.now() - letzterAbgleich < 4000) return;
+  abgleichLaeuft = true;
+  try{
+    const s = await db.ref('data/' + me.dk).once('value');
+    const wolke = s.val();
+    if(wolke){
+      const meins = clean(dataBlob());
+      const zusammen = mische(wolke, meins);
+      if(!gleich(zusammen, meins)){
+        applyData(zusammen);
+        shadow = JSON.parse(JSON.stringify(clean(dataBlob())));
+        renderAll();
+        saveState("abgeglichen");
+      }
+    }
+    letzterAbgleich = Date.now();
+  }catch(err){
+    console.warn("Abgleich nicht möglich:", err && err.message);
+  }finally{
+    abgleichLaeuft = false;
+  }
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) setTimeout(abgleichen, 400); });
+window.addEventListener('focus', ()=> setTimeout(abgleichen, 400));
 
 /* ================= Menü ================= */
 const IC = {
