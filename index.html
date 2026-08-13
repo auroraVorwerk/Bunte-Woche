@@ -597,9 +597,41 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .page.active{display:block}
 .placeholder{border:1px dashed var(--line);border-radius:var(--r-xl);padding:44px 20px;text-align:center;color:var(--muted);font-size:.9rem}
 
+/* ---------- Ziele ---------- */
+.zsec h3{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.zsec.gewonnen{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent)}
+.zsec.offen{opacity:.6}
+.zhaken{font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--bg);
+  background:var(--accent);border-radius:999px;padding:4px 10px;font-weight:700}
+.zziel{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px}
+.zziel.erreicht{background:color-mix(in srgb,var(--accent) 16%,var(--surface-2))}
+.zkopf{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.zkopf span{font-size:.84rem;font-weight:600}
+.zkopf b{font-family:"JetBrains Mono",monospace;font-size:.78rem;color:var(--muted);white-space:nowrap}
+.zbalken{height:8px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.zbalken i{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .4s}
+.zziel.erreicht .zbalken i{background:var(--accent)}
+.zfuss{font-size:.72rem;color:var(--faint);margin-top:7px}
+.zziel.erreicht .zfuss{color:var(--accent);font-weight:600}
+.zoder{text-align:center;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:10px 0}
+.zstufen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.zstufe{background:var(--surface-2);border-radius:var(--r);padding:12px 14px;text-align:center;opacity:.45}
+.zstufe.an{opacity:1;background:color-mix(in srgb,var(--accent) 18%,var(--surface-2))}
+.zstufe b{display:block;font-size:.86rem}
+.zstufe span{display:block;font-size:.68rem;color:var(--muted);margin-top:3px}
+.jahrwahl{max-width:280px;margin:0 auto 16px}
+.sicherung{opacity:.6;text-align:center;margin-top:20px}
+.tuzeile{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px}
+.tumon{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.tumon b{font-size:.88rem}
+.tumon span{font-family:"JetBrains Mono",monospace;font-size:.72rem;color:var(--faint)}
+
 /* ---------- Statuszeile, Laufzeit, Archivzeichen, Fehlermarkierung ---------- */
 .statuszeile{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);
   border-radius:var(--r);padding:12px 16px}
+.statuszeile + .nbblock,.seg + .nbblock,.statuszeile + .h4,.seg + .h4{margin-top:20px}
+.nbblock + .h4{margin-top:26px}
+.klang{display:inline}.kkurz{display:none}
 .statuszeile b{flex:1;font-size:.92rem}
 .laufzeile{display:flex;gap:10px;margin-bottom:4px}
 .laufzeile .btn{padding:11px 8px;font-size:.82rem}
@@ -691,7 +723,8 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   body[data-tagwahl="5"] .grid > [data-col]:not([data-col="0"]):not([data-col="6"]),
   body[data-tagwahl="6"] .grid > [data-col]:not([data-col="0"]):not([data-col="7"]){display:none}
   .grid .corner,.grid .dayhead{padding:8px 6px}
-  .corner .lbl{font-size:.56rem}
+  .klang{display:none}.kkurz{display:inline}
+  .corner .lbl{font-size:.62rem;letter-spacing:.08em}
   .corner .vw{font-size:.98rem}
   .timelbl{flex-direction:column;align-items:flex-start;justify-content:center;padding:0 6px;font-size:.7rem;line-height:1.25}
   .slot{min-height:52px}
@@ -819,6 +852,9 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   </section>
   <section class="page" id="page-inventur"><div id="inventur"></div></section>
   <section class="page" id="page-jahr"><div id="jahr"></div></section>
+  <section class="page" id="page-ziele"><div id="ziele"></div></section>
+  <section class="page" id="page-jobtickets"><div id="jobt"></div></section>
+  <section class="page" id="page-teamumsatz"><div id="tumsatz"></div></section>
   <section class="page" id="page-faq"><div id="faq"></div></section>
   <section class="page" id="page-profil"><div id="profil"></div></section>
   <section class="page" id="page-kbdelete"><div id="kbdel"></div></section>
@@ -841,7 +877,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -1015,7 +1051,7 @@ function render(){
   document.getElementById('rangeText').textContent = `${fmt(weekDays[0])} – ${fmt(weekDays[6])}`;
   document.getElementById('todayBtn').hidden = (+monday === +mondayOf(new Date()));
 
-  let h = `<div class="cell corner" data-col="0"><span class="lbl">Vertriebswoche</span><span class="vw">${vw.n}/${vw.of}</span></div>`;
+  let h = `<div class="cell corner" data-col="0"><span class="lbl"><span class="klang">Vertriebswoche</span><span class="kkurz">VW</span></span><span class="vw">${vw.n}/${vw.of}</span></div>`;
   weekDays.forEach((d,i)=>{ h += `<div class="cell dayhead${+d===+today?" is-today":""}" data-col="${i+1}">${DAYS_S[i]}<small>${fmtShort(d)}</small></div>`; });
 
   const blocked = weekDays.map(d=>blockedSet(dk(d)));
@@ -1303,10 +1339,7 @@ function nbForm(){
        ${fld("realStart","Gestartet",n.realStart||"","time",'step="300"')}
        ${fld("realEnde","Geendet",n.realEnde||"","time",'step="300"')}
      </div>
-     <div class="actions">
-       <button type="button" class="btn" data-zeit="start">${n.realStart?"Start korrigieren":"Termin startet jetzt"}</button>
-       <button type="button" class="btn" data-zeit="ende">${n.realEnde?"Ende korrigieren":"Termin ist beendet"}</button>
-     </div>`,
+     <p class="hinweis">Oben im Termin lassen sich beide Zeiten mit einem Tipp setzen — hier nur zum Nachbessern.</p>`,
     (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "",
     true) +
   nbBlock("gespraech","Gespräch", `
@@ -1370,10 +1403,7 @@ function nbPremiumForm(){
          ${fld("realStart","Gestartet",n.realStart||"","time",'step="300"')}
          ${fld("realEnde","Geendet",n.realEnde||"","time",'step="300"')}
        </div>
-       <div class="actions">
-         <button type="button" class="btn" data-zeit="start">${n.realStart?"Start korrigieren":"Termin startet jetzt"}</button>
-         <button type="button" class="btn" data-zeit="ende">${n.realEnde?"Ende korrigieren":"Termin ist beendet"}</button>
-       </div>`,
+       <p class="hinweis">Oben im Termin lassen sich beide Zeiten mit einem Tipp setzen — hier nur zum Nachbessern.</p>`,
       (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "", true)}
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde etwas nachgekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
@@ -3769,6 +3799,9 @@ async function renderProfil(){
           ${fld("pfVor","Vorname",me.vorname)}${fld("pfNach","Nachname",me.nachname)}
         </div>
         ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||me.mailPending||"","email")}
+        ${fld("pfEinst","Einstellungsdatum", settings.einstellung||"", "date")}
+        <p class="hinweis" style="margin-top:0">Wer weniger als 52 Wochen dabei ist, gilt als Berufseinsteiger —
+          davon hängen die Ziele ab.</p>
         ${me.mailPending && !me.mail ? `<p class="hinweis">Für ${me.mailPending} steht die Bestätigung noch aus.</p>` : ""}
         <div class="field pw"><label for="pfPin">Dein PIN</label>
           <input id="pfPin" type="password" value="${pin || ""}" placeholder="${pin ? "" : "noch nicht hinterlegt"}" readonly>
@@ -3805,8 +3838,21 @@ async function renderProfil(){
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
+      <p class="hinweis sicherung"><button type="button" class="mini" id="pfBackup">Daten sichern</button>
+        legt eine Datei mit allen deinen Einträgen auf dem Gerät ab.</p>
     </div>`;
   document.getElementById('pfSave').onclick = profilSpeichern;
+  const bk = document.getElementById('pfBackup');
+  if(bk) bk.onclick = ()=>{
+    const daten = JSON.stringify({dk:me.dk, name:`${me.vorname} ${me.nachname}`, stand:new Date().toISOString(),
+      daten: clean(dataBlob())}, null, 1);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([daten], {type:"application/json"}));
+    a.download = `bunte-woche-${me.dk}-${dk(new Date())}.json`;
+    a.click();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+    bk.textContent = "gesichert"; setTimeout(()=> bk.textContent = "Daten sichern", 1800);
+  };
   box.querySelectorAll('[data-thema]').forEach(b=> b.onclick = ()=>{ themaSetzen(b.dataset.thema, true); renderProfil(); });
   document.getElementById('pfPinNeu').onclick = pinDialog;
   const fc = document.getElementById('pfFeedCopy');
@@ -3855,6 +3901,12 @@ async function profilSpeichern(){
   const vor = document.getElementById('pfVor').value.trim();
   const nach = document.getElementById('pfNach').value.trim();
   const mail = document.getElementById('pfMail').value.trim().toLowerCase();
+  const einst = document.getElementById('pfEinst');
+  if(einst){
+    const v = einst.value.trim();
+    if(v) settings.einstellung = v; else delete settings.einstellung;
+    saveData();
+  }
   if(!vor || !nach) return zeig("Vor- und Nachname dürfen nicht leer sein.");
   if(mail && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(mail)) return zeig("Diese E-Mail-Adresse sieht nicht gültig aus.");
   try{
@@ -4445,6 +4497,279 @@ function katalogDialog(){
     }, "Katalog speichern");
 }
 
+/* ================= Ziele, Jobtickets, Teamumsatz ================= */
+/* Das Vertriebsjahr läuft von der ersten bis zur letzten Vertriebswoche – nicht vom 1. Januar. */
+function jahrSpanne(jahr){
+  const von = vertriebsmonat(mondayOfISOWeek(jahr, 1));
+  const bis = vertriebsmonat(mondayOfISOWeek(jahr, weeksInISOYear(jahr)));
+  return {fromK: von.fromK, toK: bis.toK};
+}
+/* Nettoumsatz für die Ziele: Festgebiet + Weißgebiet + K70-Einkauf (Eigenkauf steckt im Festgebiet).
+   Der K70-Abverkauf zählt bewusst nicht mit. */
+function zielNettoZeitraum(vonK, bisK){
+  const u = umsatz(vonK, bisK);
+  return netto(u.fg + u.wg + u.k70ein);
+}
+function jahresNetto(jahr){
+  return jahresUebersicht(jahr).reduce((n,z)=> n + (+z.nettoU||0), 0);
+}
+/* Alles, was je erfasst wurde, plus der von Hand nachgetragene Umsatz vor 2020 */
+function gesamtNetto(){
+  const bis = isoWeek(new Date()).year;
+  let summe = +settings.umsatzVor2020 || 0;
+  for(let j = 2020; j <= bis; j++) summe += jahresNetto(j);
+  return summe;
+}
+const istBerufseinsteiger = () => {
+  if(!settings.einstellung) return false;
+  return (Date.now() - fromDk(settings.einstellung).getTime()) < 52*7*86400000;
+};
+function einsteigerFenster(){
+  if(!settings.einstellung) return null;
+  return {von: settings.einstellung, bis: plusTage(settings.einstellung, 26*7 - 1)};
+}
+function jt(jahr){
+  const j = jobtickets[jahr] || {};
+  return {manuell:+j.manuell||0, qualifiziert:+j.qualifiziert||0,
+          qualEigene:+j.qualEigene||0, foerderung:+j.foerderung||0};
+}
+/* Aus den Nachbereitungen geschriebene Jobtickets eines Vertriebsjahres */
+function jobticketsGeschrieben(jahr){
+  const sp = jahrSpanne(jahr);
+  let n = 0;
+  Object.keys(entries).forEach(k=>{
+    const e = entries[k], nb = e.nb;
+    if(!nb || nb.job !== "Ja") return;
+    const tag = k.split("|")[0];
+    if(tag >= sp.fromK && tag <= sp.toK) n += +nb.jobAnzahl || 0;
+  });
+  return n;
+}
+function teamJahr(jahr){
+  const t = teamumsatz[jahr] || {};
+  let team = 0, einsteiger = 0;
+  Object.keys(t).forEach(k=>{ team += +t[k].team||0; einsteiger += +t[k].einsteiger||0; });
+  return {team, einsteiger};
+}
+
+/* Ein Fortschrittsbalken für ein Ziel */
+function zielBalken(titel, ist, ziel, einheit, hinweis){
+  const pct = ziel > 0 ? Math.min(100, Math.round(ist/ziel*1000)/10) : 0;
+  const fertig = ist >= ziel && ziel > 0;
+  const z = v => einheit === "€" ? eur(v)+" €" : `${Math.round(v*10)/10}`.replace(".",",")+(einheit?" "+einheit:"");
+  return `<div class="zziel${fertig?" erreicht":""}">
+    <div class="zkopf"><span>${titel}</span><b>${z(ist)} / ${z(ziel)}</b></div>
+    <div class="zbalken"><i style="width:${pct}%"></i></div>
+    <div class="zfuss">${fertig ? "erreicht ✓" : `${pct} % · noch ${z(Math.max(0,ziel-ist))}`}${hinweis?` · ${hinweis}`:""}</div>
+  </div>`;
+}
+function zielGruppe(titel, unter, balken){
+  const erreicht = balken.some(b=>b.includes("erreicht ✓"));
+  return `<div class="asec zsec${erreicht?" gewonnen":""}">
+    <h3>${titel}${erreicht?' <span class="zhaken">erreicht</span>':""}</h3>
+    <p class="sub">${unter}</p>
+    ${balken.join('<div class="zoder">oder</div>')}
+  </div>`;
+}
+
+function renderZiele(){
+  const box = document.getElementById('ziele');
+  if(!box || !me) return;
+  const jahr = isoWeek(new Date()).year;
+  const j = jt(jahr);
+  const gesamt = gesamtNetto();
+
+  /* Goldene Nadel – gilt für alle, über den gesamten Zeitraum */
+  const brillanten = gesamt >= 100000 ? Math.floor(gesamt/100000) : 0;
+  const naechste = gesamt < 15000 ? {t:"Vorwerk Signet", z:15000}
+                 : gesamt < 50000 ? {t:"Goldene Nadel", z:50000}
+                 : {t:`${brillanten+1}. Brillant`, z:(brillanten+1)*100000};
+  const tj = teamJahr(jahr);
+  const stufen = [
+    ["Vorwerk Signet", gesamt >= 15000, "ab 15.000 €"],
+    ["Goldene Nadel", gesamt >= 50000, "ab 50.000 €"],
+    [`Brillanten: ${brillanten}`, brillanten > 0, "je 100.000 €"],
+    ["Smaragd", gesamt >= 500000, "ab 500.000 €"]
+  ];
+  if(istTeamleiter()){
+    const topas = Math.floor(tj.team/500000);
+    stufen.push([`Topas: ${topas}`, topas > 0, "je 500.000 € Teamumsatz"]);
+    stufen.push([`Rubin: ${j.foerderung}`, j.foerderung > 0, "je Teamleiterförderung"]);
+  }
+
+  let h = "";
+  if(istTeamleiter()){
+    h += zielGruppe("Club of Excellence", `Teamleiterziele im Vertriebsjahr ${jahr} — einer der vier Wege genügt.`, [
+      zielBalken("Teamumsatz", tj.team, 1100000, "€"),
+      zielBalken("Umsatz der Berufseinsteiger im Team", tj.einsteiger, 500000, "€"),
+      zielBalken("Qualifizierte Anmeldungen", j.qualifiziert, 6, "",
+        `davon in eigener Region: ${j.qualEigene} von 2`),
+      zielBalken("Teamleiterförderungen", j.foerderung, 1, "")
+    ]);
+    h += zielGruppe("Kobold Club", `Teamleiterziele im Vertriebsjahr ${jahr} — einer der vier Wege genügt.`, [
+      zielBalken("Teamumsatz", tj.team, 1450000, "€"),
+      zielBalken("Umsatz der Berufseinsteiger im Team", tj.einsteiger, 700000, "€"),
+      zielBalken("Qualifizierte Anmeldungen", j.qualifiziert, 8, "",
+        `davon in eigener Region: ${j.qualEigene} von 2`),
+      zielBalken("Teamleiterförderungen", j.foerderung, 2, "")
+    ]);
+  }else{
+    const ef = einsteigerFenster();
+    const ceWege = [];
+    if(ef && istBerufseinsteiger())
+      ceWege.push(zielBalken("Als Berufseinsteiger in den ersten 26 Wochen",
+        zielNettoZeitraum(ef.von, ef.bis), 100000, "€",
+        `Zeitraum ${fmt(fromDk(ef.von))} – ${fmt(fromDk(ef.bis))}`));
+    ceWege.push(zielBalken("Nettoumsatz im Vertriebsjahr", jahresNetto(jahr), 250000, "€"));
+    ceWege.push(zielBalken("Qualifizierte Anmeldungen", j.qualifiziert, 3, ""));
+    h += zielGruppe("Club of Excellence", `Vertriebsjahr ${jahr} — einer der Wege genügt.`, ceWege);
+    h += zielGruppe("Kobold Club", `Vertriebsjahr ${jahr} — einer der beiden Wege genügt.`, [
+      zielBalken("Nettoumsatz im Vertriebsjahr", jahresNetto(jahr), 350000, "€"),
+      zielBalken("Qualifizierte Anmeldungen", j.qualifiziert, 4, "")
+    ]);
+  }
+
+  h += `<div class="asec zsec">
+    <h3>Goldene Nadel</h3>
+    <p class="sub">Über den gesamten Zeitraum gerechnet, nicht je Jahr.</p>
+    <div class="kpis">${kpi("Gesamter Nettoumsatz", eur(gesamt)+" €", `nächste Stufe: ${naechste.t} ab ${eur(naechste.z)} €`, "hero")}</div>
+    ${zielBalken("Bis " + naechste.t, gesamt, naechste.z, "€")}
+    <div class="zstufen">${stufen.map(([t,an,sub])=>
+      `<div class="zstufe${an?" an":""}"><b>${t}</b><span>${sub}</span></div>`).join("")}</div>
+    ${settings.umsatzVor2020 ? `<p class="hinweis">Enthalten sind ${eur(+settings.umsatzVor2020)} € aus der Zeit vor 2020,
+      die du im Jahresrückblick eingetragen hast.</p>`
+      : `<p class="hinweis">Warst du vor 2020 schon dabei? Trag deinen bisherigen Gesamtumsatz unten im Jahresrückblick ein,
+        dann stimmt die Nadel.</p>`}
+  </div>`;
+
+  h += `<div class="asec zsec offen">
+    <h3>Vian</h3>
+    <p class="sub">Ziel noch offen — sobald die Kriterien feststehen, erscheinen sie hier.</p>
+  </div>`;
+
+  box.innerHTML = h;
+}
+
+function renderJobtickets(){
+  const box = document.getElementById('jobt');
+  if(!box || !me) return;
+  const jahr = jobJahr || isoWeek(new Date()).year;
+  const jetzt = isoWeek(new Date()).year;
+  const jahre = []; for(let x = 2020; x <= jetzt; x++) jahre.push(x);
+  const j = jt(jahr);
+  const ausTerminen = jobticketsGeschrieben(jahr);
+  const gesamtGeschrieben = ausTerminen + j.manuell;
+  const quote = gesamtGeschrieben ? Math.round(j.qualifiziert/gesamtGeschrieben*100) : 0;
+
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Jobtickets</h3>
+      <p class="sub">Ein Jobticket wird zur qualifizierten Anmeldung, sobald die Person angestellt ist
+        und die ersten 5.000 € Nettoumsatz geschrieben hat.</p>
+      <div class="field jahrwahl"><label for="jobJahrSel">Vertriebsjahr</label>
+        <select id="jobJahrSel">${jahre.slice().reverse().map(x=>
+          `<option value="${x}" ${x===jahr?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="kpis">
+        ${kpi("Jobtickets geschrieben", String(gesamtGeschrieben), `${ausTerminen} aus Terminen · ${j.manuell} von Hand`,"hero")}
+        ${kpi("Qualifizierte Anmeldungen", String(j.qualifiziert), `davon ${j.qualEigene} in eigener Region`,"hero")}
+        ${kpi("Quote", gesamtGeschrieben ? quote+" %" : "–", "aus Jobticket wird Anmeldung")}
+      </div>
+    </div>
+
+    <div class="asec">
+      <div class="ah4">Von Hand nachtragen</div>
+      <p class="sub">Alles, was nicht aus einem Kundentermin kommt.</p>
+      ${zaehlFeld("jbManuell","Zusätzliche Jobtickets", j.manuell)}
+      ${zaehlFeld("jbQual","Qualifizierte Anmeldungen", j.qualifiziert)}
+      ${istTeamleiter() ? zaehlFeld("jbEigene","davon in eigener Region", j.qualEigene) : ""}
+      ${istTeamleiter() ? zaehlFeld("jbFoerd","Teamleiterförderungen", j.foerderung) : ""}
+      <p class="hinweis">Die Zahlen gelten für ${jahr} und starten im neuen Vertriebsjahr wieder bei null.
+        Sie fließen direkt in die Ziele und in den Jahresrückblick.</p>
+    </div>`;
+
+  const sel = document.getElementById('jobJahrSel');
+  sel.onchange = ()=>{ jobJahr = +sel.value; renderJobtickets(); };
+  box.querySelectorAll('[data-jplus],[data-jminus]').forEach(b=> b.onclick = ()=>{
+    const id = b.dataset.jplus || b.dataset.jminus;
+    const feld = {jbManuell:"manuell", jbQual:"qualifiziert", jbEigene:"qualEigene", jbFoerd:"foerderung"}[id];
+    jobtickets[jahr] = jobtickets[jahr] || {};
+    const neu = Math.max(0, (+jobtickets[jahr][feld] || 0) + (b.dataset.jplus ? 1 : -1));
+    jobtickets[jahr][feld] = neu;
+    saveData(); renderJobtickets(); renderZiele(); renderJahr();
+  });
+}
+/* Zählzeile für die Seiten außerhalb der Nachbereitung */
+function zaehlFeld(id, titel, wert){
+  const n = +wert || 0;
+  return `<div class="zzeile${n?" hat":""}">
+    <span class="ztitel">${titel}</span>
+    <span class="stepper${n?" hat":""}">
+      <button type="button" data-jminus="${id}" aria-label="weniger">−</button>
+      <b>${n}</b>
+      <button type="button" data-jplus="${id}" aria-label="mehr">+</button>
+    </span>
+  </div>`;
+}
+
+function renderTeamumsatz(){
+  const box = document.getElementById('tumsatz');
+  if(!box || !me) return;
+  if(!istTeamleiter()){ box.innerHTML = ""; return; }
+  const jetzt = isoWeek(new Date()).year;
+  const jahr = tuJahr || jetzt;
+  const jahre = []; for(let x = 2020; x <= jetzt; x++) jahre.push(x);
+  const monate = jahresUebersicht(jahr);
+  const daten = teamumsatz[jahr] || {};
+  const sumT = monate.reduce((n,m)=> n + (+(daten[m.startW]||{}).team||0), 0);
+  const sumE = monate.reduce((n,m)=> n + (+(daten[m.startW]||{}).einsteiger||0), 0);
+
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Teamumsatz</h3>
+      <p class="sub">Nettoumsatz des Teams je Vertriebsmonat — von Hand eingetragen.
+        Der Umsatz der Berufseinsteiger wird getrennt erfasst und ist im Teamumsatz enthalten.</p>
+      <div class="field jahrwahl"><label for="tuJahrSel">Vertriebsjahr</label>
+        <select id="tuJahrSel">${jahre.slice().reverse().map(x=>
+          `<option value="${x}" ${x===jahr?"selected":""}>${x}</option>`).join("")}</select></div>
+      <div class="kpis">
+        ${kpi("Teamumsatz netto", eur(sumT)+" €", `Vertriebsjahr ${jahr}`,"hero")}
+        ${kpi("davon Berufseinsteiger", eur(sumE)+" €", sumT ? Math.round(sumE/sumT*100)+" % des Teamumsatzes" : "–")}
+      </div>
+    </div>
+
+    <div class="asec">
+      <div class="ah4">Eintragen</div>
+      <div class="tuliste">
+        ${monate.map(m=>{
+          const d = daten[m.startW] || {};
+          return `<div class="tuzeile">
+            <div class="tumon"><b>${m.name}</b><span>KW ${m.kw}</span></div>
+            <div class="row2">
+              <div class="field"><label for="tu_${m.startW}">Teamumsatz netto €</label>
+                <input id="tu_${m.startW}" data-tu="${m.startW}|team" inputmode="decimal" value="${d.team?eur(+d.team):""}" placeholder="–"></div>
+              <div class="field"><label for="tue_${m.startW}">davon Berufseinsteiger €</label>
+                <input id="tue_${m.startW}" data-tu="${m.startW}|einsteiger" inputmode="decimal" value="${d.einsteiger?eur(+d.einsteiger):""}" placeholder="–"></div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+      <p class="hinweis">Die Summen fließen direkt in deine Teamleiterziele.</p>
+    </div>`;
+
+  const sel = document.getElementById('tuJahrSel');
+  sel.onchange = ()=>{ tuJahr = +sel.value; renderTeamumsatz(); };
+  box.querySelectorAll('[data-tu]').forEach(el=> el.onchange = ()=>{
+    const [kw, feld] = el.dataset.tu.split("|");
+    teamumsatz[jahr] = teamumsatz[jahr] || {};
+    teamumsatz[jahr][kw] = teamumsatz[jahr][kw] || {};
+    const v = num(el.value);
+    if(v) teamumsatz[jahr][kw][feld] = v; else delete teamumsatz[jahr][kw][feld];
+    if(!Object.keys(teamumsatz[jahr][kw]).length) delete teamumsatz[jahr][kw];
+    saveData(); renderTeamumsatz(); renderZiele();
+  });
+}
+var jobJahr = 0, tuJahr = 0;
+
 /* ================= Menü ================= */
 const IC = {
   heute:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
@@ -4460,15 +4785,19 @@ const IC = {
   jahr:'<path d="M3 20V4M3 20h18"/><path d="M7 16l4-5 3.5 3L21 7"/><circle cx="21" cy="7" r="1.4"/>',
   profil:'<circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/>',
   team:'<circle cx="8.5" cy="8.5" r="3"/><circle cx="17" cy="9.5" r="2.4"/><path d="M2.5 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2"/><path d="M16 14.2c2.9 0 5.5 1.5 5.5 4.3"/>',
-  kbdelete:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>'
+  kbdelete:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>',
+  ziele:'<path d="M6 3v9a6 6 0 0 0 12 0V3z"/><path d="M6 5H3.5v2A3.5 3.5 0 0 0 7 10.5M18 5h2.5v2A3.5 3.5 0 0 1 17 10.5"/><path d="M12 18v3M8.5 21h7"/>',
+  jobtickets:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3 12h18"/>',
+  teamumsatz:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/><circle cx="10" cy="5" r="1.6"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 const MENUE = [
   ["heute","Heute"],["planer","Planer"],["statistik","Statistik"],["auswertungen","Auswertungen"],
   ["potenzial","Potenzialliste"],["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
-  ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
+  ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["ziele","Ziele"],["jobtickets","Jobtickets"],
+  ["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
 ];
-const MENUE_TL = [["team","Teammitglieder"],["kbdelete","KB Delete"]];
+const MENUE_TL = [["teamumsatz","Teamumsatz"],["team","Teammitglieder"],["kbdelete","KB Delete"]];
 function renderMenu(){
   const bau = liste => liste.map(([k,t])=>
     `<a class="navlink" href="#${k}" data-page="${k}"><span class="mic">${ic(k)}</span>${t}</a>`).join("");
@@ -4675,6 +5004,7 @@ function renderJahr(){
         ${kpi("Nettoumsatz", eur(sum('nettoU'))+" €", `Vorjahr ${eur(sum('vorjahrNetto'))} €`,"hero")}
         ${kpi("Einheiten", sum('einheiten')||"–", `Vorjahr ${sum('vorjahrEh')||"–"}`)}
         ${kpi("Provision", eur(sum('prov'))+" €", "ohne Versicherungsbonus")}
+        ${kpi("Qualifizierte Anmeldungen", String(jt(jahrAnsicht).qualifiziert), "aus dem Menüpunkt Jobtickets")}
       </div>
 
       <div class="ah4">Nettoumsatz je Vertriebsmonat</div>
@@ -4717,10 +5047,22 @@ function renderJahr(){
         <p class="err" id="ntErr" hidden></p>
       </div>
       ${nachtragListe(heuteJahr)}
+      <div class="ah4">Zeit vor 2020</div>
+      <div class="grp" style="max-width:460px;margin:0 auto">
+        <p class="hinweis" style="margin-top:0">Einstellung vor 2020? Dann hier noch den Gesamtumsatz des Zeitraums davor
+          eintragen — er zählt für die Goldene Nadel mit. Ab 2020 nutzt du das Formular darüber.</p>
+        ${fld("ntVor2020","Nettoumsatz vor 2020 (€)", settings.umsatzVor2020?eur(+settings.umsatzVor2020):"", "text", 'inputmode="decimal"')}
+      </div>
     </div>`;
 
   const js = document.getElementById('jahrSel');
   if(js) js.onchange = ()=>{ jahrAnsicht = +js.value; renderJahr(); };
+  const v20 = document.getElementById('ntVor2020');
+  if(v20) v20.onchange = ()=>{
+    const w = num(v20.value);
+    if(w > 0) settings.umsatzVor2020 = w; else delete settings.umsatzVor2020;
+    saveData(); renderZiele(); renderJahr();
+  };
   document.getElementById('ntSpeichern').onclick = ()=>{
     const w = id => document.getElementById(id).value.trim();
     const jahr = +w('ntJahr'), startW = +w('ntMonat');
@@ -4953,7 +5295,7 @@ function tourZeigen(){
 
 /* ================= Rahmen ================= *//* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); saveData(); }
+function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); renderZiele(); renderJobtickets(); renderTeamumsatz(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
