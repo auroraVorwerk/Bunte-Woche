@@ -635,7 +635,10 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   font-size:.68rem;color:var(--muted);text-align:center}
 .zherkunft b{display:block;font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--text);margin-top:3px}
 .jahrwahl{max-width:280px;margin:0 auto 16px}
-.sicherung{opacity:.6;text-align:center;margin-top:20px}
+.sicherung{opacity:.7;text-align:center;margin-top:24px;border-top:1px solid var(--line-soft);padding-top:18px}
+.sicherung .hinweis{margin:0 0 10px}
+.sicherung .hinweis:last-child{margin-bottom:0}
+.mini.gefahr{color:var(--warn)}
 .buildzeile{text-align:center;font-size:.66rem;color:var(--faint);font-family:"JetBrains Mono",monospace;margin-top:14px;opacity:.7}
 /* Einheitliche Abstände in den Auswertungsblöcken */
 .asec > .sub + .actions,.asec > .sub + .kpis{margin-top:18px}
@@ -2599,7 +2602,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v13 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v14 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -3363,6 +3366,10 @@ function fehlerkurz(err){
 }
 function flushSave(){
   if(!me || !dataReady) return;
+  if(fremdAktiv){                                     // Notbremse: niemals fremde Daten unter eigener DK ablegen
+    console.warn("Speichern uebersprungen - es lagen fremde Daten im Speicher.");
+    return;
+  }
   const zielDk = me.dk;                               // gespeichert wird immer der eigene Stand
   const blob = clean(dataBlob());
   store.set('bw-data-'+zielDk, blob);
@@ -3384,8 +3391,9 @@ function flushSave(){
     .then(()=>{ shadow = JSON.parse(JSON.stringify(blob)); cloudOk = true; saveState("gespeichert"); })
     .catch(err=>{ cloudOk = false; letzterFehler = (err&&err.message)||""; saveState("nur lokal · "+fehlerkurz(err), true); });   // nächster Versuch läuft wieder
 }
+var fremdAktiv = false;        // solange true, liegen fremde Daten im Speicher - es wird nichts geschrieben
 function saveData(){
-  if(!me || !dataReady) return;
+  if(!me || !dataReady || fremdAktiv) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(flushSave, 400);
 }
@@ -3745,22 +3753,41 @@ function zurueckZuMir(){
   renderTeam();
 }
 /* Baut Planer und Statistik des Mitglieds, ohne die eigenen Daten anzutasten */
+/* Merkt den eigenen Stand und schaltet das Speichern ab */
+function fremdStart(){
+  clearTimeout(saveTimer);
+  const sicherung = {daten: clean(dataBlob()), montag: new Date(monday)};
+  fremdAktiv = true;
+  return sicherung;
+}
+/* Stellt den eigenen Stand wieder her - darf beliebig oft aufgerufen werden */
+function fremdEnde(sicherung){
+  if(!fremdAktiv) return;
+  applyData(sicherung.daten);
+  monday = new Date(sicherung.montag);
+  fremdAktiv = false;
+  try{ render(); renderStat(); renderPotenzial(); }catch(e){ console.error(e); }
+}
 function fremdAnsicht(){
-  const meins = clean(dataBlob());
-  const meinMontag = new Date(monday);
-  applyData(teamBlob);
-  monday = new Date(teamMonday);
-  render(); renderStat();
-  const gridHtml = document.getElementById('grid').innerHTML;
-  const statHtml = document.getElementById('statTable').innerHTML;
-  renderPotenzial();
-  const potHtml = document.getElementById('plist').innerHTML;
-  const potListe = potenzial.map(x=>({...x}));
-  const meld = meldungHTML(new Date(teamMonday), viewUser.name);
-  applyData(meins);
-  monday = meinMontag;
-  render(); renderStat(); renderPotenzial();
-  return {gridHtml, statHtml, meld, potHtml, potListe};
+  const sicherung = fremdStart();
+  let ergebnis = {gridHtml:"", statHtml:"", meld:"", potHtml:"", potListe:[]};
+  try{
+    applyData(teamBlob);
+    monday = new Date(teamMonday);
+    render(); renderStat();
+    ergebnis.gridHtml = document.getElementById('grid').innerHTML;
+    ergebnis.statHtml = document.getElementById('statTable').innerHTML;
+    renderPotenzial();
+    ergebnis.potHtml = document.getElementById('plist').innerHTML;
+    ergebnis.potListe = potenzial.map(x=>({...x}));
+    ergebnis.meld = meldungHTML(new Date(teamMonday), viewUser.name);
+  }catch(e){
+    console.error("Fremdansicht fehlgeschlagen:", e);
+    ergebnis.meld = `<div class="asec"><p class="aempty">Die Daten dieses Mitglieds lassen sich gerade nicht anzeigen.</p></div>`;
+  }finally{
+    fremdEnde(sicherung);                 // laeuft immer, auch wenn oben etwas schiefgeht
+  }
+  return ergebnis;
 }
 /* Kennzahlen aller Mitglieder für die laufende Woche */
 async function teamVergleich(){
@@ -3835,15 +3862,33 @@ function renderTeam(){
 }
 /* Für den Druck kurz auf die Daten des Mitglieds umschalten */
 function fremdPdf(){
-  const meins = clean(dataBlob());
-  const meinMontag = new Date(monday);
-  applyData(teamBlob); monday = new Date(teamMonday);
-  render(); renderStat(); show('statistik'); preparePrint();
-  setTimeout(()=>{
-    window.print();
-    applyData(meins); monday = meinMontag;
-    render(); renderStat(); show('team');
-  }, 300);
+  const sicherung = fremdStart();
+  try{
+    applyData(teamBlob); monday = new Date(teamMonday);
+    render(); renderStat(); show('statistik'); preparePrint();
+  }catch(e){
+    console.error("Druckansicht fehlgeschlagen:", e);
+    fremdEnde(sicherung); show('team');
+    return;
+  }
+
+  /* Der eigene Stand kommt zurueck, sobald der Druck durch ist - egal auf welchem Weg.
+     Auf dem iPhone kann das Drucken die Seite pausieren, deshalb mehrere Ausloeser. */
+  let fertig = false;
+  function beiSichtbar(){ if(!document.hidden) setTimeout(zurueck, 200); }
+  function zurueck(){
+    if(fertig) return;
+    fertig = true;
+    window.removeEventListener('afterprint', zurueck);
+    document.removeEventListener('visibilitychange', beiSichtbar);
+    fremdEnde(sicherung);
+    show('team');
+  }
+  window.addEventListener('afterprint', zurueck);
+  document.addEventListener('visibilitychange', beiSichtbar);
+  setTimeout(zurueck, 20000);
+
+  setTimeout(function(){ try{ window.print(); }catch(e){ console.error(e); } setTimeout(zurueck, 400); }, 300);
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
 addEventListener('hashchange', ()=>{ if(location.hash === "#team") teamVergleich(); });
@@ -3970,8 +4015,15 @@ async function renderProfil(){
       <p class="hinweis">${me.mail
         ? "Passwort vergessen läuft für dich per E-Mail — du bekommst dann einen Link von Firebase."
         : "Solange keine E-Mail hinterlegt ist, läuft „Passwort vergessen“ über deinen PIN. Das Passwort selbst kann niemand einsehen."}</p>
-      <p class="hinweis sicherung"><button type="button" class="mini" id="pfBackup">Daten sichern</button>
-        legt eine Datei mit allen deinen Einträgen auf dem Gerät ab.</p>
+      <div class="sicherung">
+        <p class="hinweis"><button type="button" class="mini" id="pfBackup">Daten sichern</button>
+          legt eine Datei mit allen deinen Einträgen auf dem Gerät ab.</p>
+        <p class="hinweis"><button type="button" class="mini" id="pfRestore">Sicherung einspielen</button>
+          ersetzt alle Einträge durch den Stand aus einer solchen Datei.
+          <input type="file" id="pfDatei" accept=".json,application/json" hidden></p>
+        <p class="hinweis"><button type="button" class="mini gefahr" id="pfLeeren">Alle Einträge zurücksetzen</button>
+          löscht Termine, Listen und Zahlen — Profil, PIN und Kalender bleiben.</p>
+      </div>
       <p class="buildzeile">Stand ${BUILD}</p>
     </div>`;
   document.getElementById('pfSave').onclick = ()=>{
@@ -3984,6 +4036,48 @@ async function renderProfil(){
       setTimeout(()=>{ b.textContent = alt; b.classList.remove('okpuls'); delete b.dataset.laeuft; }, 1800);
     }
   };
+  const rs = document.getElementById('pfRestore');
+  const datei = document.getElementById('pfDatei');
+  if(rs) rs.onclick = ()=> datei.click();
+  if(datei) datei.onchange = ()=>{
+    const f = datei.files && datei.files[0];
+    if(!f) return;
+    const leser = new FileReader();
+    leser.onload = ()=>{
+      let paket;
+      try{ paket = JSON.parse(leser.result); }
+      catch(e){ alert("Diese Datei lässt sich nicht lesen."); return; }
+      const blob = paket && paket.daten ? paket.daten : paket;
+      if(!blob || typeof blob !== "object" || !("entries" in blob)){
+        alert("Das sieht nicht nach einer Sicherung aus."); return;
+      }
+      const anzahl = Object.keys(blob.entries||{}).length;
+      const wann = paket && paket.stand ? new Date(paket.stand).toLocaleString("de-DE") : "unbekannt";
+      if(!confirm(`Sicherung vom ${wann} mit ${anzahl} Terminen einspielen?\n\nAlle jetzigen Einträge werden ersetzt.`)) return;
+      if(!confirm("Wirklich einspielen? Das lässt sich nicht rückgängig machen.")) return;
+      const vorher = clean(dataBlob());
+      applyData(blob);
+      shadow = JSON.parse(JSON.stringify(vorher));   // erzwingt das Schreiben aller Unterschiede
+      dataReady = true;
+      clearTimeout(saveTimer); flushSave(); renderAll();
+      alert("Sicherung eingespielt.");
+    };
+    leser.readAsText(f);
+    datei.value = "";
+  };
+
+  const leeren = document.getElementById('pfLeeren');
+  if(leeren) leeren.onclick = ()=>{
+    if(!confirm("Alle Termine, Listen, Nachträge und Zahlen löschen?\n\nProfil, PIN und Kalenderabo bleiben erhalten.")) return;
+    if(!confirm("Wirklich alles zurücksetzen? Das lässt sich nicht rückgängig machen.")) return;
+    const vorher = clean(dataBlob());
+    applyData(null);
+    shadow = JSON.parse(JSON.stringify(vorher));
+    dataReady = true;
+    clearTimeout(saveTimer); flushSave(); renderAll();
+    alert("Alle Einträge wurden zurückgesetzt.");
+  };
+
   const bk = document.getElementById('pfBackup');
   if(bk) bk.onclick = ()=>{
     const daten = JSON.stringify({dk:me.dk, name:`${me.vorname} ${me.nachname}`, stand:new Date().toISOString(),
