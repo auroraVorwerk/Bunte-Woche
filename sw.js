@@ -1,7 +1,7 @@
 /* Bunte Woche – Offlinebetrieb
    Die App selbst wird zwischengespeichert, die Daten holt Firebase.
    Bei der Versionsnummer eine Zahl hochzählen, wenn eine neue index.html hochgeladen wird. */
-const VERSION = "bw-v10";
+const VERSION = "bw-v11";
 const DATEIEN = ["./", "./index.html", "./manifest.json"];
 
 self.addEventListener("install", ev=>{
