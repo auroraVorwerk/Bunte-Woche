@@ -619,6 +619,10 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .zstufe.an{opacity:1;background:color-mix(in srgb,var(--accent) 18%,var(--surface-2))}
 .zstufe b{display:block;font-size:.86rem}
 .zstufe span{display:block;font-size:.68rem;color:var(--muted);margin-top:3px}
+.zherkunft{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.zherkunft span{flex:1 1 92px;background:var(--surface-2);border-radius:var(--r);padding:9px 11px;
+  font-size:.68rem;color:var(--muted);text-align:center}
+.zherkunft b{display:block;font-family:"JetBrains Mono",monospace;font-size:.8rem;color:var(--text);margin-top:3px}
 .jahrwahl{max-width:280px;margin:0 auto 16px}
 .sicherung{opacity:.6;text-align:center;margin-top:20px}
 /* ---------- Kundenliste ---------- */
@@ -4690,8 +4694,11 @@ function renderZiele(){
     ${zielBalken("Bis " + naechste.t, gesamt, naechste.z, "€")}
     <div class="zstufen">${stufen.map(([t,an,sub])=>
       `<div class="zstufe${an?" an":""}"><b>${t}</b><span>${sub}</span></div>`).join("")}</div>
-    ${settings.umsatzVor2020 ? `<p class="hinweis">Enthalten sind ${eur(+settings.umsatzVor2020)} € aus der Zeit vor 2020,
-      die du im Jahresrückblick eingetragen hast.</p>`
+    <div class="zherkunft">${(()=>{ const bis = isoWeek(new Date()).year, teile = [];
+      if(+settings.umsatzVor2020) teile.push(`<span>vor 2020<b>${eur(+settings.umsatzVor2020)} €</b></span>`);
+      for(let x = 2020; x <= bis; x++){ const w = jahresNetto(x); if(w) teile.push(`<span>${x}<b>${eur(w)} €</b></span>`); }
+      return teile.length ? teile.join("") : `<span>noch nichts erfasst<b>–</b></span>`; })()}</div>
+    ${settings.umsatzVor2020 ? `<p class="hinweis">Der Betrag vor 2020 stammt aus deiner Eingabe im Jahresrückblick.</p>`
       : `<p class="hinweis">Warst du vor 2020 schon dabei? Trag deinen bisherigen Gesamtumsatz unten im Jahresrückblick ein,
         dann stimmt die Nadel.</p>`}
   </div>`;
@@ -5439,12 +5446,12 @@ function renderJahr(){
       umsatz:    alt.umsatz    + num(w('ntUmsatz')),
       auftraege: alt.auftraege + (+w('ntAuftraege')||0)
     };
-    saveData(); renderJahr();
+    saveData(); renderJahr(); renderZiele();
   };
   box.querySelectorAll('[data-ntweg]').forEach(b=> b.onclick = ()=>{
     const [jahr,kw] = b.dataset.ntweg.split("|");
     if(nachtrag[jahr]) delete nachtrag[jahr][kw];
-    saveData(); renderJahr();
+    saveData(); renderJahr(); renderZiele();
   });
 }
 function nachtragListe(heuteJahr){
