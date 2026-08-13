@@ -621,6 +621,18 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .zstufe span{display:block;font-size:.68rem;color:var(--muted);margin-top:3px}
 .jahrwahl{max-width:280px;margin:0 auto 16px}
 .sicherung{opacity:.6;text-align:center;margin-top:20px}
+/* ---------- Fahrtenbuch ---------- */
+.fzeile{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px}
+.fzeile.hat{background:color-mix(in srgb,var(--accent) 12%,var(--surface-2))}
+.fkopf{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.fkopf b{display:block;font-size:.88rem}
+.fkopf span{font-size:.72rem;color:var(--muted)}
+.fkm{flex:0 0 118px;margin-bottom:0}
+.fkm input{text-align:right;font-family:"JetBrains Mono",monospace}
+.fziele{display:flex;flex-direction:column;gap:2px;margin:10px 0 4px}
+.fziele span{font-size:.75rem;color:var(--muted)}
+.fzeile .mini{margin:6px 0 10px}
+.fzeile .field:last-child{margin-bottom:0;margin-top:10px}
 .tuzeile{background:var(--surface-2);border-radius:var(--r-lg);padding:14px 16px;margin-bottom:10px}
 .tumon{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
 .tumon b{font-size:.88rem}
@@ -855,6 +867,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   <section class="page" id="page-ziele"><div id="ziele"></div></section>
   <section class="page" id="page-jobtickets"><div id="jobt"></div></section>
   <section class="page" id="page-teamumsatz"><div id="tumsatz"></div></section>
+  <section class="page" id="page-fahrten"><div id="fahrtenbuch"></div></section>
   <section class="page" id="page-faq"><div id="faq"></div></section>
   <section class="page" id="page-profil"><div id="profil"></div></section>
   <section class="page" id="page-kbdelete"><div id="kbdel"></div></section>
@@ -877,7 +890,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz", fahrten:"Fahrtenbuch"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -1945,6 +1958,7 @@ function paint(){
         strasse:[g('f_str'), g('f_hnr')].filter(Boolean).join(" "),
         plz:g('f_plz'), ort:g('f_ort'), telefon:g('f_tel')
       };
+      if(draft.nb.f_lat && draft.nb.f_lon){ eintrag.lat = +draft.nb.f_lat; eintrag.lon = +draft.nb.f_lon; }
       if(draft.nb.f_anrede) eintrag.anrede = draft.nb.f_anrede; else delete eintrag.anrede;
       if(g('f_notiz')) eintrag.notiz = g('f_notiz'); else delete eintrag.notiz;
       if(draft.quelle) eintrag.quelle = draft.quelle;
@@ -3800,6 +3814,13 @@ async function renderProfil(){
         </div>
         ${fld("pfMail","E-Mail-Adresse (ab dem zweiten Monat)",me.mail||me.mailPending||"","email")}
         ${fld("pfEinst","Einstellungsdatum", settings.einstellung||"", "date")}
+        <div class="field vorschlagfeld"><label for="pfWohn_str">Wohnadresse — Start im Fahrtenbuch</label>
+          <input id="pfWohn_str" data-adr="pfWohn" value="${settings.wohnort||""}" autocomplete="off" spellcheck="false"
+            placeholder="Straße und Hausnummer">
+          <div class="vorschlaege" id="pfWohn_vorschlaege" hidden></div></div>
+        <p class="hinweis" style="margin-top:0">${settings.wohnLat
+          ? "Adresse erkannt — das Fahrtenbuch kann die Kilometer schätzen."
+          : "Aus der Vorschlagsliste auswählen, damit die Kilometerschätzung funktioniert."}</p>
         <p class="hinweis" style="margin-top:0">Wer weniger als 52 Wochen dabei ist, gilt als Berufseinsteiger —
           davon hängen die Ziele ab.</p>
         ${me.mailPending && !me.mail ? `<p class="hinweis">Für ${me.mailPending} steht die Bestätigung noch aus.</p>` : ""}
@@ -3901,6 +3922,15 @@ async function profilSpeichern(){
   const vor = document.getElementById('pfVor').value.trim();
   const nach = document.getElementById('pfNach').value.trim();
   const mail = document.getElementById('pfMail').value.trim().toLowerCase();
+  const wohn = document.getElementById('pfWohn_str');
+  if(wohn){
+    const v = wohn.value.trim();
+    if(v) settings.wohnort = v; else { delete settings.wohnort; delete settings.wohnLat; delete settings.wohnLon; }
+    if(adrZielFeld && adrZielFeld.feld === "pfWohn" && adrZielFeld.lat){
+      settings.wohnLat = +adrZielFeld.lat; settings.wohnLon = +adrZielFeld.lon;
+    }
+    saveData();
+  }
   const einst = document.getElementById('pfEinst');
   if(einst){
     const v = einst.value.trim();
@@ -4171,6 +4201,7 @@ document.addEventListener('click', ev=>{
 /* ================= Adressvervollständigung ================= */
 /* Nutzt Photon (OpenStreetMap) – kein Schlüssel, keine Anmeldung nötig */
 let adrTimer = null, adrLetzte = "", adrZiel = "f";
+var adrZielFeld = null;                 // fängt Koordinaten außerhalb der Terminmaske auf
 const adrBox = () => document.getElementById(adrZiel === "f" ? 'strVorschlaege' : adrZiel + '_vorschlaege');
 function adrSchliessen(){
   document.querySelectorAll('.vorschlaege').forEach(b=>{ b.hidden = true; b.innerHTML = ""; });
@@ -4183,15 +4214,19 @@ async function adrSuchen(text){
     const r = await fetch("https://photon.komoot.io/api/?limit=6&lang=de&q="+encodeURIComponent(text));
     const j = await r.json();
     const treffer = (j.features||[])
-      .map(f=>f.properties)
-      .filter(p => p.country === "Deutschland" && (p.street || p.name))
-      .map(p => ({
-        str: p.street || p.name || "",
-        hnr: p.housenumber || "",
-        strasse: [p.street || p.name, p.housenumber].filter(Boolean).join(" "),
-        plz: p.postcode || "",
-        ort: p.city || p.town || p.village || p.district || ""
-      }))
+      .filter(f => f.properties && f.properties.country === "Deutschland"
+                && (f.properties.street || f.properties.name))
+      .map(f => { const p = f.properties, c = (f.geometry||{}).coordinates || [];
+        return {
+          str: p.street || p.name || "",
+          hnr: p.housenumber || "",
+          strasse: [p.street || p.name, p.housenumber].filter(Boolean).join(" "),
+          plz: p.postcode || "",
+          ort: p.city || p.town || p.village || p.district || "",
+          lon: c[0] !== undefined ? Math.round(c[0]*100000)/100000 : "",
+          lat: c[1] !== undefined ? Math.round(c[1]*100000)/100000 : ""
+        };
+      })
       .filter(a => a.strasse);
     /* Doppelte Vorschläge zusammenfassen */
     const gesehen = new Set(), liste = [];
@@ -4201,7 +4236,7 @@ async function adrSuchen(text){
     });
     if(!liste.length){ adrSchliessen(); return; }
     box.innerHTML = liste.map(a=>
-      `<button type="button" class="vorschlag" data-str="${a.str}" data-hnr="${a.hnr}" data-plz="${a.plz}" data-ort="${a.ort}">
+      `<button type="button" class="vorschlag" data-str="${a.str}" data-hnr="${a.hnr}" data-plz="${a.plz}" data-ort="${a.ort}" data-lat="${a.lat}" data-lon="${a.lon}">
          <b>${[a.str,a.hnr].filter(Boolean).join(" ")}</b><span>${[a.plz,a.ort].filter(Boolean).join(" ")}</span></button>`).join("");
     box.hidden = false;
   }catch(err){ adrSchliessen(); }
@@ -4223,7 +4258,14 @@ document.addEventListener('click', ev=>{
     setz('str', v.dataset.str); setz('hnr', v.dataset.hnr);
     setz('plz', v.dataset.plz); setz('ort', v.dataset.ort);
     if(draft && z === "f"){ draft.nb.f_str = v.dataset.str; draft.nb.f_hnr = v.dataset.hnr;
-               draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort; }
+               draft.nb.f_plz = v.dataset.plz; draft.nb.f_ort = v.dataset.ort;
+               draft.nb.f_lat = v.dataset.lat; draft.nb.f_lon = v.dataset.lon; }
+    adrZielFeld = {feld: z, lat: v.dataset.lat, lon: v.dataset.lon};
+    if(z === "pfWohn"){
+      const el = document.getElementById('pfWohn_str');
+      if(el) el.value = [v.dataset.str, v.dataset.hnr].filter(Boolean).join(" ")
+                      + (v.dataset.plz || v.dataset.ort ? ", " + [v.dataset.plz, v.dataset.ort].filter(Boolean).join(" ") : "");
+    }
     adrSchliessen();
     return;
   }
@@ -4770,6 +4812,131 @@ function renderTeamumsatz(){
 }
 var jobJahr = 0, tuJahr = 0;
 
+/* ================= Fahrtenbuch ================= */
+/* Luftlinie in Kilometern zwischen zwei Punkten */
+function luftlinie(a, b){
+  if(!a || !b || !a.lat || !b.lat) return 0;
+  const R = 6371, r = Math.PI/180;
+  const dLat = (b.lat-a.lat)*r, dLon = (b.lon-a.lon)*r;
+  const x = Math.sin(dLat/2)**2 + Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+const zuhause = () => (settings.wohnLat && settings.wohnLon)
+  ? {lat:+settings.wohnLat, lon:+settings.wohnLon} : null;
+
+/* Alle Termine eines Tages mit Adresse, in zeitlicher Reihenfolge */
+function tagesZiele(tag){
+  const liste = [];
+  START_HOURS.slice().sort((a,b)=>a-b).forEach(h=>{
+    const e = entries[key(tag,h)];
+    if(!e || !adresseVon(e)) return;
+    liste.push({h, e, adresse:adresseVon(e), name:[e.vorname,e.nachname].filter(Boolean).join(" ").trim(),
+                punkt: (e.lat && e.lon) ? {lat:+e.lat, lon:+e.lon} : null});
+  });
+  return liste;
+}
+/* Geschätzte Tagesstrecke: von zuhause über alle Stopps und zurück, Luftlinie mal 1,3 */
+function tagesKm(tag){
+  const ziele = tagesZiele(tag);
+  const heim = zuhause();
+  if(!heim || !ziele.length || ziele.some(z=>!z.punkt)) return 0;
+  let km = 0, vorher = heim;
+  ziele.forEach(z=>{ km += luftlinie(vorher, z.punkt); vorher = z.punkt; });
+  km += luftlinie(vorher, heim);
+  return Math.round(km * 1.3 * 10) / 10;
+}
+function fahrtId(tag){ return "t" + tag.replace(/-/g,""); }
+
+function renderFahrten(){
+  const box = document.getElementById('fahrtenbuch');
+  if(!box || !me) return;
+  const vm = vertriebsmonat(monday);
+  const tage = [];
+  for(let d = fromDk(vm.fromK); dk(d) <= vm.toK; d.setDate(d.getDate()+1)) tage.push(dk(d));
+
+  const erfasst = {};
+  fahrten.forEach(f=> erfasst[f.datum] = f);
+  const summe = tage.reduce((n,t)=> n + (+(erfasst[t]||{}).km || 0), 0);
+  const offen = tage.filter(t=> tagesZiele(t).length && !erfasst[t]).length;
+  const heim = zuhause();
+
+  const zeilen = tage.map(t=>{
+    const ziele = tagesZiele(t);
+    const f = erfasst[t];
+    if(!ziele.length && !f) return "";
+    const schaetzung = tagesKm(t);
+    const d = fromDk(t);
+    return `<div class="fzeile${f?" hat":""}">
+      <div class="fkopf">
+        <div><b>${DAYS_L[(d.getDay()+6)%7]}, ${fmtShort(d)}</b>
+          <span>${ziele.length ? `${ziele.length} Ziel${ziele.length>1?"e":""}` : "kein Termin mit Adresse"}</span></div>
+        <div class="field fkm"><label for="km_${fahrtId(t)}">Kilometer</label>
+          <input id="km_${fahrtId(t)}" data-fkm="${t}" inputmode="decimal"
+            value="${f && f.km ? String(f.km).replace(".",",") : ""}"
+            placeholder="${schaetzung ? String(schaetzung).replace(".",",") : "–"}"></div>
+      </div>
+      ${ziele.length ? `<div class="fziele">${ziele.map(z=>
+        `<span>${pad(z.h)} Uhr · ${z.name || z.adresse}</span>`).join("")}</div>` : ""}
+      ${schaetzung && !(f && f.km) ? `<button type="button" class="mini" data-fuebernehmen="${t}">
+        Schätzung ${String(schaetzung).replace(".",",")} km übernehmen</button>` : ""}
+      <div class="field"><label for="an_${fahrtId(t)}">Anlass</label>
+        <input id="an_${fahrtId(t)}" data-fanlass="${t}" value="${(f && f.anlass) || (ziele.length ? "Kundentermine" : "")}"
+          placeholder="Kundentermine, Terminierung, Meeting"></div>
+    </div>`;
+  }).filter(Boolean).join("");
+
+  box.innerHTML = `
+    <div class="asec">
+      <h3>Fahrtenbuch</h3>
+      <p class="sub">Vertriebsmonat ${vm.idx} im ${vm.quartal}. Quartal · ${fmt(vm.from)} – ${fmt(vm.to)}<br>
+        Über die Wochenauswahl im Planer wechselst du den Monat.</p>
+      <div class="kpis">
+        ${kpi("Kilometer im Monat", String(Math.round(summe*10)/10).replace(".",",")+" km", `${tage.filter(t=>erfasst[t]).length} Tage erfasst`,"hero")}
+        ${kpi("Noch offen", String(offen), offen ? "Tage mit Terminen ohne Eintrag" : "alles eingetragen")}
+      </div>
+      ${!heim ? `<p class="hinweis">Trag im Profil deine Wohnadresse ein, dann schlägt die App die Kilometer je Tag vor.</p>`
+        : `<p class="hinweis">Die Vorschläge sind Schätzungen aus den Adressen (Luftlinie mal 1,3, hin und zurück).
+           Für das Finanzamt zählt der echte Tachostand — trag ihn einfach drüber.</p>`}
+      <div class="actions"><button class="btn" id="fbExport">Monat als Tabelle sichern</button></div>
+    </div>
+    <div class="asec">${zeilen || `<p class="aempty">In diesem Vertriebsmonat sind noch keine Termine mit Adresse eingetragen.</p>`}</div>`;
+
+  const merke = (tag, feld, wert) => {
+    let f = fahrten.find(x=>x.datum===tag);
+    if(!f){ f = {datum:tag}; fahrten.push(f); }
+    if(wert === "" || wert === 0) delete f[feld]; else f[feld] = wert;
+    if(!f.km && !f.anlass){ const i = fahrten.indexOf(f); fahrten.splice(i,1); }
+    fahrten.sort((a,b)=> a.datum.localeCompare(b.datum));
+    saveData();
+  };
+  box.querySelectorAll('[data-fkm]').forEach(el=> el.onchange = ()=>{
+    merke(el.dataset.fkm, "km", num(el.value)); renderFahrten();
+  });
+  box.querySelectorAll('[data-fanlass]').forEach(el=> el.onchange = ()=>{
+    merke(el.dataset.fanlass, "anlass", el.value.trim());
+  });
+  box.querySelectorAll('[data-fuebernehmen]').forEach(b=> b.onclick = ()=>{
+    const t = b.dataset.fuebernehmen;
+    merke(t, "km", tagesKm(t));
+    if(!(fahrten.find(x=>x.datum===t)||{}).anlass) merke(t, "anlass", "Kundentermine");
+    renderFahrten();
+  });
+  document.getElementById('fbExport').onclick = ()=>{
+    const kopf = "Datum;Kilometer;Anlass;Ziele";
+    const reihen = tage.filter(t=>erfasst[t]).map(t=>{
+      const f = erfasst[t];
+      const ziele = tagesZiele(t).map(z=>z.adresse).join(" / ");
+      return [fmt(fromDk(t)), String(f.km||"").replace(".",","), f.anlass||"", ziele].join(";");
+    });
+    const text = [kopf, ...reihen, `Summe;${String(Math.round(summe*10)/10).replace(".",",")};;`].join("\n");
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(["\ufeff"+text], {type:"text/csv;charset=utf-8"}));
+    a.download = `fahrtenbuch-${vm.year||""}-VM${vm.idx}.csv`;
+    a.click();
+    setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
+  };
+}
+
 /* ================= Menü ================= */
 const IC = {
   heute:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
@@ -4788,14 +4955,15 @@ const IC = {
   kbdelete:'<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>',
   ziele:'<path d="M6 3v9a6 6 0 0 0 12 0V3z"/><path d="M6 5H3.5v2A3.5 3.5 0 0 0 7 10.5M18 5h2.5v2A3.5 3.5 0 0 1 17 10.5"/><path d="M12 18v3M8.5 21h7"/>',
   jobtickets:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3 12h18"/>',
-  teamumsatz:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/><circle cx="10" cy="5" r="1.6"/>'
+  teamumsatz:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/><circle cx="10" cy="5" r="1.6"/>',
+  fahrten:'<path d="M5 17h14M6.5 17V9.5l1.7-3.5h7.6l1.7 3.5V17"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/><path d="M6.5 12.5h11"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 const MENUE = [
   ["heute","Heute"],["planer","Planer"],["statistik","Statistik"],["auswertungen","Auswertungen"],
   ["potenzial","Potenzialliste"],["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
   ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["ziele","Ziele"],["jobtickets","Jobtickets"],
-  ["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
+  ["fahrten","Fahrtenbuch"],["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
 ];
 const MENUE_TL = [["teamumsatz","Teamumsatz"],["team","Teammitglieder"],["kbdelete","KB Delete"]];
 function renderMenu(){
@@ -5295,7 +5463,7 @@ function tourZeigen(){
 
 /* ================= Rahmen ================= *//* ================= Rahmen ================= */
 document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i style="--c:${c.c}"></i>${c.t}</span>`).join("");
-function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); renderZiele(); renderJobtickets(); renderTeamumsatz(); saveData(); }
+function renderAll(){ render(); renderHeute(); renderFaq(); renderPapierkorb(); renderJahr(); renderStat(); renderPotenzial(); renderEmpfehlung(); renderEmpfehlung(); renderAusw(); renderProv(); renderWunsch(); renderTeam(); renderProfil(); renderDelete(); renderInventur(); renderZiele(); renderJobtickets(); renderTeamumsatz(); renderFahrten(); saveData(); }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
 document.getElementById('prev').onclick = ()=> shiftWeek(-7);
 document.getElementById('next').onclick = ()=> shiftWeek(7);
