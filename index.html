@@ -1519,6 +1519,7 @@ function nbForm(){
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
       ${n.verkauft==="Ja"?`${zaehlZeile("einheiten","Einheiten",n.einheiten)}${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}
+      <p class="hinweis" style="margin-top:0">Artikel ohne Einheiten? Dann Einheiten auf 0 lassen und nur den Umsatz eintragen.</p>
         <div class="sect"><span class="lb">Späteres Lieferdatum?</span>${seg("datiert",["Ja","Nein"],n.datiert)}
           ${n.datiert==="Ja"?`${fld("lieferdatum","Geliefert und abgerechnet am",n.lieferdatum||draft.day,"date")}
             <p class="hinweis">Der Umsatz zählt heute in Statistik und Wochenmeldung, fließt aber erst im
@@ -1621,7 +1622,6 @@ function saveAbhol(e){
   const urspruenglich = (e.vonTag !== undefined) ? entries[key(e.vonTag, e.vonStunde)] : null;
   if(n.verkauft==="Ja"){
     if(!n.gebiet){ error="Bitte das Gebiet wählen."; draft.fokus='[data-seg="gebiet"]'; repaint(); return; }
-    if(!(+n.einheiten > 0)){ error="Bitte die Einheiten eintragen."; draft.fokus='[data-zplus="einheiten"]'; repaint(); return; }
     if(num(n.umsatz) <= 0){ error="Bitte den Bruttoumsatz eintragen."; draft.fokus="#umsatz"; repaint(); return; }
     if(!n.k70){ error="Bitte angeben, ob K70 verkauft wurde."; draft.fokus='[data-seg="k70"]'; repaint(); return; }
     if(n.k70==="Ja" && num(n.k70betrag) <= 0){ error="Bitte den K70-Betrag eintragen."; draft.fokus="#k70betrag"; repaint(); return; }
@@ -1734,7 +1734,6 @@ function saveNb(e){
   f(!n.k70, "K70 aus dem Kofferraum", '[data-seg="k70"]', null);
   f(n.k70==="Ja" && num(n.k70betrag) <= 0, "Betrag K70", "#k70betrag", null);
   if(n.verkauft==="Ja"){
-    f(!(+n.einheiten > 0), "Einheiten", '[data-zplus="einheiten"]', null);
     f(num(n.umsatz) <= 0, "Bruttoumsatz", "#umsatz", null);
     f(!n.datiert, "späteres Lieferdatum", '[data-seg="datiert"]', null);
   }
@@ -2781,7 +2780,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v24 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v25 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
