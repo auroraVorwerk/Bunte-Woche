@@ -7,8 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Bunte Woche">
-<title>Bunte Woche</title>
+<meta name="apple-mobile-web-app-title" content="Digitaler Businessplan">
+<title>Digitaler Businessplan</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -710,7 +710,9 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .statuszeile b{flex:1;font-size:.92rem}
 .laufzeile{display:flex;gap:10px;margin-bottom:4px}
 .laufzeile .btn{padding:11px 8px;font-size:.82rem}
-.amark{position:absolute;top:4px;right:7px;font-size:.68rem;line-height:1;color:var(--warn);opacity:.75;font-style:normal}
+.amark{position:absolute;top:2px;right:2px;font-size:.72rem;line-height:1;color:var(--warn);opacity:.8;
+  font-style:normal;padding:5px 6px;cursor:pointer;border-radius:8px;z-index:2}
+.amark:hover{opacity:1;background:rgba(0,0,0,.06)}
 .amark.nichtda{color:var(--faint)}
 .slot.hatarchiv{position:relative}
 .fehltmark{outline:2px solid var(--warn);outline-offset:4px;border-radius:12px;transition:outline-color .3s}
@@ -898,7 +900,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <header class="topbar" id="topbar">
   <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
-  <span class="mark">Bunte Woche</span>
+  <span class="mark">Digitaler Businessplan</span>
   <span class="savestate" id="saveState"></span>
 </header>
 <div class="scrim" id="scrim"></div>
@@ -910,7 +912,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <main class="wrap">
   <div class="hero">
-    <h1>Bunte<span>Woche</span></h1>
+    <h1>Digitaler<span>Businessplan</span></h1>
     <div class="streifen" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="pagetitle" id="pagetitle">Planer</div>
   </div>
@@ -1068,7 +1070,31 @@ var tagWahl = Math.min(6, (new Date().getDay()+6)%7);   // Handyansicht: welcher
 function archivMark(tag, hr){
   const a = archiv.find(x=>x.tag===tag && +x.h===+hr);
   if(!a) return "";
-  return `<i class="amark ${a.art}" title="${a.art==="nichtda"?"Kunde war nicht da":"abgesagt"}: ${(a.vorname||"")} ${(a.nachname||"")}">${a.art==="nichtda"?"○":"✗"}</i>`;
+  return `<i class="amark ${a.art}" data-tag="${tag}" data-h="${hr}"
+    title="${a.art==="nichtda"?"Kunde war nicht da":"abgesagt"}">${a.art==="nichtda"?"○":"✗"}</i>`;
+}
+/* Zeigt, wer hier abgesagt hat – der Zeitblock bleibt trotzdem frei */
+function archivZeigen(tag, hr){
+  const i = archiv.findIndex(x=>x.tag===tag && +x.h===+hr);
+  if(i < 0) return;
+  const a = archiv[i];
+  const name = [a.vorname, a.nachname].filter(Boolean).join(" ").trim() || "Ohne Namen";
+  simpleDialog(a.art === "nichtda" ? "Kunde war nicht da" : "Termin abgesagt",
+    `${fmt(fromDk(tag))} · ${pad(hr)}–${pad(hr+2)} Uhr`,
+    `<div class="grp">
+       <p style="margin:0 0 6px;font-weight:700">${name}</p>
+       ${a.quelle?`<p class="hinweis" style="margin:0">Quelle: ${a.quelle}</p>`:""}
+       <p class="hinweis">Der Zeitblock ist frei — du kannst ihn ganz normal neu belegen.
+         ${a.nachname ? "Der Kunde steht in deiner Potenzialliste." : ""}</p>
+     </div>
+     <div class="actions"><button type="button" class="btn danger" id="amWeg">Zeichen entfernen</button></div>`,
+    ()=> closeModal(), "Schließen");
+  const weg = document.getElementById('amWeg');
+  if(weg) weg.onclick = ()=>{
+    const j = archiv.findIndex(x=>x.tag===tag && +x.h===+hr);
+    if(j >= 0) archiv.splice(j,1);
+    closeModal(); saveData(); renderAll();
+  };
 }
 function insArchiv(tag, h, e, art){
   archiv.push({tag, h:+h, art, vorname:e.vorname||"", nachname:e.nachname||"", quelle:e.quelle||""});
@@ -1083,6 +1109,7 @@ const kurzName = e => `${(e.vorname||"").trim().charAt(0).toUpperCase()}. ${e.na
 function label(e){
   if(e.kind==="kunde")   return {t1:kurzName(e), t2:""};
   if(e.kind==="premium") return {t1:kurzName(e), t2:"Premium CheckIn"};
+  if(e.kind==="abholen")  return {t1:"Abholtermin", t2:kurzName(e)};
   if(e.kind==="eigenkauf"){
     const n = e.nb || {};
     return {t1:"Eigenkauf", t2: n.umsatz ? eur(num(n.umsatz))+" €" : ""};
@@ -1127,6 +1154,7 @@ const COLORS = {
 const FARBEN = ["#A9D18E","#8FBF9F","#E8C4F2","#77CDF5","#E0402F","#F2B33D","#C9DD2C",
                 "#6FC3A0","#E8A2C8","#9FB4E8","#D8C48A"];
 function colorOf(e){
+  if(e.kind==="abholen") return COLORS.kunde;      // dieselbe Farbe wie der Kundentermin
   if(e.kind==="individuell") return e.farbe || "#9FB4E8";
   if(e.kind==="terminieren") return e.quelle==="Promotion" ? COLORS.promotion : COLORS.terminieren;
   return COLORS[e.kind] || null;
@@ -1285,6 +1313,8 @@ grid.addEventListener('contextmenu', ev=>{ if(ev.target.closest('.slot')) ev.pre
 grid.addEventListener('click', ev=>{
   const ml = ev.target.closest('[data-mclick]');
   if(ml){ ml.dataset.mclick === "einkauf" ? dlgEinkauf() : dlgRahmen(); return; }
+  const mark = ev.target.closest('.amark');
+  if(mark){ ev.stopPropagation(); archivZeigen(mark.dataset.tag, +mark.dataset.h); return; }
   const s = ev.target.closest('.slot');
   if(!s) return;
   if(s.classList.contains('blocked') && !s.classList.contains('soft')) return;
@@ -1385,12 +1415,13 @@ const checks = (name,vals,cur=[],cls="") => `<div class="checks ${cls}">${vals.m
 const fld = (id,lbl,val="",type="text",extra="") => `<div class="field"><label for="${id}">${lbl}</label><input id="${id}" type="${type}" value="${val??""}" ${extra}></div>`;
 const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option value="${h}" ${+cur===h?"selected":""}>${pad(h)}:00 – ${pad(h+2)}:00</option>`).join("")}</select>`;
 
-const FIELD_IDS = ["jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum",
+const FIELD_IDS = ["jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum","abDatum",
                    "f_vor","f_nach","f_str","f_hnr","f_plz","f_ort","f_tel","f_notiz","lieferdatum","vsDatum",
                    "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG"];
 function collect(){
   FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) draft.nb[id]=el.value;});
   const sel = document.getElementById('pcZeit'); if(sel) draft.nb.pcZeit = sel.value;
+  const abz = document.getElementById('abZeit'); if(abz) draft.nb.abZeit = abz.value;
   const anr = document.getElementById('f_anrede'); if(anr) draft.nb.f_anrede = anr.value;
   const emp = document.querySelectorAll('[data-emp]');
   if(emp.length){
@@ -1516,6 +1547,15 @@ function nbForm(){
         <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
           ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
         <p class="hinweis">Was der Kunde schon hat und warum er nicht gekauft hat — daraus entsteht der Eintrag in der Potenzialliste.</p>
+      </div>
+      <div class="grp">
+        <div class="sect"><span class="lb">Gerät ausgeliehen, Kaufentscheidung später?</span>
+          ${seg("ausgeliehen",["Ja","Nein"],n.ausgeliehen)}</div>
+        ${n.ausgeliehen==="Ja" ? `
+          <div class="ah4" style="margin-top:6px">Abholtermin</div>
+          ${fld("abDatum","Datum",n.abDatum||plusTage(draft.day,3),"date")}
+          <div class="field"><label for="abZeit">Startzeit</label>${hourSelect("abZeit",n.abZeit??draft.hour)}</div>
+          <p class="hinweis">Der Abholtermin wird im Kalender angelegt — mit Adresse und Telefonnummer des Kunden.</p>` : ""}
       </div>`;
   }
   return h;
@@ -1549,6 +1589,76 @@ function saveNbPremium(e){
   if(!n.k70){ error="Bitte angeben, ob K70 abverkauft wurde."; repaint(); return; }
   e.nb = {...n, kundenstatus:"Bestandskunde"};
   e.status = "stattgefunden";
+  closeModal(); renderAll();
+}
+
+/* Nachbereitung des Abholtermins – das Ergebnis wandert in den ursprünglichen Kundentermin */
+function abholForm(e){
+  const n = draft.nb;
+  const has = n.besitz || [];
+  const fertig = has.length >= BESITZ.length || (has.length && (n.grund||"").trim());
+  return `<div class="h4">Kaufentscheidung</div>
+    <div class="grp">
+      <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
+      ${n.verkauft==="Ja" ? `
+        <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet",["Festgebiet","Weißgebiet"],n.gebiet)}</div>
+        ${zaehlZeile("einheiten","Einheiten",n.einheiten)}
+        ${fld("umsatz","Bruttoumsatz €",n.umsatz,"text",'inputmode="decimal"')}
+        <div class="sect"><span class="lb">K70 aus dem Kofferraum verkauft?</span>${seg("k70",["Ja","Nein"],n.k70)}
+          ${n.k70==="Ja"?fld("k70betrag","Bruttoumsatz K70 €",n.k70betrag,"text",'inputmode="decimal"'):""}</div>
+        <p class="hinweis">Umsatz und Einheiten werden dem ursprünglichen Kundentermin zugeschrieben und
+          im Vertriebsmonat dieses Abholtermins abgerechnet. In der Statistik bleibt es ein Termin.</p>` : ""}
+      ${n.verkauft==="Nein" ? `
+        <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
+          ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
+        <p class="hinweis">Der Kunde wandert mit dem offenen Potenzial in die Potenzialliste.</p>` : ""}
+    </div>`;
+}
+function saveAbhol(e){
+  const n = draft.nb;
+  if(!n.verkauft){ error="Bitte angeben, ob der Kunde gekauft hat."; repaint(); return; }
+  const urspruenglich = (e.vonTag !== undefined) ? entries[key(e.vonTag, e.vonStunde)] : null;
+  if(n.verkauft==="Ja"){
+    if(!n.gebiet){ error="Bitte das Gebiet wählen."; draft.fokus='[data-seg="gebiet"]'; repaint(); return; }
+    if(!(+n.einheiten > 0)){ error="Bitte die Einheiten eintragen."; draft.fokus='[data-zplus="einheiten"]'; repaint(); return; }
+    if(num(n.umsatz) <= 0){ error="Bitte den Bruttoumsatz eintragen."; draft.fokus="#umsatz"; repaint(); return; }
+    if(!n.k70){ error="Bitte angeben, ob K70 verkauft wurde."; draft.fokus='[data-seg="k70"]'; repaint(); return; }
+    if(n.k70==="Ja" && num(n.k70betrag) <= 0){ error="Bitte den K70-Betrag eintragen."; draft.fokus="#k70betrag"; repaint(); return; }
+  }else{
+    if((n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim()){
+      error="Bitte kurz eintragen, warum nicht gekauft wurde."; draft.fokus="#potOeffnen"; repaint(); return;
+    }
+  }
+  if(urspruenglich && urspruenglich.nb){
+    const u = urspruenglich.nb;
+    if(n.verkauft==="Ja"){
+      u.verkauft = "Ja";
+      u.gebiet = n.gebiet;
+      u.einheiten = n.einheiten;
+      u.umsatz = n.umsatz;
+      u.k70 = n.k70;
+      u.k70betrag = n.k70betrag || "";
+      u.datiert = "Ja";                       // abgerechnet am Tag der Abholung
+      u.lieferdatum = draft.day;
+      u.besitz = []; u.grund = "";
+      const id = [urspruenglich.vorname, urspruenglich.nachname, urspruenglich.str, urspruenglich.plz]
+        .map(v=>(v||"").trim().toLowerCase()).join("|");
+      const i = potenzial.findIndex(x=>x.id===id);
+      if(i>=0) potenzial.splice(i,1);          // doch gekauft – raus aus der Potenzialliste
+    }else{
+      u.verkauft = "Nein";
+      u.besitz = n.besitz || [];
+      u.grund = n.grund || "";
+      if((u.besitz||[]).length < BESITZ.length){
+        addPotenzial(urspruenglich, BESITZ.filter(b=>!(u.besitz||[]).includes(b)),
+          [u.grund, "Gerät war ausgeliehen"].filter(Boolean).join(" · "), e.vonTag);
+      }
+    }
+  }else if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length){
+    addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day);
+  }
+  e.status = "nachbereitet";
+  e.nb = {...n};
   closeModal(); renderAll();
 }
 
@@ -1629,6 +1739,10 @@ function saveNb(e){
   }
   if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim())
     f(true, "Grund für den Nichtkauf", "#potOeffnen", null);
+  if(n.verkauft==="Nein"){
+    f(!n.ausgeliehen, "ob das Gerät ausgeliehen wurde", '[data-seg="ausgeliehen"]', null);
+    if(n.ausgeliehen==="Ja") f(!n.abDatum || n.abZeit===undefined, "Datum und Zeit für den Abholtermin", "#abDatum", null);
+  }
   if(fehlt.length){
     error = "Es fehlt noch: " + fehlt.map(x=>x.text).join(", ") + ".";
     ["kunde","zeit","gespraech","vorfuehrung"].forEach(b=> delete draft.nb["_zu_"+b]);
@@ -1648,7 +1762,19 @@ function saveNb(e){
     entries[k] = {...(vorhanden||{}), kind:"premium", vorname:e.vorname, nachname:e.nachname,
       strasse:e.strasse, plz:e.plz, ort:e.ort, telefon:e.telefon};
   }
-  if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length){
+  if(n.verkauft==="Nein" && n.ausgeliehen==="Ja"){
+    const ka = key(n.abDatum, +n.abZeit);
+    const da = entries[ka];
+    const passt = da && da.kind==="abholen"
+      && (da.nachname||"") === (e.nachname||"") && (da.vorname||"") === (e.vorname||"");
+    if(da && !passt){ error="Zum Abholtermin steht schon ein anderer Eintrag im Kalender."; repaint(); return; }
+    entries[ka] = {...(da||{}), kind:"abholen", vorname:e.vorname, nachname:e.nachname,
+      strasse:e.strasse, plz:e.plz, ort:e.ort, telefon:e.telefon, quelle:e.quelle,
+      vonTag:draft.day, vonStunde:draft.hour};
+  }
+  /* Bei ausgeliehenem Gerät ist noch nichts entschieden – die Potenzialliste
+     wird erst beim Abholtermin gefüllt, falls es dann ein Nein wird. */
+  if(n.verkauft==="Nein" && n.ausgeliehen!=="Ja" && (n.besitz||[]).length < BESITZ.length){
     addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day);
   }
   if(n.empf==="Ja") (n.empfListe||[]).forEach(x=>{
@@ -1941,12 +2067,15 @@ function paint(){
 
   if(step==="view" && e){
     let body = "";
-    if(e.vorname) body = `<div class="summary"><b>${e.anrede?e.anrede+" ":""}${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":e.quelle||""}</span>
+    if(e.vorname) body = `<div class="summary"><b>${e.anrede?e.anrede+" ":""}${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":(e.kind==="abholen"?"Gerät abholen":e.quelle||"")}</span>
       ${e.strasse?`<br>${e.strasse}`:""}${(e.plz||e.ort)?`<br>${e.plz||""} ${e.ort||""}`:""}${e.telefon?`<br><span>${e.telefon}</span>`:""}${e.notiz?`<br><span>${e.notiz}</span>`:""}</div>
       <div class="actions">
         ${e.telefon?`<a class="btn" href="${telLink(e.telefon)}">Anrufen</a>`:""}
         ${adresseVon(e)?`<a class="btn" href="${mapsLink(adresseVon(e))}" target="_blank" rel="noopener">Route</a>`:""}
       </div>`;
+    if(e.kind==="abholen") body += `<p class="hinweis">Gerät ausgeliehen beim Termin am
+      ${e.vonTag?fmt(fromDk(e.vonTag)):"–"}. Deine Entscheidung hier wird diesem Termin zugeschrieben —
+      in der Statistik bleibt es ein einziger Kundentermin.</p>`;
     else if(e.bis) body = `<div class="summary"><b>${e.art||"Privat"}</b><br><span>${e.von}–${e.bis} Uhr</span></div>`;
     else body = `<div class="summary"><b>${label(e).t1}</b><br><span>${label(e).t2}</span></div>`;
 
@@ -1955,6 +2084,10 @@ function paint(){
       extra = `<div class="hr"></div>` + nbTermForm(e) + (error?`<div class="err">${error}</div>`:"");
       saveBtn = `<button class="btn primary" id="saveNbT">Abschließen</button>`;
       zweiteReihe = `<button class="btn wide" id="nbZwischen">Zwischenspeichern</button>`;
+    }
+    if(e.kind==="abholen"){
+      extra = `<div class="hr"></div>` + abholForm(e) + (error?`<div class="err">${error}</div>`:"");
+      saveBtn = `<button class="btn primary" id="saveAb">Abschließen</button>`;
     }
     if(e.kind==="kunde" || e.kind==="premium"){
       const st = draft.nb.status || e.status || "";
@@ -1993,13 +2126,15 @@ function paint(){
       ${bearbeitbar ? `<div class="actions"><button class="btn wide" id="editBtn">${
         (e.kind==="kunde"||e.kind==="premium") ? "Kundendaten bearbeiten" : "Daten bearbeiten"}</button></div>` : ""}`;
 
-    sheet.innerHTML = head(e.kind==="premium"?"Premium CheckIn":"Eintrag") + body + historie(e) + extra + foot;
+    sheet.innerHTML = head(e.kind==="premium" ? "Premium CheckIn"
+                         : e.kind==="abholen" ? "Abholtermin" : "Eintrag") + body + historie(e) + extra + foot;
     wireSegs();
     const d1 = document.getElementById('del');
     if(d1) d1.onclick = ()=>{ inPapierkorb(draft.day,draft.hour); closeModal(); renderAll(); };
     const snT = document.getElementById('saveNbT'); if(snT) snT.onclick = ()=> saveNbTerm(e);
     const eb = document.getElementById('editBtn'); if(eb) eb.onclick = ()=> startEdit(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
+    const sab = document.getElementById('saveAb'); if(sab) sab.onclick = ()=> saveAbhol(e);
     const nz = document.getElementById('nbZwischen'); if(nz) nz.onclick = ()=> nbZwischen(e);
     const stc = document.getElementById('stChange');
     if(stc) stc.onclick = ()=>{ draft.stEdit = true; repaint(); };
@@ -2622,7 +2757,7 @@ function preparePrint(){
   const t = document.getElementById('statTable');
   const {week} = isoWeek(monday);
   document.getElementById('printhead').innerHTML =
-    `Bunte Woche – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
+    `Digitaler Businessplan – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
   /* A4 quer bei 96 dpi: 1122 × 794 px, abzüglich 6 mm Rand ringsum */
   const kopf = (document.getElementById('printhead').offsetHeight || 46) + 18;
   const PW = 1122 - 2*23;
@@ -2638,7 +2773,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v20 · 13.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v22 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -2871,7 +3006,7 @@ function sollWerte(){
 
 /* ================= Provisionsrechner ================= */
 function renderProv(){
-  const vm = vertriebsmonat(monday);
+  const vm = vertriebsmonat(new Date());        // immer der laufende Vertriebsmonat
   const u = umsatz(vm.fromK, vm.toK);
   const p = provision(u, vm.weeks);
 
@@ -3547,7 +3682,7 @@ const wert = id => { const e = document.getElementById(id); return e ? e.value.t
 function lgFehler(t){ lgErrText = t; renderLogin(); }
 
 function renderLogin(){
-  const kopf = `<div class="lgmark">Bunte Woche</div>`;
+  const kopf = `<div class="lgmark">Digitaler Businessplan</div>`;
   const fehler = lgErrText ? `<p class="err">${lgErrText}</p>` : "";
   const laden = lgBusy ? ` disabled` : "";
   let h = "";
@@ -4185,7 +4320,7 @@ async function renderProfil(){
       daten: clean(dataBlob())}, null, 1);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([daten], {type:"application/json"}));
-    a.download = `bunte-woche-${me.dk}-${dk(new Date())}.json`;
+    a.download = `businessplan-${me.dk}-${dk(new Date())}.json`;
     a.click();
     setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
     bk.textContent = "gesichert"; setTimeout(()=> bk.textContent = "Daten sichern", 1800);
@@ -6243,7 +6378,7 @@ function show(k){
   if(!PAGES[k]) k='planer';
   if((k==='team'||k==='kbdelete') && !istTeamleiter()) k='planer';
   document.getElementById('pagetitle').textContent = PAGES[k];
-  document.title = 'Bunte Woche – '+PAGES[k];
+  document.title = 'Digitaler Businessplan – '+PAGES[k];
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+k));
   document.querySelectorAll('.navlink').forEach(a=> a.dataset.page===k ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
   setMenu(false); scrollTo({top:0});
