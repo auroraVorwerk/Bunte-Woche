@@ -2548,6 +2548,10 @@ function wireSegs(){
     collect(); error="";
     draft.nb[b.dataset.seg] = draft.nb[b.dataset.seg]===b.dataset.val ? "" : b.dataset.val;
     if(b.dataset.seg === "status") draft.stEdit = false;
+    /* Wird das Gerät doch ausgeliehen, ist das Potenzial hier noch nicht dran */
+    if(b.dataset.seg === "ausgeliehen" && draft.nb.ausgeliehen === "Ja"){
+      draft.nb.besitz = []; draft.nb.grund = "";
+    }
     repaint();
   });
   sheet.querySelectorAll('[data-chk]').forEach(b=> b.onclick = ()=>{
@@ -2777,7 +2781,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v23 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v24 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
