@@ -1544,19 +1544,20 @@ function nbForm(){
     const fertig = has.length >= BESITZ.length || (has.length && (n.grund||"").trim());
     h += `<div class="h4">Kein Kauf</div>
       <div class="grp">
-        <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
-          ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
-        <p class="hinweis">Was der Kunde schon hat und warum er nicht gekauft hat — daraus entsteht der Eintrag in der Potenzialliste.</p>
-      </div>
-      <div class="grp">
         <div class="sect"><span class="lb">Gerät ausgeliehen, Kaufentscheidung später?</span>
           ${seg("ausgeliehen",["Ja","Nein"],n.ausgeliehen)}</div>
         ${n.ausgeliehen==="Ja" ? `
           <div class="ah4" style="margin-top:6px">Abholtermin</div>
           ${fld("abDatum","Datum",n.abDatum||plusTage(draft.day,3),"date")}
           <div class="field"><label for="abZeit">Startzeit</label>${hourSelect("abZeit",n.abZeit??draft.hour)}</div>
-          <p class="hinweis">Der Abholtermin wird im Kalender angelegt — mit Adresse und Telefonnummer des Kunden.</p>` : ""}
-      </div>`;
+          <p class="hinweis">Der Abholtermin wird im Kalender angelegt, mit Adresse und Telefonnummer.
+            Das offene Potenzial und der Grund werden erst dort erfasst — falls es doch ein Nein wird.</p>` : ""}
+      </div>
+      ${n.ausgeliehen==="Nein" ? `<div class="grp">
+        <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
+          ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
+        <p class="hinweis">Was der Kunde schon hat und warum er nicht gekauft hat — daraus entsteht der Eintrag in der Potenzialliste.</p>
+      </div>` : ""}`;
   }
   return h;
 }
@@ -1737,11 +1738,14 @@ function saveNb(e){
     f(num(n.umsatz) <= 0, "Bruttoumsatz", "#umsatz", null);
     f(!n.datiert, "späteres Lieferdatum", '[data-seg="datiert"]', null);
   }
-  if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim())
-    f(true, "Grund für den Nichtkauf", "#potOeffnen", null);
   if(n.verkauft==="Nein"){
     f(!n.ausgeliehen, "ob das Gerät ausgeliehen wurde", '[data-seg="ausgeliehen"]', null);
-    if(n.ausgeliehen==="Ja") f(!n.abDatum || n.abZeit===undefined, "Datum und Zeit für den Abholtermin", "#abDatum", null);
+    if(n.ausgeliehen==="Ja"){
+      f(!n.abDatum || n.abZeit===undefined, "Datum und Zeit für den Abholtermin", "#abDatum", null);
+    }else if(n.ausgeliehen==="Nein"){
+      f((n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim(),
+        "Grund für den Nichtkauf", "#potOeffnen", null);
+    }
   }
   if(fehlt.length){
     error = "Es fehlt noch: " + fehlt.map(x=>x.text).join(", ") + ".";
@@ -2773,7 +2777,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v22 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v23 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
