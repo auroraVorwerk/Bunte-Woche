@@ -323,6 +323,10 @@ a.btn{text-decoration:none;text-align:center;display:block;color:var(--text)}
 .kpis.zwei{display:grid;grid-template-columns:1fr 1fr}
 .kpis.zwei > .kpi{flex:none}
 .kpi{background:var(--surface-2);border-radius:var(--r-lg);padding:20px;text-align:center}
+/* Die hervorgehobene Kachel traegt zusaetzlich die Klasse "hero". Ihre
+   Ausrichtung steht hier ausdruecklich, damit keine Regel fuer den
+   Seitenkopf (der ebenfalls "hero" heisst) sie je wieder erwischt. */
+.kpi.hero, .kpi.hero .kl, .kpi.hero .kv, .kpi.hero .ks{text-align:center}
 .kpi .kl{display:block;font-size:.64rem;letter-spacing:.11em;text-transform:uppercase;color:var(--faint);line-height:1.4;min-height:2.5em}
 .kpi .kv{display:block;font-family:"JetBrains Mono",monospace;font-size:1.9rem;font-weight:600;margin-top:8px;letter-spacing:-.03em}
 .kpi .ks{display:block;font-size:.72rem;color:var(--faint);margin-top:5px}
@@ -924,7 +928,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .invsumme span{ text-align:left !important; }
 .invsumme b{ text-align:right !important; font-size:1.25rem; }
 </style>
-<link rel="stylesheet" href="ui.css?v=31">
+<link rel="stylesheet" href="ui.css?v=32">
 </head>
 <body>
 
@@ -2855,7 +2859,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v31 · 15.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v32 · 15.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
