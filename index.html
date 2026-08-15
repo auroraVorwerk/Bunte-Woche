@@ -1024,6 +1024,21 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <div id="druckPot" class="druckbereich"></div>
 
+<nav class="tabbar" id="tabbar" aria-label="Schnellzugriff">
+  <a class="navlink tab" href="#heute" data-page="heute"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><i>Heute</i></a>
+  <a class="navlink tab" href="#planer" data-page="planer"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4z"/><path d="M4 10h16M9 3v4M15 3v4M9 14h2M13 14h2M9 17h2M13 17h2"/></svg></span><i>Planer</i></a>
+  <a class="navlink tab" href="#statistik" data-page="statistik"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18v14H3z"/><path d="M3 9h18M9 9v10M15 9v10"/></svg></span><i>Statistik</i></a>
+  <a class="navlink tab" href="#potenzial" data-page="potenzial"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h10M4 18h7"/><path d="m17 14 1.6 3.3 3.4.5-2.5 2.4.6 3.4-3.1-1.6-3.1 1.6.6-3.4L12 17.8l3.4-.5z" transform="translate(0,-6) scale(0.85) translate(3,3)"/></svg></span><i>Listen</i></a>
+  <button class="tab tabmehr" id="tabMehr" aria-label="Menü öffnen"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span><i>Mehr</i></button>
+</nav>
+
+<script>
+/* Untere Leiste am Handy: "Mehr" oeffnet das vollstaendige Menue.
+   Die vier Direktpunkte tragen die Klasse navlink und werden deshalb
+   von der vorhandenen Seitenlogik automatisch mit hervorgehoben. */
+document.getElementById("tabMehr").onclick = () => document.getElementById("burger").click();
+</script>
+
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="back" data-close></div>
   <div class="sheet" id="sheet"></div>
@@ -1153,7 +1168,7 @@ function label(e){
 }
 /* Beträge: "1.250,50" -> 1250.5 */
 const num = s => { const v = parseFloat(String(s??"").replace(/\./g,"").replace(",",".")); return isNaN(v)?0:v; };
-const eur = v => v ? v.toLocaleString("de-DE",{maximumFractionDigits:2}) : "–";
+const eur = v => v ? Math.round(v).toLocaleString("de-DE",{maximumFractionDigits:0}) : "–";
 const preis = v => (+v||0).toLocaleString("de-DE",{minimumFractionDigits:2, maximumFractionDigits:2});
 function dayTotals(day){
   const t = {fg:0,wg:0,k70:0,k70ein:0};
