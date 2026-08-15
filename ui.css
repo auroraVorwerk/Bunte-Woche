@@ -1,0 +1,224 @@
+/* =============================================================
+   Digitaler Businessplan – Designebene "Firmengrün" (Variante D)
+   -------------------------------------------------------------
+   Diese Datei enthaelt AUSSCHLIESSLICH Gestaltung.
+   Sie wird nach dem <style>-Block der index.html geladen und
+   ueberschreibt ihn deshalb. Keine Funktion wird beruehrt:
+   es gibt hier keine Zeile JavaScript und keine neuen Elemente
+   ausser dem Logo im Menue und im Kopf.
+
+   Aufbau:
+     1  Farbwerte dunkel / hell
+     2  Seitenspalte in Firmengruen
+     3  Feste Seitenspalte ab 1100 px (iPad quer, PC)
+     4  Kopfbereich und Seitentitel
+     5  Kalender – nutzt die neue Breite aus
+     6  Kleinigkeiten (Knoepfe, Karten, Logo)
+
+   Terminfarben werden hier NICHT angefasst. Die Legende und
+   alle farbigen Terminbloecke kommen weiterhin aus der App.
+   ============================================================= */
+
+
+/* ---------- 1  Farbwerte ---------------------------------- */
+
+/* Dunkel: Waldgruen wie das alte Geraet, Firmengruen als Akzent */
+:root{
+  --bg:#0C1A13;
+  --surface:#122419;
+  --surface-2:#173021;
+  --surface-3:#1E3D29;
+  --line:#1F3D29;
+  --line-soft:#17301F;
+  --text:#EEF3EA;
+  --muted:#8CA697;
+  --faint:#6C8578;
+  --accent:#22B463;          /* auf dunklem Grund etwas heller als das Firmengruen */
+  --warn:#E5806D;
+  --z0:#102117;
+  --z1:#16301F;
+  --tick:#1A3522;
+  --linie:rgba(255,255,255,.30);
+
+  /* Seitenspalte */
+  --side:#0E2A1B;
+  --side-text:#EEF3EA;
+  --side-muted:rgba(238,243,234,.62);
+  --side-active:#00A94F;
+  --side-active-text:#FFFFFF;
+  --side-line:rgba(255,255,255,.12);
+}
+
+/* Hell: Variante D – heller Arbeitsbereich, Seitenspalte im Firmengruen */
+body.hell{
+  --bg:#F2F5F2;
+  --surface:#FFFFFF;
+  --surface-2:#E9EEE9;
+  --surface-3:#DEE7DF;
+  --line:#DBE2DB;
+  --line-soft:#E7EDE7;
+  --text:#12211A;
+  --muted:#5F726A;
+  --faint:#8B9A93;
+  --accent:#00A94F;
+  --warn:#C9503F;
+  --z0:#FBFCFB;
+  --z1:#F0F4F0;
+  --tick:#E9EEE9;
+  --linie:rgba(0,0,0,.22);
+
+  --side:#00A94F;
+  --side-text:#FFFFFF;
+  --side-muted:rgba(255,255,255,.80);
+  --side-active:#FFFFFF;
+  --side-active-text:#007D3A;
+  --side-line:rgba(255,255,255,.24);
+}
+
+
+/* ---------- 2  Seitenspalte ------------------------------- */
+
+.drawer{
+  background:var(--side);
+  color:var(--side-text);
+  border-color:var(--side-line);
+}
+.drawer .konto{border-bottom-color:var(--side-line)}
+.drawer .konto .ktext b{color:var(--side-text)}
+.drawer .konto .ktext span{color:var(--side-muted)}
+.drawer .konto button{
+  background:transparent;
+  border-color:var(--side-line);
+  color:var(--side-muted);
+}
+.drawer .konto button:hover{border-color:var(--side-text);color:var(--side-text)}
+.navliste.unten{border-top-color:var(--side-line)}
+
+.navlink{color:var(--side-text);font-weight:500}
+.navlink .mic{color:var(--side-muted)}
+.navlink:hover{background:rgba(255,255,255,.12)}
+.navlink[aria-current="page"]{
+  background:var(--side-active);
+  color:var(--side-active-text);
+  font-weight:700;
+}
+.navlink[aria-current="page"] .mic{color:var(--side-active-text)}
+
+/* Logo oben in der Seitenspalte */
+.brandbox{
+  display:flex;align-items:center;gap:11px;
+  padding:4px 12px 14px;
+}
+.brandbox .duese{width:34px;height:34px;flex:none;color:var(--side-text)}
+.brandbox .btext{line-height:1.1}
+.brandbox .btext b{display:block;font-size:1.02rem;font-weight:800;letter-spacing:-.03em}
+.brandbox .btext span{
+  display:block;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--side-muted);margin-top:3px;
+}
+
+
+/* ---------- 3  Feste Seitenspalte ab 1100 px -------------- */
+
+@media (min-width:1100px){
+
+  /* Platz fuer die Spalte schaffen – nur der normale Seiteninhalt
+     rueckt nach rechts, Overlays wie Login und Fenster bleiben mittig */
+  body{padding-left:266px}
+
+  /* aus der Schublade wird eine feste Spalte */
+  .drawer{
+    top:0;bottom:0;left:0;
+    width:266px;
+    border-radius:0;
+    border:0;
+    border-right:1px solid var(--side-line);
+    padding-top:22px;
+    transform:none !important;
+  }
+  .burger{display:none}
+  .scrim{display:none !important}
+
+  /* Kopfleiste schlanker, Name der App immer sichtbar */
+  .topbar{
+    min-height:calc(56px + env(safe-area-inset-top));
+    padding-top:calc(10px + env(safe-area-inset-top));
+    padding-bottom:10px;
+  }
+  .topbar .mark{opacity:1;transform:none;font-size:.9rem;color:var(--muted)}
+
+  /* Kopfbereich linksbuendig statt mittig */
+  .hero{
+    text-align:left;
+    align-items:flex-start;
+    padding:22px 0 16px;
+  }
+  .hero h1,.hero .streifen,.hero .logomark{display:none}
+  .pagetitle{
+    margin-top:0;
+    background:none;
+    padding:0;
+    font-size:1.85rem;
+    font-weight:800;
+    letter-spacing:-.035em;
+    text-transform:none;
+    color:var(--text);
+  }
+
+  /* Wochenwahl nicht ueber die volle Breite ziehen */
+  .weekbar{max-width:520px}
+  .wochenaktion{display:flex;gap:10px;justify-content:flex-start}
+  .todaybtn{margin:0 0 16px}
+}
+
+
+/* ---------- 4  Kalender ----------------------------------- */
+
+/* Auf breiten Bildschirmen passt die Woche jetzt ohne
+   seitliches Schieben ins Bild – die Spalten teilen sich
+   den Platz, der durch die feste Seitenspalte uebrig bleibt. */
+@media (min-width:1100px){
+  .grid{
+    grid-template-columns:126px repeat(7,minmax(104px,1fr));
+    min-width:854px;
+  }
+  .board{padding:12px}
+  .slot{min-height:50px}
+}
+
+/* Sehr breite Bildschirme: etwas mehr Luft je Termin */
+@media (min-width:1500px){
+  .grid{grid-template-columns:150px repeat(7,minmax(130px,1fr))}
+  .slot{min-height:56px}
+}
+
+
+/* ---------- 5  Kleinigkeiten ------------------------------ */
+
+/* Der Farbstreifen bleibt als Erkennungszeichen, aber ruhiger */
+.streifen i{height:4px;border-radius:2px}
+
+/* Logo im Kopfbereich (nur Handy und Hochformat) */
+.logomark{width:52px;height:52px;color:var(--accent);margin-bottom:10px}
+.logomark svg{width:100%;height:100%}
+
+/* Runde Ecken durchgaengig etwas weicher */
+:root,body.hell{
+  --r-xl:24px;--r-lg:18px;--r:13px;--r-sm:10px;
+}
+
+/* Kopfzeilen des Rasters im Firmengruen */
+.corner,.dayhead{background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
+.dayhead.is-today{background:var(--accent);color:#fff}
+.dayhead.is-today small{color:rgba(255,255,255,.82)}
+
+/* Auf hellem Grund braucht der aktive Menuepunkt keinen Schatten */
+body.hell .navlink[aria-current="page"]{box-shadow:none}
+
+
+/* ---------- 6  Druck ------------------------------------- */
+/* Beim PDF-Export darf die Seitenspalte keinen Platz belegen */
+@media print{
+  body{padding-left:0 !important}
+  .drawer{display:none !important}
+}
