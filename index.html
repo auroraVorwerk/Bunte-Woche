@@ -5739,7 +5739,7 @@ function renderMenu(){
        <button id="logoutBtn">Abmelden</button>` : "";
   const lo = document.getElementById('logoutBtn');
   if(lo) lo.onclick = logout;
-  const k = (location.hash.slice(1) || "planer");
+  const k = (location.hash.slice(1) || "heute");
   document.querySelectorAll('.navlink').forEach(a=>
     a.dataset.page === k ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
 }
@@ -6412,7 +6412,7 @@ scrim.onclick = ()=> setMenu(false);
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') setMenu(false); });
 
 function show(k){
-  if(!PAGES[k]) k='planer';
+  if(!PAGES[k]) k='heute';
   if((k==='team'||k==='kbdelete') && !istTeamleiter()) k='planer';
   document.getElementById('pagetitle').textContent = PAGES[k];
   document.title = 'Digitaler Businessplan – '+PAGES[k];
