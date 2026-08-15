@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#262624">
+<meta name="theme-color" content="#0C1A13">
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Digitaler Businessplan">
-<title>Digitaler Businessplan</title>
+<title>Digitaler Businessplan – Test</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -404,6 +404,8 @@ i.bvor{background:var(--surface-3)}
 .zfuss .btn{flex:1 1 0;min-width:0;padding:15px 8px;font-size:.82rem}
 .zfuss.drei .btn{font-size:.76rem;padding:15px 6px}
 .zform{flex:1;overflow-y:auto;margin-top:4px;padding-right:2px}
+.zform .vorschlagfeld{position:relative}
+.zform .vorschlaege{z-index:95}
 .zform .field{margin-bottom:12px}
 .zform .row2{margin-bottom:0}
 .zfhinweis{font-size:.78rem;color:var(--muted);line-height:1.5;margin:0 0 16px}
@@ -891,6 +893,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<link rel="stylesheet" href="ui.css">
 </head>
 <body>
 
@@ -905,6 +908,20 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 </header>
 <div class="scrim" id="scrim"></div>
 <nav class="drawer" id="drawer" aria-label="Hauptmenü">
+  <div class="brandbox">
+  <svg class="duese" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <path d="M11 24h42a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V28a4 4 0 0 1 4-4z" fill="currentColor"/>
+      <rect x="27" y="9" width="10" height="16" rx="5" fill="currentColor"/>
+      <rect x="12.0" y="41.0" width="3.4" height="4.0" rx="1.7" fill="#F26D5B"/>
+      <rect x="17.9" y="38.8" width="3.4" height="6.2" rx="1.7" fill="#F2A65A"/>
+      <rect x="23.8" y="36.6" width="3.4" height="8.4" rx="1.7" fill="#E9D16C"/>
+      <rect x="29.7" y="34.4" width="3.4" height="10.6" rx="1.7" fill="#9CC08B"/>
+      <rect x="35.6" y="32.2" width="3.4" height="12.8" rx="1.7" fill="#77CDF5"/>
+      <rect x="41.5" y="30.0" width="3.4" height="15.0" rx="1.7" fill="#9A6CE8"/>
+      <rect x="47.4" y="27.8" width="3.4" height="17.2" rx="1.7" fill="#E8C4F2"/>
+    </svg>
+    <div class="btext"><b>Businessplan</b><span>Digital</span></div>
+  </div>
   <div class="konto" id="drawerFoot"></div>
   <div class="navliste" id="navHaupt"></div>
   <div class="navliste unten" id="navTL"></div>
@@ -912,6 +929,17 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
 <main class="wrap">
   <div class="hero">
+    <div class="logomark" aria-hidden="true"><svg class="duese" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <path d="M11 24h42a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V28a4 4 0 0 1 4-4z" fill="currentColor"/>
+    <rect x="27" y="9" width="10" height="16" rx="5" fill="currentColor"/>
+    <rect x="12.0" y="41.0" width="3.4" height="4.0" rx="1.7" fill="#F26D5B"/>
+    <rect x="17.9" y="38.8" width="3.4" height="6.2" rx="1.7" fill="#F2A65A"/>
+    <rect x="23.8" y="36.6" width="3.4" height="8.4" rx="1.7" fill="#E9D16C"/>
+    <rect x="29.7" y="34.4" width="3.4" height="10.6" rx="1.7" fill="#9CC08B"/>
+    <rect x="35.6" y="32.2" width="3.4" height="12.8" rx="1.7" fill="#77CDF5"/>
+    <rect x="41.5" y="30.0" width="3.4" height="15.0" rx="1.7" fill="#9A6CE8"/>
+    <rect x="47.4" y="27.8" width="3.4" height="17.2" rx="1.7" fill="#E8C4F2"/>
+  </svg></div>
     <h1>Digitaler<span>Businessplan</span></h1>
     <div class="streifen" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     <div class="pagetitle" id="pagetitle">Planer</div>
@@ -2206,8 +2234,8 @@ function paint(){
            `<option value="${a}" ${(n.f_anrede||"")===a?"selected":""}>${a||"kein Eintrag"}</option>`).join("")}</select></div>
        <div class="row2">
          <div class="field vorschlagfeld" style="flex:1 1 65%"><label for="f_str">Straße</label>
-           <input id="f_str" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
-           <div class="vorschlaege" id="strVorschlaege" hidden></div></div>
+           <input id="f_str" data-adr="f" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
+           <div class="vorschlaege" id="f_vorschlaege" hidden></div></div>
          <div class="field" style="flex:0 0 30%"><label for="f_hnr">Hausnummer</label>
            <input id="f_hnr" value="${n.f_hnr||""}" autocomplete="off" spellcheck="false"></div>
        </div>
@@ -2780,7 +2808,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v25 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v26 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4660,7 +4688,7 @@ document.addEventListener('click', ev=>{
 /* Nutzt Photon (OpenStreetMap) – kein Schlüssel, keine Anmeldung nötig */
 let adrTimer = null, adrLetzte = "", adrZiel = "f";
 var adrZielFeld = null;                 // fängt Koordinaten außerhalb der Terminmaske auf
-const adrBox = () => document.getElementById(adrZiel === "f" ? 'strVorschlaege' : adrZiel + '_vorschlaege');
+const adrBox = () => document.getElementById(adrZiel + '_vorschlaege');
 function adrSchliessen(){
   document.querySelectorAll('.vorschlaege').forEach(b=>{ b.hidden = true; b.innerHTML = ""; });
 }
@@ -5877,7 +5905,7 @@ function themaSetzen(t, sichern){
   if(sichern && me){ me.thema = t; userSet(me).catch(()=>{}); }
   document.body.classList.toggle('hell', t === "Hell");
   const meta = document.querySelector('meta[name="theme-color"]');
-  if(meta) meta.setAttribute('content', t === "Hell" ? "#f5f4f1" : "#262624");
+  if(meta) meta.setAttribute('content', t === "Hell" ? "#00A94F" : "#0C1A13");
 }
 themaSetzen(store.get('bw-thema') || "Dunkel");
 
@@ -6066,12 +6094,14 @@ function zaehlZeichnen(){
           <div class="field"><label for="zkNach">Nachname</label><input id="zkNach"></div>
         </div>
         <div class="row2">
-          <div class="field" style="flex:1 1 65%"><label for="zkStr">Straße</label><input id="zkStr"></div>
-          <div class="field" style="flex:0 0 30%"><label for="zkHnr">Nr.</label><input id="zkHnr"></div>
+          <div class="field vorschlagfeld" style="flex:1 1 65%"><label for="zk_str">Straße</label>
+            <input id="zk_str" data-adr="zk" autocomplete="off" spellcheck="false">
+            <div class="vorschlaege" id="zk_vorschlaege" hidden></div></div>
+          <div class="field" style="flex:0 0 30%"><label for="zk_hnr">Nr.</label><input id="zk_hnr"></div>
         </div>
         <div class="row2">
-          <div class="field" style="flex:0 0 42%"><label for="zkPlz">PLZ</label><input id="zkPlz" inputmode="numeric" maxlength="5"></div>
-          <div class="field"><label for="zkOrt">Ort</label><input id="zkOrt"></div>
+          <div class="field" style="flex:0 0 42%"><label for="zk_plz">PLZ</label><input id="zk_plz" inputmode="numeric" maxlength="5"></div>
+          <div class="field"><label for="zk_ort">Ort</label><input id="zk_ort"></div>
         </div>
         <div class="field"><label for="zkTel">Telefon</label><input id="zkTel" inputmode="tel"></div>
         <div class="field"><label for="zkWieder">Wieder ansprechen am</label>
@@ -6088,9 +6118,9 @@ function zaehlZeichnen(){
       const w = id => (document.getElementById(id).value||"").trim();
       const err = document.getElementById('zkErr');
       if(!w('zkNach')){ err.textContent = "Ohne Nachnamen geht es nicht."; err.hidden = false; return; }
-      const p = {vorname:w('zkVor'), nachname:w('zkNach'), str:w('zkStr'), hnr:w('zkHnr'),
-                 strasse:[w('zkStr'),w('zkHnr')].filter(Boolean).join(" "),
-                 plz:w('zkPlz'), ort:w('zkOrt'), telefon:w('zkTel'),
+      const p = {vorname:w('zkVor'), nachname:w('zkNach'), str:w('zk_str'), hnr:w('zk_hnr'),
+                 strasse:[w('zk_str'),w('zk_hnr')].filter(Boolean).join(" "),
+                 plz:w('zk_plz'), ort:w('zk_ort'), telefon:w('zkTel'),
                  potenzial:[...BESITZ], grund:w('zkNotiz') || `Angesprochen bei ${z.quelle}`,
                  quelle:z.quelle, datum:dk(new Date())};
       if(w('zkWieder')) p.wieder = w('zkWieder');
