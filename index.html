@@ -892,8 +892,39 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   .tagbar button{font-size:.72rem;padding:8px 1px 7px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Zentrierung in den Kacheln =====================================
+   Steht bewusst hier und nicht nur in der ui.css: so wirkt es auch dann,
+   wenn der Browser die ui.css noch aus dem Zwischenspeicher holt. */
+.asec, .asec > *,
+.kpis, .kpis > *,
+.kpi, .kpi > *, .kpi span, .kpi b,
+.zsec, .zsec > *,
+.rangebar, .rangebar > *,
+.summary, .summary *,
+.fazit, .fazit *,
+.zstufe, .zstufe *,
+.metric, .metric *,
+.atable th, .atable td,
+.meld td{ text-align:center !important; }
+
+/* Ausnahmen, wo Mittigkeit das Lesen erschwert */
+.asec .navlink,
+.asec select,
+.asec textarea,
+.asec input[type=date],
+.asec input[type=time],
+.asec .invzeile,
+.asec .invzeile .nm,
+.asec .stat tr.dayrow td{ text-align:left !important; }
+.asec .invzeile .pr{ text-align:right !important; }
+
+/* K70 Inventur: Warenbestand steht oben und darf aussen sitzen */
+.invsumme{ justify-content:space-between !important; margin:0 0 18px; }
+.invsumme span{ text-align:left !important; }
+.invsumme b{ text-align:right !important; font-size:1.25rem; }
 </style>
-<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="ui.css?v=31">
 </head>
 <body>
 
@@ -2824,7 +2855,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v26 · 14.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v31 · 15.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
