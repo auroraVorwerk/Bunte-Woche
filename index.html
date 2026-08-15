@@ -4887,13 +4887,13 @@ function renderInventur(){
   box.innerHTML = `
     <div class="asec">
       <h3>K70 Inventur</h3>
+      <div class="invsumme"><span>Warenbestand gesamt</span><b>${preis(bestandWert())} €</b></div>
       <p class="sub">Warenbestand nach Kategorien des Shops — Reihenfolge wie im Original.</p>
       <div class="field vorschlagfeld">
         <input id="invSuche" value="${invSuche}" placeholder="Artikel oder Preis suchen" autocomplete="off" inputmode="search">
         <div class="vorschlaege" id="invVorschlaege" hidden></div>
       </div>
       <p class="hinweis" id="invTreffer" hidden></p>
-      <div class="invsumme"><span>Warenbestand gesamt</span><b>${preis(bestandWert())} €</b></div>
       <div class="actions"><button type="button" class="btn" id="invAlle">Alle Kategorien auf- oder zuklappen</button></div>
     </div>
     <div class="asec invliste" id="invliste">${liste}</div>
