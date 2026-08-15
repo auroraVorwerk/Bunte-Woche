@@ -1,14 +1,15 @@
 {
-  "name": "Bunte Woche",
-  "short_name": "Bunte Woche",
-  "start_url": "./index.html",
-  "scope": "./",
+  "name": "Businessplan Test",
+  "short_name": "BP Test",
+  "description": "Testfassung des digitalen Businessplans mit neuer Oberflaeche",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
-  "background_color": "#262624",
-  "theme_color": "#262624",
-  "lang": "de",
+  "orientation": "any",
+  "background_color": "#0C1A13",
+  "theme_color": "#00A94F",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "../icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
