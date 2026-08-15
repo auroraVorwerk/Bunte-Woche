@@ -1,0 +1,415 @@
+/* =============================================================
+   Digitaler Businessplan – Designebene "Firmengrün" (Variante D)
+   -------------------------------------------------------------
+   Diese Datei enthaelt AUSSCHLIESSLICH Gestaltung.
+   Sie wird nach dem <style>-Block der index.html geladen und
+   ueberschreibt ihn deshalb. Keine Funktion wird beruehrt:
+   es gibt hier keine Zeile JavaScript und keine neuen Elemente
+   ausser dem Logo im Menue und im Kopf.
+
+   Aufbau:
+     1  Farbwerte dunkel / hell
+     2  Seitenspalte in Firmengruen
+     3  Feste Seitenspalte ab 1100 px (iPad quer, PC)
+     4  Kopfbereich und Seitentitel
+     5  Kalender – nutzt die neue Breite aus
+     6  Kleinigkeiten (Knoepfe, Karten, Logo)
+
+   Terminfarben werden hier NICHT angefasst. Die Legende und
+   alle farbigen Terminbloecke kommen weiterhin aus der App.
+   ============================================================= */
+
+
+/* ---------- 1  Farbwerte ---------------------------------- */
+
+/* Dunkel: Waldgruen wie das alte Geraet, Firmengruen als Akzent */
+:root{
+  --bg:#0C1A13;
+  --surface:#122419;
+  --surface-2:#173021;
+  --surface-3:#1E3D29;
+  --line:#1F3D29;
+  --line-soft:#17301F;
+  --text:#EEF3EA;
+  --muted:#8CA697;
+  --faint:#6C8578;
+  --accent:#22B463;          /* auf dunklem Grund etwas heller als das Firmengruen */
+  --warn:#E5806D;
+  --z0:#102117;
+  --z1:#16301F;
+  --tick:#1A3522;
+  --linie:rgba(255,255,255,.30);
+
+  /* Seitenspalte */
+  --side:#0E2A1B;
+  --side-text:#EEF3EA;
+  --side-muted:rgba(238,243,234,.62);
+  --side-active:#00A94F;
+  --side-active-text:#FFFFFF;
+  --side-line:rgba(255,255,255,.12);
+}
+
+/* Hell: Variante D – heller Arbeitsbereich, Seitenspalte im Firmengruen */
+body.hell{
+  --bg:#F2F5F2;
+  --surface:#FFFFFF;
+  --surface-2:#E9EEE9;
+  --surface-3:#DEE7DF;
+  --line:#DBE2DB;
+  --line-soft:#E7EDE7;
+  --text:#12211A;
+  --muted:#5F726A;
+  --faint:#8B9A93;
+  --accent:#00A94F;
+  --warn:#C9503F;
+  --z0:#FBFCFB;
+  --z1:#F0F4F0;
+  --tick:#E9EEE9;
+  --linie:rgba(0,0,0,.22);
+
+  --side:#00A94F;
+  --side-text:#FFFFFF;
+  --side-muted:rgba(255,255,255,.80);
+  --side-active:#FFFFFF;
+  --side-active-text:#007D3A;
+  --side-line:rgba(255,255,255,.24);
+}
+
+
+/* ---------- 2  Seitenspalte ------------------------------- */
+
+.drawer{
+  background:var(--side);
+  color:var(--side-text);
+  border-color:var(--side-line);
+}
+.drawer .konto{border-bottom-color:var(--side-line)}
+.drawer .konto .ktext b{color:var(--side-text)}
+.drawer .konto .ktext span{color:var(--side-muted)}
+.drawer .konto button{
+  background:transparent;
+  border-color:var(--side-line);
+  color:var(--side-muted);
+}
+.drawer .konto button:hover{border-color:var(--side-text);color:var(--side-text)}
+.navliste.unten{border-top-color:var(--side-line)}
+
+.navlink{color:var(--side-text);font-weight:500}
+.navlink .mic{color:var(--side-muted)}
+.navlink:hover{background:rgba(255,255,255,.12)}
+.navlink[aria-current="page"]{
+  background:var(--side-active);
+  color:var(--side-active-text);
+  font-weight:700;
+}
+.navlink[aria-current="page"] .mic{color:var(--side-active-text)}
+
+/* Logo oben in der Seitenspalte */
+.brandbox{
+  display:flex;align-items:center;gap:11px;
+  padding:4px 12px 14px;
+}
+.brandbox .duese{width:34px;height:34px;flex:none;color:var(--side-text)}
+.brandbox .btext{line-height:1.1}
+.brandbox .btext b{display:block;font-size:1.02rem;font-weight:800;letter-spacing:-.03em}
+.brandbox .btext span{
+  display:block;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--side-muted);margin-top:3px;
+}
+
+
+/* ---------- 3  Feste Seitenspalte ab 1100 px -------------- */
+
+@media (min-width:1100px){
+
+  /* Platz fuer die Spalte schaffen – nur der normale Seiteninhalt
+     rueckt nach rechts, Overlays wie Login und Fenster bleiben mittig */
+  body{padding-left:266px}
+
+  /* aus der Schublade wird eine feste Spalte */
+  .drawer{
+    top:0;bottom:0;left:0;
+    width:266px;
+    border-radius:0;
+    border:0;
+    border-right:1px solid var(--side-line);
+    padding-top:22px;
+    transform:none !important;
+  }
+  .burger{display:none}
+  .scrim{display:none !important}
+
+  /* Kopfleiste schlanker, Name der App immer sichtbar */
+  .topbar{
+    min-height:calc(56px + env(safe-area-inset-top));
+    padding-top:calc(10px + env(safe-area-inset-top));
+    padding-bottom:10px;
+  }
+  .topbar .mark{opacity:1;transform:none;font-size:.9rem;color:var(--muted)}
+
+  /* Kopfbereich linksbuendig statt mittig */
+  .hero{
+    text-align:left;
+    align-items:flex-start;
+    padding:22px 0 16px;
+  }
+  .hero h1,.hero .streifen,.hero .logomark{display:none}
+  .pagetitle{
+    margin-top:0;
+    background:none;
+    padding:0;
+    font-size:1.85rem;
+    font-weight:800;
+    letter-spacing:-.035em;
+    text-transform:none;
+    color:var(--text);
+  }
+
+  /* Wochenwahl nicht ueber die volle Breite ziehen */
+  .weekbar{max-width:520px}
+  .wochenaktion{display:flex;gap:10px;justify-content:flex-start}
+  .todaybtn{margin:0 0 16px}
+}
+
+
+/* ---------- 4  Kalender ----------------------------------- */
+
+/* Auf breiten Bildschirmen passt die Woche jetzt ohne
+   seitliches Schieben ins Bild – die Spalten teilen sich
+   den Platz, der durch die feste Seitenspalte uebrig bleibt. */
+@media (min-width:1100px){
+  .grid{
+    grid-template-columns:126px repeat(7,minmax(104px,1fr));
+    min-width:854px;
+  }
+  .board{padding:12px}
+  .slot{min-height:50px}
+}
+
+/* Sehr breite Bildschirme: etwas mehr Luft je Termin */
+@media (min-width:1500px){
+  .grid{grid-template-columns:150px repeat(7,minmax(130px,1fr))}
+  .slot{min-height:56px}
+}
+
+
+/* ---------- 5  Kleinigkeiten ------------------------------ */
+
+/* Der Farbstreifen bleibt als Erkennungszeichen, aber ruhiger */
+.streifen i{height:4px;border-radius:2px}
+
+/* Logo im Kopfbereich (nur Handy und Hochformat) */
+.logomark{width:52px;height:52px;color:var(--accent);margin-bottom:10px}
+.logomark svg{width:100%;height:100%}
+
+/* Runde Ecken durchgaengig etwas weicher */
+:root,body.hell{
+  --r-xl:24px;--r-lg:18px;--r:13px;--r-sm:10px;
+}
+
+/* Kopfzeilen des Rasters im Firmengruen */
+.corner,.dayhead{background:color-mix(in srgb,var(--accent) 18%,var(--surface))}
+.dayhead.is-today{background:var(--accent);color:#fff}
+.dayhead.is-today small{color:rgba(255,255,255,.82)}
+
+/* Auf hellem Grund braucht der aktive Menuepunkt keinen Schatten */
+body.hell .navlink[aria-current="page"]{box-shadow:none}
+
+
+/* ---------- 6  Druck ------------------------------------- */
+/* Beim PDF-Export darf die Seitenspalte keinen Platz belegen */
+@media print{
+  body{padding-left:0 !important}
+  .drawer{display:none !important}
+}
+
+
+/* =============================================================
+   7  Kachel-Optik
+   Alle Karten der App bekommen dieselbe Sprache: heller Grund,
+   feine Umrandung, weicher Schatten, groessere Ecken. Damit
+   sieht jede Seite aus wie der Entwurf, nicht nur die Startseite.
+   ============================================================= */
+
+/* Umrandung fuer alles, was eine Karte ist */
+.asec,.pcard,.kcard,.smkarte,.empkarte,.tkarte,.fbkarte,.wkarte,.tuzeile,
+.rangebar,.board,.summary,.sect.boxed,.rufzeile,.statuszeile,.faq,
+.kpi,.grp,.korbzeile,.smsumme,.kdhinweis,.tourpunkte,.zkachel,.metric{
+  border:1px solid var(--line);
+}
+
+/* Weicher Schatten – nur auf hellem Grund, sonst wird es matschig */
+body.hell .asec,body.hell .pcard,body.hell .empkarte,body.hell .wkarte,
+body.hell .tuzeile,body.hell .rangebar,body.hell .board,body.hell .faq,
+body.hell .kpi,body.hell .zkachel,body.hell .weekbar,body.hell .statuszeile{
+  box-shadow:0 1px 2px rgba(18,33,26,.04), 0 8px 22px rgba(18,33,26,.05);
+}
+/* Karten mit farbigem Streifen behalten ihn und bekommen den Schatten dazu */
+body.hell .tkarte{box-shadow:inset 4px 0 0 var(--c), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .kcard{box-shadow:0 8px 22px rgba(18,33,26,.05)}
+body.hell .kcard.istkunde{box-shadow:inset 3px 0 0 var(--accent), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .smkarte{box-shadow:0 8px 22px rgba(18,33,26,.05)}
+body.hell .smkarte.hatumsatz{box-shadow:inset 3px 0 0 var(--accent), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .fbkarte.business{box-shadow:inset 3px 0 0 var(--accent), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .fbkarte.privat{box-shadow:inset 3px 0 0 var(--faint), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .rufzeile{box-shadow:inset 3px 0 0 var(--accent), 0 8px 22px rgba(18,33,26,.05)}
+body.hell .rufzeile.reminder{box-shadow:inset 3px 0 0 #E8C4F2, 0 8px 22px rgba(18,33,26,.05)}
+
+/* Anfassbare Karten heben sich leicht an */
+.pcard:hover,.kcard:hover,.fbkarte:hover,.wkarte:hover,.zkachel:hover{transform:translateY(-2px)}
+.pcard,.kcard,.fbkarte,.wkarte{transition:transform .15s, border-color .15s, box-shadow .15s}
+
+/* Abschnittsueberschrift bekommt einen kurzen gruenen Strich */
+.asec > h3::after{
+  content:"";display:block;width:36px;height:3px;border-radius:2px;
+  background:var(--accent);margin:11px auto 0;
+}
+.zsec > h3::after{content:none}   /* dort steht die Ueberschrift in einer Zeile */
+
+/* Kennzahl-Kacheln wie im Entwurf: Bezeichnung klein, Zahl gross */
+.kpi{padding:18px 16px}
+.kpi .kv{color:var(--text)}
+.kpi.hero{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.kpi.hero .kv{color:var(--accent)}
+
+/* Wochenraster und Termine als Kacheln */
+.slot{border-radius:var(--r)}
+.metric{border-radius:var(--r)}
+.dayhead,.corner{border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
+
+
+/* =============================================================
+   8  Zentrierung
+   Alles, was in einer Kachel steht, sitzt mittig. Ausgenommen
+   bleiben nur Stellen, an denen das Lesen darunter leidet:
+   das Menue, lange Fliesstexte und die Zeilen der Inventur.
+   ============================================================= */
+
+/* Karteninhalte */
+.pcard,.kcard,.smkarte,.empkarte,.wkarte,.fbkarte,.tuzeile,.rufzeile,
+.tkarte,.kdvorschlag,.summary,.korbzeile,.smsumme,.kdhinweis,.faq summary,
+.grp,.sect.boxed,.metriclbl,.slot,.statuszeile{
+  text-align:center;
+}
+
+/* Zeilen innerhalb der Karten mittig ausrichten */
+.pcard .pot,.pcard .pact,.smchips,.smzahlen,.kcard .kzahlen,.taktion,.raktion,
+.woffen,.actions,.zfuss,.laufzeile,.smkopf,.fbkopf,.tumon,.empkarte .ekopf,
+.statuszeile,.fbstrecke,.korbzeile,.chips{
+  justify-content:center;
+}
+.kcard .kzahlen span,.smzahlen span{align-items:center}
+.statuszeile b{text-align:center}
+.fbstrecke span{text-align:center}
+.nbkurz{text-align:center}
+.invkat .kn{text-align:center}
+
+/* Der Termin auf der Heute-Seite: Uhrzeit ueber dem Namen statt daneben */
+.tkarte{flex-direction:column;gap:8px}
+.tzeit{width:auto}
+.tzeit span{display:inline;margin-left:6px}
+
+/* Zitatstriche werden zu Trennlinien, damit der Text mittig stehen kann */
+.pcard .why,.tnotiz{
+  border-left:0;border-top:1px solid var(--line-soft);
+  padding:11px 0 0;margin-top:12px;
+}
+
+/* Formulare */
+.field label,.lb{text-align:center}
+.field input{text-align:center}
+.field input[type=date],.field input[type=time],.field select,.field textarea{text-align:left}
+
+/* Aufklappbare Abschnitte: Titel wirklich mittig, Pfeil bleibt rechts */
+.klappkopf{text-align:center}
+.klappkopf::before{content:"";flex:none;width:1.1rem}
+
+/* Kleine Tabelle der Auswertungen */
+.atable th,.atable td,.atable th:first-child,.atable td:first-child{text-align:center}
+
+/* Statistik: Name und Summenzeile mittig wie der Rest der Tabelle */
+.stat td.name,.stat tr.sum td.lbl{text-align:center}
+
+/* Hinweise und Fusszeilen */
+.hint,.hinweis,.statnote,.zfhinweis,.kdh1,.fbtag,.tspanne{text-align:center}
+.smtag{margin-left:auto;margin-right:auto}
+.fbtag,.h4,.ah4{width:100%}
+
+/* Ausgenommen: das Menue bleibt linksbuendig, sonst springen die Symbole */
+.navlink,.brandbox,.konto{text-align:left}
+.konto .ktext{text-align:left}
+
+
+/* =============================================================
+   9  Untere Leiste am Handy
+   Vier Direktpunkte plus "Mehr" fuer das vollstaendige Menue.
+   Ab 1100 px verschwindet sie – dort steht die Seitenspalte.
+   ============================================================= */
+
+.tabbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:44;
+  display:flex;
+  background:color-mix(in srgb,var(--surface) 94%,transparent);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);
+  padding:8px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.tabbar .tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:none;border:0;padding:6px 2px;cursor:pointer;
+  color:var(--faint);text-decoration:none;border-radius:var(--r);
+}
+.tabbar .tab i{font-style:normal;font-size:.62rem;font-weight:600;letter-spacing:.02em}
+.tabbar .tab .mic{width:22px;height:22px;color:inherit}
+.tabbar .tab .mic svg{width:22px;height:22px}
+.tabbar .tab:hover{background:none;color:var(--muted)}
+.tabbar .navlink[aria-current="page"]{
+  background:none;color:var(--accent);font-weight:600;
+}
+.tabbar .navlink[aria-current="page"] .mic{color:var(--accent)}
+
+/* Platz, damit die Leiste nichts verdeckt */
+.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+
+@media (min-width:1100px){
+  .tabbar{display:none}
+  .wrap{padding-bottom:calc(56px + env(safe-area-inset-bottom))}
+}
+@media print{ .tabbar{display:none !important} }
+
+
+/* =============================================================
+   10  Nachbesserungen zur Zentrierung
+   ============================================================= */
+
+/* Vertriebswoche in der Ecke des Rasters */
+.corner{align-items:center;text-align:center}
+
+/* K70 Verkauf / Einkauf und die uebrigen Kennzahlenbeschriftungen */
+.metriclbl{align-items:center;text-align:center}
+.metriclbl small{width:100%}
+
+/* Ampelpunkt sitzt mittig unter der Beschriftung statt daneben */
+.ampel{margin:5px 0 0}
+
+/* Der KW-Regler nutzt die volle Breite */
+.weekbar{max-width:none}
+.weeklabel{flex:1}
+
+/* Zeilen mit Beschriftung links und Wert rechts: beides mittig */
+.hzeile,.ntzeile,.standzeile,.invsumme,.zzeile,.tk-kopf,.smkopf,.tumon,.zkopf{
+  justify-content:center;text-align:center;
+}
+.hzeile .hinfo{text-align:center}
+.zzeile .ztitel,.ntzeile>span:first-child,.ntwerte{flex:none;text-align:center}
+.mlbl{text-align:center}
+
+/* Fazit der Auswertungen: Strich nach oben, damit der Text mittig steht */
+.fazit{border-left:0;border-top:3px solid var(--accent);padding-left:16px;text-align:center}
+.fazit.leer{border-top-color:var(--line)}
+
+/* Balkendiagramme und ihre Zahlen */
+.bgruppe span,.zstufe,.blegende{text-align:center}
+
+/* Striche statt Werte ("–") stehen jetzt ueberall mittig */
+.kpi .kv,.kpi .ks,.kpi .kl,.wkarte .wval,.zstufe b,.zstufe span{text-align:center}
