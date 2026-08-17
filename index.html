@@ -909,8 +909,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .fazit, .fazit *,
 .zstufe, .zstufe *,
 .metric, .metric *,
-.atable th, .atable td,
-.meld td{ text-align:center !important; }
+.atable th, .atable td{ text-align:center !important; }
 
 /* Ausnahmen, wo Mittigkeit das Lesen erschwert */
 .asec .navlink,
@@ -923,12 +922,37 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .asec .stat tr.dayrow td{ text-align:left !important; }
 .asec .invzeile .pr{ text-align:right !important; }
 
+/* ===== Wochenmeldung: Text links, Wert rechts ==========================
+   Gilt in jeder Breite - Handy, iPad und Teamansicht sehen gleich aus. */
+.meldung .ascroll{overflow-x:visible}
+.atable.meld{min-width:0!important;display:block}
+.meld tbody,.meld tr,.meld td{display:block;width:auto}
+.meld tr{display:flex;flex-wrap:wrap;align-items:baseline;
+  justify-content:space-between!important;gap:4px 14px;
+  background:var(--surface-2);border-radius:var(--r);padding:13px 16px;margin-bottom:8px;border:0}
+.meld tr:last-child{margin-bottom:0}
+.meld td,.atable.meld td{background:none!important;padding:0!important;border:0!important;border-radius:0!important}
+.meld td:first-child,.atable.meld td:first-child{flex:1 1 auto!important;min-width:0;width:auto!important;
+  text-align:left!important;font-family:"Manrope",sans-serif;font-weight:600;color:var(--text);
+  line-height:1.35;white-space:normal;overflow-wrap:anywhere}
+.meld td.v,.atable.meld td.v{flex:0 0 auto!important;width:auto!important;text-align:right!important;
+  font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--text);
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em;white-space:nowrap}
+.meld td.x,.atable.meld td.x{flex:1 1 100%!important;order:3;text-align:left!important;
+  font-family:"Manrope",sans-serif;color:var(--faint);font-size:.75rem;line-height:1.45;
+  margin-top:2px;white-space:normal}
+.meld td.x:empty{display:none}
+
+/* Steht nur ein Knopf in der Reihe, nimmt er die ganze Breite */
+.actions.einzeln{justify-content:stretch}
+.actions.einzeln .btn{flex:1 1 100%}
+
 /* K70 Inventur: Warenbestand steht oben und darf aussen sitzen */
 .invsumme{ justify-content:space-between !important; margin:0 0 18px; }
 .invsumme span{ text-align:left !important; }
 .invsumme b{ text-align:right !important; font-size:1.25rem; }
 </style>
-<link rel="stylesheet" href="ui.css?v=32">
+<link rel="stylesheet" href="ui.css?v=33">
 </head>
 <body>
 
@@ -4151,6 +4175,18 @@ async function teamVergleich(){
       </tr>`).join("")}</tbody></table></div>
   </div>`;
 }
+/* Teamleiter sehen Planer und Statistik nur in der Einarbeitungszeit.
+   Ab der 26. Woche nach dem Einstellungsdatum des Mitglieds bleiben nur
+   Potenzialliste (Download) und Wochenmeldung. Der Admin ist ausgenommen,
+   und ohne hinterlegtes Einstellungsdatum bleibt es beim vollen Zugriff. */
+const TM_WOCHEN = 26;
+function tmZugriff(){
+  if(istAdmin()) return {voll:true, datum:null, rest:null};
+  const datum = teamBlob && teamBlob.settings && teamBlob.settings.einstellung;
+  if(!datum) return {voll:true, datum:null, rest:null};
+  const wochen = Math.floor((Date.now() - fromDk(datum).getTime()) / (7*86400000));
+  return {voll: wochen < TM_WOCHEN, datum, rest: TM_WOCHEN - wochen};
+}
 function renderTeam(){
   const box = document.getElementById('tmViews');
   const bar = document.getElementById('tmWeekbar');
@@ -4168,15 +4204,23 @@ function renderTeam(){
     document.getElementById('tmRange').textContent = `${fmt(tage[0])} – ${fmt(tage[6])}`;
   }
   const v = fremdAnsicht();
-  box.innerHTML = `
-    <div class="tmblock"><div class="actions">
-      <button class="btn primary" id="tmPdf">Statistik als PDF</button>
-      <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>
-      <p class="hinweis">Statistik und Potenzialliste gibt es nur zum Herunterladen —
-        zum Ansehen reichen Planer und Wochenmeldung.</p></div>
-    <div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
-      <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>
-    ${v.meld}`;
+  const z = tmZugriff();
+  const kopf = z.voll
+    ? `<div class="tmblock"><div class="actions">
+        <button class="btn primary" id="tmPdf">Statistik als PDF</button>
+        <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>
+        <p class="hinweis">Statistik und Potenzialliste gibt es nur zum Herunterladen —
+        zum Ansehen reichen Planer und Wochenmeldung.${z.rest !== null
+          ? ` Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.` : ""}</p></div>`
+    : `<div class="tmblock"><div class="actions einzeln">
+        <button class="btn primary" id="tmPotDruck">Potenzialliste als PDF</button></div>
+        <p class="hinweis">${viewUser.name} ist länger als ${TM_WOCHEN} Wochen dabei — Planer und Statistik
+        sind ab jetzt nicht mehr einsehbar. Potenzialliste und Wochenmeldung bleiben.</p></div>`;
+  const planer = z.voll
+    ? `<div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
+        <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>`
+    : "";
+  box.innerHTML = kopf + planer + v.meld;
   const pd = document.getElementById('tmPotDruck');
   if(pd) pd.onclick = ()=> potDrucken(v.potListe, viewUser.name);
   const pdf = document.getElementById('tmPdf');
