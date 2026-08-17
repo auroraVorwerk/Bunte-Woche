@@ -2,7 +2,7 @@
    Die App selbst wird zwischengespeichert, die Daten holt Firebase.
    Bei der Versionsnummer eine Zahl hochzählen, wenn eine neue index.html
    ODER eine neue ui.css hochgeladen wird. */
-const VERSION = "bw-v32";
+const VERSION = "bw-v33";
 const DATEIEN = ["./", "./index.html", "./ui.css", "./manifest.json"];
 
 self.addEventListener("install", ev=>{
