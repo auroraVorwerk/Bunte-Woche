@@ -961,28 +961,22 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 .dskopf small{display:block;font-weight:400;font-size:8.5pt;color:var(--muted);font-family:"JetBrains Mono",monospace}
 
 @media print{
+  /* Auf dem Druckblatt steht wirklich nur das Blatt - alles andere waere
+     sonst eine zweite, halbleere Seite */
+  body.drucke-stat > *:not(.druckstat){display:none!important}
   body.drucke-stat main.wrap,body.drucke-stat .topbar,body.drucke-stat .drawer,body.drucke-stat .scrim,
   body.drucke-stat .modal,body.drucke-stat .login,body.drucke-stat .tabbar,body.drucke-stat .druckbereich,
   body.drucke-stat .savestate,body.drucke-stat .viewbanner{display:none!important}
-  body.drucke-stat{background:var(--bg)!important;color:var(--text)!important}
+  body.drucke-stat{background:var(--bg)!important;color:var(--text)!important;
+    margin:0!important;padding:0!important;height:auto!important;min-height:0!important}
+  html:has(body.drucke-stat){background:var(--bg)!important;height:auto!important;min-height:0!important}
   body.drucke-stat .druckstat{display:block!important;position:static!important;left:auto!important;top:auto!important;
     width:auto!important;max-width:none!important;z-index:auto!important;pointer-events:auto!important}
-  body.drucke-stat .dsblatt{overflow:hidden;page-break-inside:avoid;break-inside:avoid;
-    page-break-after:avoid;break-after:avoid}
+  body.drucke-stat .dsblatt{overflow:hidden;max-height:100vh;
+    page-break-inside:avoid;break-inside:avoid;page-break-after:avoid;break-after:avoid}
+  body.drucke-stat .dsflaeche{transform:scale(var(--ds-klein,.5))}
   .druckstat .stat td.sticky,.druckstat .stat th.sticky{position:static!important}
   .druckstat .pdfbtn{display:none!important}
-}
-/* Der Massstab haengt daran, was im Druckfenster wirklich eingestellt wird.
-   Hochformat ist der sichere Standard: passt notfalls immer. Querformat
-   nutzt die Breite dann voll aus. Die Hoehe kommt aus dem Inhalt, damit
-   nie eine zweite, leere Seite entsteht. */
-@media print{
-  body.drucke-stat .dsflaeche{transform:scale(var(--ds-hoch,1))}
-  body.drucke-stat .dsblatt{height:var(--ds-blatt-hoch,279mm)}
-}
-@media print and (orientation:landscape){
-  body.drucke-stat .dsflaeche{transform:scale(var(--ds-quer,1))}
-  body.drucke-stat .dsblatt{height:var(--ds-blatt-quer,192mm)}
 }
 
 /* ===== K70: Katalogpflege durch den Admin ============================= */
@@ -1136,6 +1130,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 
 <div id="druckPot" class="druckbereich"></div>
 <div id="druckStat" class="druckstat" aria-hidden="true"></div>
+<style id="druckMass"></style>
 
 <nav class="tabbar" id="tabbar" aria-label="Schnellzugriff">
   <a class="navlink tab" href="#heute" data-page="heute"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><i>Heute</i></a>
@@ -2968,8 +2963,12 @@ function druckBlattBauen(tabelle, mo, wer){
 }
 /* Zwei Maßstäbe: einer fürs Quer-, einer fürs Hochformat. So passt das
    Blatt auf eine Seite, egal was im Druckfenster eingestellt wird. */
-const appleGeraet = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+/* Wie groß die Druckseite wirklich ist, weiß vorher niemand: jedes Gerät
+   rechnet anders, und Ausrichtung, Papier und Skalierung kann jeder im
+   Druckfenster noch umstellen. Deshalb wird kein einzelner Maßstab mehr
+   geraten – es entsteht ein kleiner Stapel Regeln für jede mögliche
+   Seitengröße, und das Gerät greift sich beim Drucken die passende.
+   Dadurch wird das Blatt immer so groß wie die Seite es hergibt. */
 function druckSkalieren(){
   const box = document.getElementById('druckStat');
   document.body.classList.add('druck-messen');
@@ -2978,29 +2977,25 @@ function druckSkalieren(){
   const w = (t ? t.scrollWidth : 1) + 6;
   const h = (t ? t.scrollHeight : 1) + 6;
   document.body.classList.remove('druck-messen');
-  const luft = kopf + 22;
+  const luft = kopf + 14;
 
-  /* Wie breit die Seite beim Drucken wirklich ist, hängt am Gerät:
-     Apple-Geräte legen die Druckseite in der Breite des Fensters an und
-     verkleinern das Ganze erst danach aufs Papier. Windows und Android
-     rechnen dagegen in echten Seitenpunkten (A4 bei 96 dpi). */
-  let bQ, hQ, bH, hH;
-  if(appleGeraet){
-    const B = Math.max(320, document.documentElement.clientWidth || window.innerWidth || 390);
-    bQ = bH = B;
-    hQ = B * 210/297;                                  /* Querformat: flacher   */
-    hH = B * 297/210;                                  /* Hochformat: höher     */
-  }else{
-    bQ = 1122-46; hQ = 794-46;                         /* A4 quer,  6 mm Rand   */
-    bH = 794-46;  hH = 1122-46;                        /* A4 hoch,  6 mm Rand   */
-  }
-  const quer = Math.min(bQ/(w||1), (hQ-luft)/(h||1), 1) * .96;
-  const hoch = Math.min(bH/(w||1), (hH-luft)/(h||1), 1) * .96;
-  const st = document.documentElement.style;
-  st.setProperty('--ds-quer', quer.toFixed(3));
-  st.setProperty('--ds-hoch', hoch.toFixed(3));
-  st.setProperty('--ds-blatt-quer', Math.ceil(Math.min(h*quer + luft, hQ)) + "px");
-  st.setProperty('--ds-blatt-hoch', Math.ceil(Math.min(h*hoch + luft, hH)) + "px");
+  const breiten = [];
+  for(let b = 260; b <= 1500; b += 40) breiten.push(b);
+  const hoehen = [200,280,360,450,550,650,780,950,1150,1450];
+  const faktor = (B,H) => Math.min((B-10)/(w||1), (H-luft)/(h||1), 1) * .985;
+
+  let css = "";
+  breiten.forEach(B => hoehen.forEach(H => {
+    const k = faktor(B,H);
+    if(k <= 0) return;
+    css += `@media print and (min-width:${B}px) and (min-height:${H}px){`
+        +  `body.drucke-stat .dsflaeche{transform:scale(${k.toFixed(3)})}`
+        +  `body.drucke-stat .dsblatt{height:${Math.ceil(h*k + luft)}px}}\n`;
+  }));
+  const fach = document.getElementById('druckMass');
+  if(fach) fach.textContent = css;
+  /* Notnagel, falls keine Regel greift: klein genug für jede Seite */
+  document.documentElement.style.setProperty('--ds-klein', faktor(260,200).toFixed(3));
 }
 /* Das Blatt bleibt so lange stehen, bis wieder auf der Seite getippt wird.
    afterprint kommt auf manchen Geräten schon beim Öffnen der Vorschau –
@@ -3037,8 +3032,8 @@ addEventListener('beforeprint', ()=>{
 /* Vor dem Download wird gefragt, welche Woche gedruckt werden soll */
 function kwDialog(titel, startMo, cb){
   const basis = mondayOf(new Date());
-  const wochen = [];
-  for(let i = 4; i >= -52; i--){ const m = new Date(basis); m.setDate(m.getDate() + i*7); wochen.push(m); }
+  const wochen = [];                                  /* die letzten 26 Wochen – weiter reicht die Einsicht nicht */
+  for(let i = 0; i >= -25; i--){ const m = new Date(basis); m.setDate(m.getDate() + i*7); wochen.push(m); }
   const start = dk(mondayOf(new Date(startMo || basis)));
   simpleDialog(titel, "Welche Woche soll ins PDF?",
     `<div class="grp"><div class="field"><label for="kwSel">Kalenderwoche</label>
@@ -3068,7 +3063,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v33 · 18.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v35 · 18.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
