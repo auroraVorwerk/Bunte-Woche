@@ -947,6 +947,58 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .actions.einzeln{justify-content:stretch}
 .actions.einzeln .btn{flex:1 1 100%}
 
+
+/* ===== Druckblatt Statistik ===========================================
+   Der PDF-Export baut ein eigenes, festes Blatt auf. Es haengt nicht an
+   der laufenden Seite - deshalb bleibt die Vorlage stehen, auch wenn das
+   Geraet die Vorschau neu aufbaut (zum Beispiel beim Umstellen auf
+   Querformat). ======================================================== */
+.druckstat{display:none}
+body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;width:1700px;z-index:-1;pointer-events:none}
+.dsflaeche{transform-origin:top left;width:max-content}
+.dsblatt{padding:0}
+.dskopf{font-weight:800;font-size:12pt;margin:0 0 4mm;color:var(--text)}
+.dskopf small{display:block;font-weight:400;font-size:8.5pt;color:var(--muted);font-family:"JetBrains Mono",monospace}
+
+@media print{
+  body.drucke-stat main.wrap,body.drucke-stat .topbar,body.drucke-stat .drawer,body.drucke-stat .scrim,
+  body.drucke-stat .modal,body.drucke-stat .login,body.drucke-stat .tabbar,body.drucke-stat .druckbereich,
+  body.drucke-stat .savestate,body.drucke-stat .viewbanner{display:none!important}
+  body.drucke-stat{background:var(--bg)!important;color:var(--text)!important}
+  body.drucke-stat .druckstat{display:block!important;position:static!important;left:auto!important;top:auto!important;
+    width:auto!important;max-width:none!important;z-index:auto!important;pointer-events:auto!important}
+  body.drucke-stat .dsblatt{overflow:hidden;page-break-inside:avoid;break-inside:avoid;
+    page-break-after:avoid;break-after:avoid}
+  .druckstat .stat td.sticky,.druckstat .stat th.sticky{position:static!important}
+  .druckstat .pdfbtn{display:none!important}
+}
+/* Der Massstab haengt daran, was im Druckfenster wirklich eingestellt wird.
+   Hochformat ist der sichere Standard: passt notfalls immer. Querformat
+   nutzt die Breite dann voll aus. Die Hoehe kommt aus dem Inhalt, damit
+   nie eine zweite, leere Seite entsteht. */
+@media print{
+  body.drucke-stat .dsflaeche{transform:scale(var(--ds-hoch,1))}
+  body.drucke-stat .dsblatt{height:var(--ds-blatt-hoch,279mm)}
+}
+@media print and (orientation:landscape){
+  body.drucke-stat .dsflaeche{transform:scale(var(--ds-quer,1))}
+  body.drucke-stat .dsblatt{height:var(--ds-blatt-quer,192mm)}
+}
+
+/* ===== K70: Katalogpflege durch den Admin ============================= */
+.invliste.bearbeiten .invzeile{flex-wrap:wrap}
+.invadmin{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 12px;
+  margin-top:9px;padding-top:9px;border-top:1px dashed var(--line-soft)}
+.invadmin .posreg{flex:1 1 210px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.invadmin .posreg span{font-size:.68rem;letter-spacing:.06em;color:var(--faint)}
+.invadmin input[type=range]{width:100%;height:26px;accent-color:var(--accent);background:transparent;cursor:pointer}
+.invwerk{display:flex;flex-wrap:wrap;gap:6px}
+.invwerk .mini{margin:0}
+.invwerk .mini.an{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.invneu{padding:8px 10px 16px}
+.invneu .mini{margin:0}
+.asec .invadmin,.asec .invadmin *,.asec .invneu{text-align:left!important}
+
 /* K70 Inventur: Warenbestand steht oben und darf aussen sitzen */
 .invsumme{ justify-content:space-between !important; margin:0 0 18px; }
 .invsumme span{ text-align:left !important; }
@@ -1083,6 +1135,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 </main>
 
 <div id="druckPot" class="druckbereich"></div>
+<div id="druckStat" class="druckstat" aria-hidden="true"></div>
 
 <nav class="tabbar" id="tabbar" aria-label="Schnellzugriff">
   <a class="navlink tab" href="#heute" data-page="heute"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><i>Heute</i></a>
@@ -1956,10 +2009,7 @@ function potDrucken(liste, wer){
         <td>${p.grund||""}</td>
       </tr>`).join("")}</tbody>
     </table>`;
-  document.body.classList.add('drucke-pot');
-  const fertig = ()=>{ document.body.classList.remove('drucke-pot'); removeEventListener('afterprint', fertig); };
-  addEventListener('afterprint', fertig);
-  setTimeout(()=> window.print(), 150);
+  druckStarten('drucke-pot');
 }
 function empfNeu(){
   const leer = {id:"", vorname:"", nachname:"", str:"", hnr:"", plz:"", ort:"", telefon:"", notiz:"", von:"", datum:dk(new Date())};
@@ -2862,28 +2912,163 @@ document.getElementById('statTable').addEventListener('click', ev=>{
 });
 
 
-/* Druck: Tabelle so skalieren, dass sie immer auf eine Seite passt */
-function preparePrint(){
-  const t = document.getElementById('statTable');
-  const {week} = isoWeek(monday);
-  document.getElementById('printhead').innerHTML =
-    `Digitaler Businessplan – Statistik KW ${week}<small>${fmt(weekDays[0])} – ${fmt(weekDays[6])}</small>`;
-  /* A4 quer bei 96 dpi: 1122 × 794 px, abzüglich 6 mm Rand ringsum */
-  const kopf = (document.getElementById('printhead').offsetHeight || 46) + 18;
-  const PW = 1122 - 2*23;
-  const PH = 794  - 2*23 - kopf;
-  const w = t.scrollWidth + 4, h = t.scrollHeight + 4;
-  const k = Math.min(PW/(w||1), PH/(h||1), 1) * 0.97;    // kleine Reserve gegen eine zweite Seite
-  document.documentElement.style.setProperty('--pscale', k.toFixed(3));
+/* ================= Druck =============================================
+   Statistik und Potenzialliste drucken über ein eigenes, festes Blatt.
+   Früher wurde dafür die laufende Seite benutzt – dabei hat sich die
+   Vorlage zurückgesetzt, sobald das Gerät die Vorschau neu aufgebaut hat
+   (zum Beispiel beim Umstellen auf Querformat). Jetzt steht das Blatt
+   fertig im Hintergrund und ändert sich während des Druckens nicht mehr.
+   ==================================================================== */
+
+/* Der eigene Stand bleibt unangetastet: Woche kurz umstellen, Tabelle
+   abholen, alles wieder zurücksetzen. */
+function statTabelleFuer(mo){
+  const altM = new Date(monday), altT = weekDays.slice();
+  let html = "";
+  try{
+    monday = mondayOf(new Date(mo));
+    weekDays = Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return d;});
+    renderStat();
+    html = document.getElementById('statTable').innerHTML;
+  }catch(e){ console.error("Statistik f\u00fcr den Druck:", e); }
+  finally{
+    monday = altM; weekDays = altT;
+    try{ render(); renderStat(); }catch(e){ console.error(e); }
+  }
+  return html.replace(/<button[^>]*class="pdfbtn"[\s\S]*?<\/button>/, "");
 }
-addEventListener('beforeprint', preparePrint);
+/* Dasselbe für ein Teammitglied – die eigenen Daten kommen danach zurück */
+function statTabelleFremd(blob, mo){
+  const sicherung = fremdStart();
+  const altM = new Date(monday), altT = weekDays.slice();
+  let html = "";
+  try{
+    applyData(blob);
+    monday = mondayOf(new Date(mo));
+    weekDays = Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return d;});
+    renderStat();
+    html = document.getElementById('statTable').innerHTML;
+  }catch(e){ console.error("Statistik des Mitglieds:", e); }
+  finally{
+    monday = altM; weekDays = altT;
+    fremdEnde(sicherung);
+  }
+  return html.replace(/<button[^>]*class="pdfbtn"[\s\S]*?<\/button>/, "");
+}
+function druckBlattBauen(tabelle, mo, wer){
+  const start = mondayOf(new Date(mo));
+  const ende = new Date(start); ende.setDate(ende.getDate()+6);
+  const {week} = isoWeek(start);
+  document.getElementById('druckStat').innerHTML = `
+    <div class="dsblatt">
+      <div class="dskopf">Digitaler Businessplan – Statistik KW ${week}${wer?` · ${wer}`:""}
+        <small>${fmt(start)} – ${fmt(ende)}</small></div>
+      <div class="dsflaeche"><table class="stat">${tabelle}</table></div>
+    </div>`;
+}
+/* Zwei Maßstäbe: einer fürs Quer-, einer fürs Hochformat. So passt das
+   Blatt auf eine Seite, egal was im Druckfenster eingestellt wird. */
+const appleGeraet = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+function druckSkalieren(){
+  const box = document.getElementById('druckStat');
+  document.body.classList.add('druck-messen');
+  const t = box.querySelector('table.stat');
+  const kopf = (box.querySelector('.dskopf') || {}).offsetHeight || 46;
+  const w = (t ? t.scrollWidth : 1) + 6;
+  const h = (t ? t.scrollHeight : 1) + 6;
+  document.body.classList.remove('druck-messen');
+  const luft = kopf + 22;
+
+  /* Wie breit die Seite beim Drucken wirklich ist, hängt am Gerät:
+     Apple-Geräte legen die Druckseite in der Breite des Fensters an und
+     verkleinern das Ganze erst danach aufs Papier. Windows und Android
+     rechnen dagegen in echten Seitenpunkten (A4 bei 96 dpi). */
+  let bQ, hQ, bH, hH;
+  if(appleGeraet){
+    const B = Math.max(320, document.documentElement.clientWidth || window.innerWidth || 390);
+    bQ = bH = B;
+    hQ = B * 210/297;                                  /* Querformat: flacher   */
+    hH = B * 297/210;                                  /* Hochformat: höher     */
+  }else{
+    bQ = 1122-46; hQ = 794-46;                         /* A4 quer,  6 mm Rand   */
+    bH = 794-46;  hH = 1122-46;                        /* A4 hoch,  6 mm Rand   */
+  }
+  const quer = Math.min(bQ/(w||1), (hQ-luft)/(h||1), 1) * .96;
+  const hoch = Math.min(bH/(w||1), (hH-luft)/(h||1), 1) * .96;
+  const st = document.documentElement.style;
+  st.setProperty('--ds-quer', quer.toFixed(3));
+  st.setProperty('--ds-hoch', hoch.toFixed(3));
+  st.setProperty('--ds-blatt-quer', Math.ceil(Math.min(h*quer + luft, hQ)) + "px");
+  st.setProperty('--ds-blatt-hoch', Math.ceil(Math.min(h*hoch + luft, hH)) + "px");
+}
+/* Das Blatt bleibt so lange stehen, bis wieder auf der Seite getippt wird.
+   afterprint kommt auf manchen Geräten schon beim Öffnen der Vorschau –
+   deshalb ist es hier bewusst kein Auslöser. */
+let druckKlasse = "";
+function druckModus(klasse, selbstDrucken){
+  if(druckKlasse) document.body.classList.remove(druckKlasse);
+  druckKlasse = klasse;
+  document.body.classList.add(klasse);
+  function aufraeumen(){
+    if(!druckKlasse) return;
+    document.body.classList.remove(druckKlasse);
+    druckKlasse = "";
+    document.removeEventListener('pointerdown', beiTipp, true);
+  }
+  function beiTipp(){ setTimeout(aufraeumen, 60); }
+  setTimeout(()=> document.addEventListener('pointerdown', beiTipp, true), 1500);
+  setTimeout(aufraeumen, 300000);
+  if(selbstDrucken) setTimeout(()=>{ try{ window.print(); }catch(e){ console.error(e); } }, 150);
+}
+function druckStarten(klasse){ druckModus(klasse, true); }
+/* Wird stattdessen über den Browser gedruckt (Strg+P, Teilen → Drucken),
+   bekommt die Statistikseite dasselbe Blatt – sonst käme nur ein Ausschnitt. */
+addEventListener('beforeprint', ()=>{
+  if(druckKlasse) return;
+  const seite = document.getElementById('page-statistik');
+  if(!seite || !seite.classList.contains('active')) return;
+  try{
+    druckBlattBauen(statTabelleFuer(monday), monday, "");
+    druckSkalieren();
+    druckModus('drucke-stat', false);
+  }catch(e){ console.error(e); }
+});
+/* Vor dem Download wird gefragt, welche Woche gedruckt werden soll */
+function kwDialog(titel, startMo, cb){
+  const basis = mondayOf(new Date());
+  const wochen = [];
+  for(let i = 4; i >= -52; i--){ const m = new Date(basis); m.setDate(m.getDate() + i*7); wochen.push(m); }
+  const start = dk(mondayOf(new Date(startMo || basis)));
+  simpleDialog(titel, "Welche Woche soll ins PDF?",
+    `<div class="grp"><div class="field"><label for="kwSel">Kalenderwoche</label>
+       <select id="kwSel">${wochen.map(m=>{
+         const e = new Date(m); e.setDate(e.getDate()+6);
+         return `<option value="${dk(m)}"${dk(m)===start?" selected":""}>KW ${isoWeek(m).week} · ${fmtShort(m)} – ${fmt(e)}</option>`;
+       }).join("")}</select></div></div>
+     <p class="hinweis">Das PDF zeigt ausschließlich die Statistik dieser Woche.
+       A4 quer ist voreingestellt – Ausrichtung und Größe lassen sich im Druckfenster
+       trotzdem umstellen, die Vorlage bleibt dabei stehen.</p>`,
+    ()=>{
+      const wert = document.getElementById('kwSel').value;
+      closeModal();
+      setTimeout(()=> cb(mondayOf(fromDk(wert))), 80);
+    }, "PDF erstellen");
+}
+function statPdf(){
+  kwDialog("Statistik als PDF", monday, mo=>{
+    druckBlattBauen(statTabelleFuer(mo), mo, "");
+    druckSkalieren();
+    druckStarten('drucke-stat');
+  });
+}
 document.addEventListener('click', ev=>{
-  if(ev.target.id === 'pdfBtn'){ preparePrint(); setTimeout(()=>window.print(), 60); }
+  if(ev.target.closest && ev.target.closest('#pdfBtn')) statPdf();
 });
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v32 · 15.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v33 · 18.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4226,35 +4411,24 @@ function renderTeam(){
   const pdf = document.getElementById('tmPdf');
   if(pdf) pdf.onclick = ()=> fremdPdf();
 }
-/* Für den Druck kurz auf die Daten des Mitglieds umschalten */
+/* Statistik eines Mitglieds: Woche wählen, Blatt bauen, drucken.
+   Die Seite selbst wird dabei nicht mehr umgeschaltet – deshalb kann sich
+   im Druckfenster auch nichts mehr zurücksetzen. */
 function fremdPdf(){
-  const sicherung = fremdStart();
-  try{
-    applyData(teamBlob); monday = new Date(teamMonday);
-    render(); renderStat(); show('statistik'); preparePrint();
-  }catch(e){
-    console.error("Druckansicht fehlgeschlagen:", e);
-    fremdEnde(sicherung); show('team');
-    return;
-  }
-
-  /* Der eigene Stand kommt zurueck, sobald der Druck durch ist - egal auf welchem Weg.
-     Auf dem iPhone kann das Drucken die Seite pausieren, deshalb mehrere Ausloeser. */
-  let fertig = false;
-  function beiSichtbar(){ if(!document.hidden) setTimeout(zurueck, 200); }
-  function zurueck(){
-    if(fertig) return;
-    fertig = true;
-    window.removeEventListener('afterprint', zurueck);
-    document.removeEventListener('visibilitychange', beiSichtbar);
-    fremdEnde(sicherung);
-    show('team');
-  }
-  window.addEventListener('afterprint', zurueck);
-  document.addEventListener('visibilitychange', beiSichtbar);
-  setTimeout(zurueck, 20000);
-
-  setTimeout(function(){ try{ window.print(); }catch(e){ console.error(e); } setTimeout(zurueck, 400); }, 300);
+  if(!teamBlob || !viewUser) return;
+  kwDialog("Statistik als PDF · " + viewUser.name, teamMonday || monday, mo=>{
+    const tabelle = statTabelleFremd(teamBlob, mo);
+    if(!tabelle){
+      simpleDialog("Statistik als PDF", viewUser.name,
+        `<p class="hinweis">Die Statistik dieses Mitglieds lässt sich gerade nicht aufbauen.
+         Bitte die Seite einmal neu laden und es noch einmal versuchen.</p>`,
+        ()=> closeModal(), "Verstanden");
+      return;
+    }
+    druckBlattBauen(tabelle, mo, viewUser.name);
+    druckSkalieren();
+    druckStarten('drucke-stat');
+  });
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
 addEventListener('hashchange', ()=>{ if(location.hash === "#team") teamVergleich(); });
@@ -4896,6 +5070,7 @@ function katalogParsen(text){
   return kats;
 }
 let invSuche = "";
+let katBearbeiten = false;      // Katalogpflege des Admins
 function invSummeZeigen(){
   const el = document.querySelector('.invsumme b');
   if(el) el.textContent = preis(bestandWert()) + " €";
@@ -4939,6 +5114,7 @@ function renderInventur(){
   const box = document.getElementById('inventur');
   if(!box || !me) return;
   let liste = "";
+  const pflege = istAdmin() && katBearbeiten;
   const zu = settings.invZu || {};
   (katalog.liste||[]).forEach(k=>{
     const kid = artKey(k.kat);
@@ -4946,11 +5122,13 @@ function renderInventur(){
     liste += `<button type="button" class="invkat${auf?" auf":""}" data-katzu="${kid}">
       <span class="kn">${k.kat}</span><span class="kz">${(k.artikel||[]).length}</span><span class="kp">${auf?"–":"+"}</span></button>`;
     liste += `<div class="invgruppe${auf?"":" zu"}" data-gruppe="${kid}">`;
-    liste += (k.artikel||[]).map(a=>{
+    const anz = (k.artikel||[]).length;
+    liste += (k.artikel||[]).map((a,idx)=>{
       const id = artKey(k.kat+'|'+a.n);
+      const ref = `${k.kat}|${a.n}`;
       const such = (a.n + " " + preis(a.p) + " " + (a.hw||"")).toLowerCase();
       return `<div class="invzeile${a.top?" top":""}${a.hw?" nichtda":""}" data-such="${such}">
-        ${istAdmin()?`<button type="button" class="markbox${a.top?" an":""}" data-mark="${k.kat}|${a.n}" title="Verkaufsschlager">✓</button>`:""}
+        ${istAdmin()?`<button type="button" class="markbox${a.top?" an":""}" data-mark="${ref}" title="Verkaufsschlager">✓</button>`:""}
         <span class="nm">${a.n}${a.hw?`<em class="hw">${a.hw}</em>`:""}</span>
         <span class="pr">${preis(a.p)} €</span>
         <span class="stepper">
@@ -4958,8 +5136,19 @@ function renderInventur(){
           <b data-menge="${id}">${inventur[id]||0}</b>
           <button type="button" data-plus="${id}" aria-label="mehr">+</button>
         </span>
+        ${pflege?`<div class="invadmin">
+          <label class="posreg"><span>Platz ${idx+1} von ${anz}</span>
+            <input type="range" min="1" max="${anz}" step="1" value="${idx+1}" data-pos="${ref}" aria-label="Platz in der Kategorie">
+          </label>
+          <div class="invwerk">
+            <button type="button" class="mini" data-artedit="${ref}">Bearbeiten</button>
+            <button type="button" class="mini${a.hw?" an":""}" data-arthw="${ref}">nicht verfügbar</button>
+            <button type="button" class="mini gefahr" data-artdel="${ref}">Löschen</button>
+          </div>
+        </div>`:""}
       </div>`;
     }).join("");
+    if(pflege) liste += `<div class="invneu"><button type="button" class="mini" data-artneu="${k.kat}">+ Artikel in „${k.kat}“</button></div>`;
     liste += `</div>`;
   });
 
@@ -4974,8 +5163,11 @@ function renderInventur(){
       </div>
       <p class="hinweis" id="invTreffer" hidden></p>
       <div class="actions"><button type="button" class="btn" id="invAlle">Alle Kategorien auf- oder zuklappen</button></div>
+      ${istAdmin()?`<div class="actions"><button type="button" class="btn${pflege?" primary":""}" id="invPflege">${pflege?"Bearbeiten beenden":"Katalog bearbeiten"}</button></div>
+        ${pflege?`<p class="hinweis">Reihenfolge über den Schieberegler, Preis und Hinweis über „Bearbeiten“.
+          Änderungen am Katalog gelten sofort für alle Berater.</p>`:""}`:""}
     </div>
-    <div class="asec invliste" id="invliste">${liste}</div>
+    <div class="asec invliste${pflege?" bearbeiten":""}" id="invliste">${liste}</div>
     <div class="asec">
       <div class="actions"><button class="btn" id="invBestand">Bestand einfügen oder sichern</button></div>
       ${istAdmin() ? `<div class="actions"><button class="btn" id="invImport">Katalog einfügen oder aktualisieren</button></div>` : ""}
@@ -5024,7 +5216,132 @@ function renderInventur(){
   const imp = document.getElementById('invImport');
   if(imp) imp.onclick = katalogDialog;
   document.getElementById('invBestand').onclick = bestandDialog;
+  const pflegeBtn = document.getElementById('invPflege');
+  if(pflegeBtn) pflegeBtn.onclick = ()=>{ katBearbeiten = !katBearbeiten; invNeuZeichnen(); };
+
+  /* Reihenfolge: der Regler sagt, an welchen Platz der Artikel soll */
+  box.querySelectorAll('[data-pos]').forEach(r=>{
+    const lbl = r.parentElement.querySelector('span');
+    const max = +r.max || 1;
+    r.oninput = ()=>{ if(lbl) lbl.textContent = `Platz ${r.value} von ${max}`; };
+    r.onchange = async ()=>{
+      const {k, i} = artikelSuchen(r.dataset.pos);
+      if(!k || i < 0){ invNeuZeichnen(); return; }
+      const ziel = Math.max(0, Math.min(k.artikel.length - 1, (+r.value || 1) - 1));
+      if(ziel === i){ invNeuZeichnen(); return; }
+      const [art] = k.artikel.splice(i, 1);
+      k.artikel.splice(ziel, 0, art);
+      invNeuZeichnen();
+      await katSpeichern();
+    };
+  });
+  box.querySelectorAll('[data-artedit]').forEach(b=> b.onclick = ()=>{
+    const [kat, ...rest] = b.dataset.artedit.split("|");
+    artikelDialog(kat, rest.join("|"));
+  });
+  box.querySelectorAll('[data-artneu]').forEach(b=> b.onclick = ()=> artikelDialog(b.dataset.artneu, null));
+  box.querySelectorAll('[data-arthw]').forEach(b=> b.onclick = async ()=>{
+    const {a} = artikelSuchen(b.dataset.arthw);
+    if(!a) return;
+    if(a.hw) delete a.hw; else a.hw = "zur Zeit nicht verfügbar";
+    invNeuZeichnen();
+    await katSpeichern();
+  });
+  box.querySelectorAll('[data-artdel]').forEach(b=> b.onclick = ()=>{
+    const ref = b.dataset.artdel;
+    const [kat, ...rest] = ref.split("|");
+    const name = rest.join("|");
+    simpleDialog("Artikel löschen", kat,
+      `<p class="hinweis">„${name}“ wird für alle Berater aus dem Katalog entfernt.
+        Der erfasste Bestand dieses Artikels geht dabei verloren.</p>`,
+      async ()=>{
+        const {k, i} = artikelSuchen(ref);
+        if(k && i >= 0) k.artikel.splice(i, 1);
+        delete inventur[artKey(kat + '|' + name)];
+        closeModal(); saveData();
+        invNeuZeichnen(); renderProv();
+        await katSpeichern();
+      }, "Endgültig löschen");
+  });
   invFiltern();
+}
+/* Zeichnet die Inventur neu, ohne dass die Seite nach oben springt */
+function invNeuZeichnen(){
+  const y = window.scrollY || 0;
+  renderInventur();
+  requestAnimationFrame(()=> window.scrollTo(0, y));
+}
+function artikelSuchen(ref){
+  const [kat, ...rest] = String(ref||"").split("|");
+  const name = rest.join("|");
+  const k = (katalog.liste||[]).find(x=>x.kat === kat);
+  const i = k ? (k.artikel||[]).findIndex(x=>x.n === name) : -1;
+  return {k, a: (k && i >= 0) ? k.artikel[i] : null, i, kat, name};
+}
+async function katSpeichern(){
+  try{ await db.ref('katalog').set(katalog.liste); saveState("Katalog gespeichert"); return true; }
+  catch(e){ saveState("Katalog nicht gespeichert", true); return false; }
+}
+/* Artikel anlegen oder ändern – Name, Preis, Hinweis und Verkaufsschlager */
+function artikelDialog(kat, name){
+  const k = (katalog.liste||[]).find(x=>x.kat === kat);
+  if(!k) return;
+  const a = name ? (k.artikel||[]).find(x=>x.n === name) : null;
+  const neu = !a;
+  const cur = a || {n:"", p:0};
+  const hw = cur.hw || "";
+  const hinweise = ["", "zur Zeit nicht verfügbar", "zur Zeit nicht lieferbar", "nicht verfügbar"];
+  if(hw && !hinweise.includes(hw)) hinweise.push(hw);
+  simpleDialog(neu ? "Artikel hinzufügen" : "Artikel bearbeiten", kat,
+    `<div class="grp">
+       ${fld("artName","Artikelname",cur.n,"text",'autocomplete="off" spellcheck="false"')}
+       ${fld("artPreis","Preis €",neu ? "" : preis(cur.p),"text",'inputmode="decimal"')}
+       <div class="field"><label for="artHw">Hinweis</label>
+         <select id="artHw">${hinweise.map(h=>
+           `<option value="${h}"${h===hw?" selected":""}>${h || "kein Hinweis"}</option>`).join("")}</select></div>
+       <div class="field"><label for="artTop">Verkaufsschlager</label>
+         <select id="artTop">
+           <option value="0"${cur.top?"":" selected"}>nein</option>
+           <option value="1"${cur.top?" selected":""}>ja</option></select></div>
+     </div>
+     ${neu ? `<p class="hinweis">Der Artikel wird unten in „${kat}“ angehängt –
+       den Platz stellst du danach mit dem Schieberegler ein.</p>`
+       : `<p class="hinweis">Wird der Name geändert, fängt der Bestand dieses Artikels
+       bei den anderen Beratern wieder bei 0 an.</p>`}
+     <p class="err" id="artErr" hidden></p>`,
+    async ()=>{
+      const err = document.getElementById('artErr');
+      const zeig = m => { err.textContent = m; err.hidden = false; };
+      const nn = document.getElementById('artName').value.trim();
+      const pp = num(document.getElementById('artPreis').value);
+      if(!nn) return zeig("Bitte einen Artikelnamen eintragen.");
+      if(nn.includes("|")) return zeig("Im Namen darf kein senkrechter Strich stehen.");
+      if((k.artikel||[]).some(x=>x !== a && x.n.toLowerCase() === nn.toLowerCase()))
+        return zeig("Diesen Artikel gibt es in dieser Kategorie schon.");
+      if(pp <= 0) return zeig("Bitte einen Preis eintragen.");
+      const hwNeu = document.getElementById('artHw').value;
+      const topNeu = document.getElementById('artTop').value === "1";
+      if(neu){
+        const eintrag = {n:nn, p:pp};
+        if(topNeu) eintrag.top = 1;
+        if(hwNeu) eintrag.hw = hwNeu;
+        k.artikel = k.artikel || [];
+        k.artikel.push(eintrag);
+      }else{
+        const altId = artKey(kat + '|' + a.n), neuId = artKey(kat + '|' + nn);
+        if(altId !== neuId && inventur[altId] !== undefined){
+          inventur[neuId] = inventur[altId];
+          delete inventur[altId];
+          saveData();
+        }
+        a.n = nn; a.p = pp;
+        if(hwNeu) a.hw = hwNeu; else delete a.hw;
+        if(topNeu) a.top = 1; else delete a.top;
+      }
+      closeModal();
+      invNeuZeichnen(); renderProv();
+      await katSpeichern();
+    }, neu ? "Artikel anlegen" : "Änderung speichern");
 }
 /* Vorschläge beim Tippen, wie bei den Adressen */
 function invVorschlagZu(){
