@@ -580,6 +580,8 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   min-width:210px;color:var(--text);-webkit-appearance:none;appearance:none}
 .tmblock{margin-bottom:16px}
 .tmblock h4{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0 0 10px 4px}
+.tmeinst{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px}
+.tmeinst .mini{margin:0}
 
 .druckbereich{display:none}
 @media print{
@@ -3093,7 +3095,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v51 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v52 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4390,12 +4392,42 @@ async function teamVergleich(){
    Potenzialliste (Download) und Wochenmeldung. Der Admin ist ausgenommen,
    und ohne hinterlegtes Einstellungsdatum bleibt es beim vollen Zugriff. */
 const TM_WOCHEN = 26;
+/* Das Einstellungsdatum steht im Profil des Kundenberaters. Ist dort
+   keines hinterlegt, kann der Teamleiter es hier selbst eintragen -
+   sonst hängt die Sperre daran, ob jemand sein Profil ausgefüllt hat.
+   Stehen beide Daten da, zählt das frühere. */
+function tmEinstellung(dk){
+  const imProfil = teamBlob && teamBlob.settings && teamBlob.settings.einstellung;
+  const notiert  = (settings.tmEinst || {})[dk || (viewUser && viewUser.dk) || ""];
+  if(imProfil && notiert) return imProfil < notiert ? imProfil : notiert;
+  return imProfil || notiert || null;
+}
 function tmZugriff(){
-  if(istAdmin()) return {voll:true, datum:null, rest:null};
-  const datum = teamBlob && teamBlob.settings && teamBlob.settings.einstellung;
-  if(!datum) return {voll:true, datum:null, rest:null};
-  const wochen = Math.floor((Date.now() - fromDk(datum).getTime()) / (7*86400000));
-  return {voll: wochen < TM_WOCHEN, datum, rest: TM_WOCHEN - wochen};
+  const datum = tmEinstellung(viewUser && viewUser.dk);
+  const wochen = datum ? Math.floor((Date.now() - fromDk(datum).getTime()) / (7*86400000)) : null;
+  if(istAdmin()) return {voll:true, datum, wochen, rest:null, admin:true};
+  if(!datum) return {voll:true, datum:null, wochen:null, rest:null};
+  return {voll: wochen < TM_WOCHEN, datum, wochen, rest: TM_WOCHEN - wochen};
+}
+/* Der Teamleiter trägt das Einstellungsdatum eines Mitglieds nach.
+   Es liegt in den eigenen Daten - fremde Profile werden nicht verändert. */
+function tmEinstDialog(){
+  if(!viewUser) return;
+  const dk = viewUser.dk;
+  const imProfil = teamBlob && teamBlob.settings && teamBlob.settings.einstellung;
+  simpleDialog("Einstellungsdatum", viewUser.name,
+    `<div class="grp">${fld("tmEinstDat","Einstellungsdatum", (settings.tmEinst||{})[dk] || imProfil || "", "date")}</div>
+     <p class="hinweis">${imProfil
+       ? `Im Profil von ${viewUser.name} steht der ${fmt(fromDk(imProfil))}. Trägst du ein früheres Datum ein, zählt das frühere.`
+       : `${viewUser.name} hat im eigenen Profil noch kein Einstellungsdatum hinterlegt.
+          Ohne Datum läuft die 26-Wochen-Frist nicht.`}
+       Planer und Statistik sind ${TM_WOCHEN} Wochen ab diesem Datum einsehbar.</p>`,
+    ()=>{
+      const v = document.getElementById('tmEinstDat').value;
+      settings.tmEinst = settings.tmEinst || {};
+      if(v) settings.tmEinst[dk] = v; else delete settings.tmEinst[dk];
+      closeModal(); saveData(); renderTeam();
+    }, "Speichern");
 }
 function renderTeam(){
   const box = document.getElementById('tmViews');
@@ -4415,17 +4447,25 @@ function renderTeam(){
   }
   const v = fremdAnsicht();
   const z = tmZugriff();
+  const stand = z.datum
+    ? `Eingestellt am ${fmt(fromDk(z.datum))} · Woche ${(z.wochen || 0) + 1}`
+    : "Einstellungsdatum nicht hinterlegt";
+  const einstZeile = `<p class="hinweis tmeinst">${stand}
+    <button type="button" class="mini" id="tmEinstBtn">${z.datum ? "ändern" : "eintragen"}</button></p>`;
   const kopf = z.voll
     ? `<div class="tmblock"><div class="actions">
         <button class="btn primary" id="tmPdf">Statistik als PDF</button>
         <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>
         <p class="hinweis">Statistik und Potenzialliste gibt es nur zum Herunterladen —
-        zum Ansehen reichen Planer und Wochenmeldung.${z.rest !== null
-          ? ` Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.` : ""}</p></div>`
+        zum Ansehen reichen Planer und Wochenmeldung.${z.rest !== null && z.rest > 0
+          ? ` Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.`
+          : (z.admin ? "" : " Ohne Einstellungsdatum läuft die 26-Wochen-Frist nicht.")}</p>
+        ${einstZeile}</div>`
     : `<div class="tmblock"><div class="actions einzeln">
         <button class="btn primary" id="tmPotDruck">Potenzialliste als PDF</button></div>
         <p class="hinweis">${viewUser.name} ist länger als ${TM_WOCHEN} Wochen dabei — Planer und Statistik
-        sind ab jetzt nicht mehr einsehbar. Potenzialliste und Wochenmeldung bleiben.</p></div>`;
+        sind ab jetzt nicht mehr einsehbar. Potenzialliste und Wochenmeldung bleiben.</p>
+        ${einstZeile}</div>`;
   const planer = z.voll
     ? `<div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
         <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>`
@@ -4435,12 +4475,15 @@ function renderTeam(){
   if(pd) pd.onclick = ()=> potDrucken(v.potListe, viewUser.name);
   const pdf = document.getElementById('tmPdf');
   if(pdf) pdf.onclick = ()=> fremdPdf();
+  const eb = document.getElementById('tmEinstBtn');
+  if(eb) eb.onclick = tmEinstDialog;
 }
 /* Statistik eines Mitglieds: Woche wählen, Blatt bauen, drucken.
    Die Seite selbst wird dabei nicht mehr umgeschaltet – deshalb kann sich
    im Druckfenster auch nichts mehr zurücksetzen. */
 function fremdPdf(){
   if(!teamBlob || !viewUser) return;
+  if(!tmZugriff().voll) return;                      /* nach 26 Wochen gibt es kein PDF mehr */
   kwDialog("Statistik als PDF · " + viewUser.name, teamMonday || monday, mo=>{
     const tabelle = statTabelleFremd(teamBlob, mo);
     if(!tabelle){
