@@ -386,6 +386,28 @@ i.bvor{background:var(--surface-3)}
   padding:11px 14px;margin-bottom:8px}
 .zzeile .ztitel{flex:1;font-size:.88rem;color:var(--muted)}
 .zzeile.hat .ztitel{color:var(--text);font-weight:600}
+/* Zählzeilen wie in der K70-Inventur: Text links, Zähler rechts */
+.zzeile{justify-content:space-between!important;text-align:left!important}
+.zzeile .ztitel{flex:1 1 auto!important;text-align:left!important}
+/* Quellenstreifen am Termin - die Farbe kommt aus dem Kontaktweg der Statistik */
+.slot.filled.hatq{position:relative;overflow:hidden}
+.slot.filled.hatq::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+  background:var(--qc);border-radius:3px 0 0 3px}
+.slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:5px}
+/* Infokarte im geöffneten Termin */
+.tinfo{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:14px 16px;margin-bottom:14px}
+.tinfo .tname{font-size:1.02rem;font-weight:800;letter-spacing:-.01em}
+.tinfo .tq{display:inline-flex;align-items:center;gap:7px;margin-top:6px;font-size:.78rem;
+  font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:4px 11px}
+.tinfo .tq i{width:9px;height:9px;border-radius:50%;background:var(--qc,var(--accent));display:block}
+.tinfo .tzeile{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:9px;font-size:.85rem;color:var(--muted)}
+.tinfo .tzeile b{color:var(--text);font-weight:600}
+.tinfo .tadresse{margin-top:9px;font-size:.9rem;line-height:1.45}
+.tinfo .tnotiz{margin-top:9px;font-size:.85rem;color:var(--muted);white-space:pre-wrap}
+.tinfo .tziel{margin-top:10px;font-size:.85rem}
+.tinfo .tziel b{font-weight:700}
 /* Zählmodus */
 #zaehlflaeche{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;
   padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
@@ -398,6 +420,8 @@ i.bvor{background:var(--surface-3)}
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;
   color:var(--text);padding:10px;transition:transform .08s}
 .zkachel:active{transform:scale(.97);background:var(--surface-2)}
+.zkachel.ziel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.zkachel.ziel .zk-t{color:var(--accent)}
 .zk-t{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
 .zk-n{font-family:"JetBrains Mono",monospace;font-size:3.2rem;font-weight:600;line-height:1}
 .zk-minus{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;background:var(--surface-2);
@@ -1350,6 +1374,18 @@ const COLORS = {
 /* Farbtöpfe für individuelle Termine: die bekannten plus vier neue */
 const FARBEN = ["#A9D18E","#8FBF9F","#E8C4F2","#77CDF5","#E0402F","#F2B33D","#C9DD2C",
                 "#6FC3A0","#E8A2C8","#9FB4E8","#D8C48A"];
+/* Farbe des Kontaktwegs - dieselben Farben wie in der Statistik */
+const KONTAKT_FARBE = {
+  "Promotion":"#F2B33D", "Empfehlung":"#9A6CE8", "Premium CheckIn":"#E8C4F2",
+  "Festgebietsbegehung":"#A9D18E", "Vertriebsadresse":"#77CDF5"
+};
+function quelleFarbe(e){
+  if(!e) return null;
+  if(e.kind==="premium") return KONTAKT_FARBE["Premium CheckIn"];
+  if(e.kind==="kunde" || e.kind==="abholen" || e.kind==="terminieren")
+    return KONTAKT_FARBE[e.quelle] || null;
+  return null;
+}
 function colorOf(e){
   if(e.kind==="abholen") return COLORS.kunde;      // dieselbe Farbe wie der Kundentermin
   if(e.kind==="individuell") return e.farbe || "#9FB4E8";
@@ -1418,8 +1454,10 @@ function render(){
           : `<div class="cell slot blocked${alt}" style="--bc:${bk.c}" data-col="${i+1}" title="durch einen laufenden Termin belegt"></div>`;
       }else if(e){
         const l = label(e), done = e.status ? " done" : (e.nb && Object.keys(e.nb).length ? " halb" : ""), c = colorOf(e);
-        const st = c ? ` style="background:${c};border-color:${c};color:${textOn(c)}"` : "";
-        h += `<button class="slot filled col${done}${alt}"${st} data-col="${i+1}" data-day="${day}" data-hour="${hr}"><span class="t1">${l.t1}</span>${l.t2?`<span class="t2">${l.t2}</span>`:""}</button>`;
+        const qc = quelleFarbe(e);
+        const stil = (c ? `background:${c};border-color:${c};color:${textOn(c)};` : "") + (qc ? `--qc:${qc}` : "");
+        const st = stil ? ` style="${stil}"` : "";
+        h += `<button class="slot filled col${done}${alt}${qc?" hatq":""}"${st} data-col="${i+1}" data-day="${day}" data-hour="${hr}" title="${l.t1}${e.quelle?" · "+e.quelle:""}"><span class="t1">${l.t1}</span>${l.t2?`<span class="t2">${l.t2}</span>`:""}</button>`;
       }else{
         h += `<button class="slot${alt}${archivMark(day,hr)?" hatarchiv":""}" data-col="${i+1}" data-day="${day}" data-hour="${hr}" aria-label="${DAYS_L[i]} ${pad(hr)}–${pad(hr+2)} Uhr, frei">${archivMark(day,hr)}</button>`;
       }
@@ -1866,7 +1904,13 @@ function nbTermForm(e){
   const zahlen = e.quelle==="Promotion"
     ? [["ansprachen","Ansprachen"],["gespraeche","Gespräche"],["termine","Termine"],["kontakte","Kontakte"]]
     : [["tueren","Türen geklingelt"],["erreicht","Erreicht"],["termine","Termine"],["rueck","Rückmeldungstermine"]];
+  const erreicht = +n.termine || 0;
+  const zielTxt = e.ziel
+    ? `<p class="hinweis" style="margin:0 0 10px">Ziel: <b>${e.ziel} Termin${e.ziel===1?"":"e"}</b> ·
+        aktuell <b>${erreicht}</b>${erreicht >= e.ziel ? " — geschafft" : ` · noch ${e.ziel-erreicht}`}</p>`
+    : "";
   return `<div class="h4">Nachbereitung · ${e.quelle}</div>
+    ${zielTxt}
     <div class="grp">
       ${zahlen.map(([id,t])=>zaehlZeile(id,t,n[id])).join("")}
       <div class="actions"><button type="button" class="btn primary" id="zaehlStart">${
@@ -2255,27 +2299,68 @@ function startEdit(e){
   else if(e.kind==="individuell"){ draft.titel = e.titel||""; draft.farbe = e.farbe; step = "indiv"; }
   else if(e.kind==="meeting" || e.kind==="privat"){ step = "zeit"; }
   else if(e.kind==="terminieren"){
+    draft.nb.zielTermine = e.ziel || 0;
+    draft.modus = e.modus;
     if(e.quelle==="Promotion"){ draft.nb.f_ort = e.ort||""; step = "promo"; }
     else step = "fgModus";
   }else{ return; }
   paint();
 }
+/* Alles Wichtige zum Termin auf einen Blick - ohne erst ins Bearbeiten zu gehen */
+function infoKarte(e){
+  if(!e) return "";
+  const qc = quelleFarbe(e);
+  const zeile = (t,w) => w ? `<span><b>${t}</b> ${w}</span>` : "";
+  const kunde = e.kind==="kunde" || e.kind==="premium" || e.kind==="abholen";
+  const name = [e.anrede, e.vorname, e.nachname].filter(Boolean).join(" ").trim();
+  const titel = kunde ? (name || "Ohne Namen")
+              : e.kind==="terminieren" ? "Terminieren" : label(e).t1;
+  const quelle = e.kind==="premium" ? "Premium CheckIn"
+               : e.kind==="abholen" ? (e.quelle || "Gerät abholen")
+               : (e.quelle || "");
+  const zeiten = e.bis ? `${e.von || pad(draft.hour)+":00"}–${e.bis} Uhr`
+                       : `${pad(draft.hour)}:00–${pad((draft.hour+2)%24)}:00 Uhr`;
+  let mitte = "";
+  if(kunde){
+    const adr = [e.strasse, [e.plz, e.ort].filter(Boolean).join(" ")].filter(Boolean).join("<br>");
+    mitte = `${adr ? `<div class="tadresse">${adr}</div>` : `<div class="tadresse" style="color:var(--faint)">Keine Adresse hinterlegt</div>`}
+      <div class="tzeile">${zeile("Zeit", zeiten)}${zeile("Telefon", e.telefon || "")}${e.status?zeile("Status", e.status):""}</div>`;
+  }else if(e.kind==="terminieren"){
+    mitte = `<div class="tzeile">
+        ${zeile("Zeit", zeiten)}
+        ${zeile("Art", e.quelle==="Promotion" ? "Promotion" : (e.modus || "Festgebietsbegehung"))}
+        ${zeile("Ort", e.ort || "")}${zeile("Gebiet", e.gebiet || "")}</div>`;
+  }else if(e.kind==="eigenkauf"){
+    const n = e.nb || {};
+    mitte = `<div class="tzeile">${zeile("Zeit", zeiten)}${zeile("Einheiten", n.einheiten || "")}
+      ${zeile("Umsatz", n.umsatz ? eur(num(n.umsatz))+" €" : "")}</div>`;
+  }else{
+    mitte = `<div class="tzeile">${zeile("Zeit", zeiten)}${zeile("Art", e.art || "")}
+      ${zeile("Bis einschließlich", e.bisTag ? fmt(fromDk(e.bisTag)) : "")}</div>`;
+  }
+  const ziel = (e.kind==="terminieren" && e.ziel)
+    ? `<div class="tziel">Ziel: <b>${e.ziel} Termin${e.ziel===1?"":"e"}</b>${
+        (e.nb && e.nb.termine) ? ` · erreicht: <b>${e.nb.termine}</b>` : ""}</div>` : "";
+  const knoepfe = kunde ? `<div class="actions">
+      ${e.telefon?`<a class="btn" href="${telLink(e.telefon)}">Anrufen</a>`:""}
+      ${adresseVon(e)?`<a class="btn" href="${mapsLink(adresseVon(e))}" target="_blank" rel="noopener">Route</a>`:""}
+    </div>` : "";
+  return `<div class="tinfo"${qc?` style="--qc:${qc}"`:""}>
+      <div class="tname">${titel}</div>
+      ${quelle?`<div class="tq"><i></i>${quelle}</div>`:""}
+      ${mitte}
+      ${e.notiz?`<div class="tnotiz">${e.notiz}</div>`:""}
+      ${ziel}
+    </div>${knoepfe}`;
+}
 function paint(){
   const e = draft ? entries[key(draft.day,draft.hour)] : null;
 
   if(step==="view" && e){
-    let body = "";
-    if(e.vorname) body = `<div class="summary"><b>${e.anrede?e.anrede+" ":""}${e.vorname} ${e.nachname}</b><br><span>${e.kind==="premium"?"Premium CheckIn":(e.kind==="abholen"?"Gerät abholen":e.quelle||"")}</span>
-      ${e.strasse?`<br>${e.strasse}`:""}${(e.plz||e.ort)?`<br>${e.plz||""} ${e.ort||""}`:""}${e.telefon?`<br><span>${e.telefon}</span>`:""}${e.notiz?`<br><span>${e.notiz}</span>`:""}</div>
-      <div class="actions">
-        ${e.telefon?`<a class="btn" href="${telLink(e.telefon)}">Anrufen</a>`:""}
-        ${adresseVon(e)?`<a class="btn" href="${mapsLink(adresseVon(e))}" target="_blank" rel="noopener">Route</a>`:""}
-      </div>`;
+    let body = infoKarte(e);
     if(e.kind==="abholen") body += `<p class="hinweis">Gerät ausgeliehen beim Termin am
       ${e.vonTag?fmt(fromDk(e.vonTag)):"–"}. Deine Entscheidung hier wird diesem Termin zugeschrieben —
       in der Statistik bleibt es ein einziger Kundentermin.</p>`;
-    else if(e.bis) body = `<div class="summary"><b>${e.art||"Privat"}</b><br><span>${e.von}–${e.bis} Uhr</span></div>`;
-    else body = `<div class="summary"><b>${label(e).t1}</b><br><span>${label(e).t2}</span></div>`;
 
     let extra = "", saveBtn = "", zweiteReihe = "", ohneLoeschen = false;
     if(e.kind==="terminieren"){
@@ -2608,10 +2693,34 @@ function paint(){
        <button class="opt" data-fg="Door to Door">Door to Door</button>` + backBtn("termQuelle");
     wireBack();
     sheet.querySelectorAll('[data-fg]').forEach(b=> b.onclick = ()=>{
-      const alt = entries[key(draft.day,draft.hour)] || {};
-      entries[key(draft.day,draft.hour)] = {...alt, kind:"terminieren", quelle:"Festgebietsbegehung", modus:b.dataset.fg};
-      closeModal(); renderAll();
+      draft.modus = b.dataset.fg; step = "termZiel"; paint();
     });
+    return;
+  }
+
+  /* Jeder Terminierungsblock bekommt ein Ziel - direkt beim Setzen */
+  if(step==="termZiel"){
+    const n = draft.nb;
+    sheet.innerHTML = head("Ziel für diesen Einsatz") +
+      `<div class="grp">
+         ${zaehlZeile("zielTermine","Termine", n.zielTermine)}
+       </div>
+       ${error?`<div class="err">${error}</div>`:""}
+       <div class="actions"><button class="btn" data-back="fgModus">Zurück</button>
+         <button class="btn primary" id="save">Speichern</button></div>
+       <div class="hint">Wie viele Termine willst du in diesem Block holen? Das Ziel steht später
+         im Termin und im Zählmodus — ändern kannst du es jederzeit über „Daten bearbeiten“.</div>`;
+    wireBack();
+    wireSegs();
+    document.getElementById('save').onclick = ()=>{
+      collect();
+      const ziel = +draft.nb.zielTermine || 0;
+      if(!ziel){ error="Bitte ein Ziel setzen — mindestens ein Termin."; repaint(); return; }
+      const alt = entries[key(draft.day,draft.hour)] || {};
+      entries[key(draft.day,draft.hour)] = {...alt, kind:"terminieren", quelle:"Festgebietsbegehung",
+        modus:draft.modus || alt.modus, ziel};
+      closeModal(); renderAll();
+    };
     return;
   }
 
@@ -2626,23 +2735,28 @@ function paint(){
          <div class="field"><label for="f_bis">Bis</label><input type="time" id="f_bis" value="${bis}" step="900"></div>
        </div>
        <div class="sect"><span class="lb">Gebiet</span>${seg("gebiet2",["Festgebiet","Weißgebiet"],geb)}</div>
+       <div class="h4">Ziel für diesen Einsatz</div>
+       <div class="grp">${zaehlZeile("zielTermine","Termine", draft.nb.zielTermine)}</div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="termQuelle">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
        <div class="hint">Für Messen und Events: die ganze Dauer wird im Planer gesperrt.</div>`;
     wireBack();
+    wireSegs();
     sheet.querySelectorAll('[data-seg]').forEach(b=> b.onclick = ()=>{ collect(); draft.bis=document.getElementById('f_bis').value; draft.gebiet=b.dataset.val; repaint(); });
     document.getElementById('save').onclick = ()=>{
       collect();
       const b = document.getElementById('f_bis').value;
       const bDec = toDec(b)||24;
       draft.bis = b;
+      const ziel = +draft.nb.zielTermine || 0;
+      if(!ziel){ error="Bitte ein Ziel setzen — mindestens ein Termin."; draft.gebiet=geb; paint(); return; }
       if(!b || bDec <= draft.hour){ error=`Die Endzeit muss nach ${von} liegen.`; draft.gebiet=geb; paint(); return; }
       if(coveredHours(draft.hour,bDec).some(hr => hr!==draft.hour && entries[key(draft.day,hr)])){
         error="In diesem Zeitraum steht schon ein Eintrag."; draft.gebiet=geb; paint(); return;
       }
       const alt = entries[key(draft.day,draft.hour)] || {};
       entries[key(draft.day,draft.hour)] = {...alt, kind:"terminieren", quelle:"Promotion",
-        ort:(draft.nb.f_ort||"").trim(), gebiet:geb, von, bis:b};
+        ort:(draft.nb.f_ort||"").trim(), gebiet:geb, von, bis:b, ziel};
       closeModal(); renderAll();
     };
     return;
@@ -3095,7 +3209,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v52 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v53 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4328,12 +4442,16 @@ function fremdEnde(sicherung){
 }
 function fremdAnsicht(){
   const sicherung = fremdStart();
-  let ergebnis = {gridHtml:"", statHtml:"", meld:"", potHtml:"", potListe:[]};
+  let ergebnis = {gridHtml:"", statHtml:"", meld:"", potHtml:"", potListe:[], tagVoll:[]};
   try{
     applyData(teamBlob);
     monday = new Date(teamMonday);
     render(); renderStat();
     ergebnis.gridHtml = document.getElementById('grid').innerHTML;
+    ergebnis.tagVoll = Array.from({length:7},(_,i)=>{
+      const d = new Date(teamMonday); d.setDate(d.getDate()+i);
+      return START_HOURS.some(hr => entries[key(dk(d),hr)]);
+    });
     ergebnis.statHtml = document.getElementById('statTable').innerHTML;
     renderPotenzial();
     ergebnis.potHtml = document.getElementById('plist').innerHTML;
@@ -4468,6 +4586,7 @@ function renderTeam(){
         ${einstZeile}</div>`;
   const planer = z.voll
     ? `<div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
+        <div class="tagbar" id="tmTagbar"></div>
         <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>`
     : "";
   box.innerHTML = kopf + planer + v.meld;
@@ -4477,6 +4596,22 @@ function renderTeam(){
   if(pdf) pdf.onclick = ()=> fremdPdf();
   const eb = document.getElementById('tmEinstBtn');
   if(eb) eb.onclick = tmEinstDialog;
+  tmTagbar(tage, v.tagVoll);
+}
+/* Auf dem Handy zeigt der Planer nur einen Tag - dieselbe Tagesauswahl
+   wie im eigenen Planer, damit man auch hier blättern kann. */
+function tmTagbar(tage, voll){
+  const bar = document.getElementById('tmTagbar');
+  if(!bar) return;
+  const heute = dk(new Date());
+  bar.innerHTML = tage.map((d,i)=>
+    `<button type="button" data-tmtag="${i}" aria-pressed="${i===tagWahl}" class="${dk(d)===heute?"ist-heute":""}">
+      ${DAYS_S[i]}<small>${pad(d.getDate())}.</small>${(voll||[])[i]?`<i></i>`:""}</button>`).join("");
+  bar.querySelectorAll('[data-tmtag]').forEach(b=> b.onclick = ()=>{
+    tagWahl = +b.dataset.tmtag;
+    setzeTagWahl();
+    bar.querySelectorAll('[data-tmtag]').forEach(x=> x.setAttribute('aria-pressed', +x.dataset.tmtag === tagWahl));
+  });
 }
 /* Statistik eines Mitglieds: Woche wählen, Blatt bauen, drucken.
    Die Seite selbst wird dabei nicht mehr umgeschaltet – deshalb kann sich
@@ -6547,6 +6682,7 @@ function zaehlModus(e){
     werte: Object.fromEntries(felder.map(([id])=>[id, +draft.nb[id] || 0])),
     start: draft.nb.realStart || uhrJetzt(),      // ein bereits gestarteter Einsatz behält seine Zeit
     quelle: e.quelle,
+    ziel: +e.ziel || 0,
     modus: "zaehlen",
     gemerkt: 0,
     hinweis: ""
@@ -6559,7 +6695,8 @@ function zaehlZeichnen(){
   if(!box){ box = document.createElement('div'); box.id = 'zaehlflaeche'; document.body.appendChild(box); }
 
   const kopf = `<div class="zkopf">
-      <div><b>${z.quelle}</b><span>läuft seit ${z.start} Uhr${z.gemerkt?` · ${z.gemerkt} gemerkt`:""}</span></div>
+      <div><b>${z.quelle}</b><span>läuft seit ${z.start} Uhr${z.gemerkt?` · ${z.gemerkt} gemerkt`:""}${
+        z.ziel?` · Ziel ${z.werte.termine||0}/${z.ziel}`:""}</span></div>
     </div>`;
 
   if(z.modus === "kontakt"){
@@ -6619,8 +6756,8 @@ function zaehlZeichnen(){
   box.innerHTML = kopf + `
     <div class="zgitter">
       ${z.felder.map(([id,t])=>`
-        <button class="zkachel" data-ztipp="${id}">
-          <span class="zk-t">${t}</span>
+        <button class="zkachel${(id==="termine"&&z.ziel&&(z.werte[id]||0)>=z.ziel)?" ziel":""}" data-ztipp="${id}">
+          <span class="zk-t">${t}${(id==="termine"&&z.ziel)?` · Ziel ${z.ziel}`:""}</span>
           <span class="zk-n">${z.werte[id]}</span>
           <span class="zk-minus" data-zab="${id}">−</span>
         </button>`).join("")}
