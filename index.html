@@ -389,11 +389,10 @@ i.bvor{background:var(--surface-3)}
 /* Zählzeilen wie in der K70-Inventur: Text links, Zähler rechts */
 .zzeile{justify-content:space-between!important;text-align:left!important}
 .zzeile .ztitel{flex:1 1 auto!important;text-align:left!important}
-/* Quellenstreifen am Termin - die Farbe kommt aus dem Kontaktweg der Statistik */
-.slot.filled.hatq{position:relative;overflow:hidden}
-.slot.filled.hatq::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
-  background:var(--qc);border-radius:3px 0 0 3px}
-.slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:5px}
+/* Quellenstrich am Kundentermin - genau wie bei markierten K70-Artikeln:
+   ein schmaler Strich innen, der die Rundung des Feldes mitmacht */
+.slot.filled.hatq{box-shadow:inset 3px 0 0 var(--qc)}
+.slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:4px}
 /* Infokarte im geöffneten Termin */
 .tinfo{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);
   padding:14px 16px;margin-bottom:14px}
@@ -1337,8 +1336,17 @@ function label(e){
   }
   if(e.kind==="meeting") return {t1:e.art, t2:`${e.von}–${e.bis}`};
   if(e.kind==="terminieren"){
-    if(e.quelle==="Promotion") return {t1:e.ort||"Promotion", t2:`Promotion, ${e.gebiet}`};
-    return {t1:e.modus, t2:"Festgebietsbegehung"};
+    /* Vorne steht das Ziel, dahinter die Kurzform der Art */
+    const kurz = e.quelle==="Promotion" ? "Promo"
+               : e.modus==="Door to Door" ? "D2D"
+               : e.modus==="Bestandskunde" ? "KD Liste" : (e.modus || "Terminieren");
+    const erreicht = e.nb ? (+e.nb.termine || 0) : null;
+    const vorne = e.ziel
+      ? (erreicht === null ? `Ziel ${e.ziel}` : `${erreicht}/${e.ziel}`)
+      : "";
+    const t1 = vorne ? `${vorne} · ${kurz}` : kurz;
+    if(e.quelle==="Promotion") return {t1, t2:[e.ort, e.gebiet].filter(Boolean).join(" · ")};
+    return {t1, t2:"Festgebietsbegehung"};
   }
   if(e.kind==="privat") return {t1:"Privat", t2:e.bis?`${e.von}–${e.bis}`:""};
   if(e.kind==="individuell") return {t1:e.titel || "Individuell", t2:e.bis?`${e.von}–${e.bis}`:""};
@@ -1379,11 +1387,14 @@ const KONTAKT_FARBE = {
   "Promotion":"#F2B33D", "Empfehlung":"#9A6CE8", "Premium CheckIn":"#E8C4F2",
   "Festgebietsbegehung":"#A9D18E", "Vertriebsadresse":"#77CDF5"
 };
-function quelleFarbe(e){
+/* Den Strich im Planer gibt es nur am Kundentermin - überall sonst wäre
+   die Quelle ohnehin schon aus der Farbe des Feldes ablesbar. */
+function quelleFarbe(e, nurPlaner){
   if(!e) return null;
+  if(e.kind==="kunde") return KONTAKT_FARBE[e.quelle] || null;
+  if(nurPlaner) return null;
   if(e.kind==="premium") return KONTAKT_FARBE["Premium CheckIn"];
-  if(e.kind==="kunde" || e.kind==="abholen" || e.kind==="terminieren")
-    return KONTAKT_FARBE[e.quelle] || null;
+  if(e.kind==="abholen" || e.kind==="terminieren") return KONTAKT_FARBE[e.quelle] || null;
   return null;
 }
 function colorOf(e){
@@ -1454,7 +1465,7 @@ function render(){
           : `<div class="cell slot blocked${alt}" style="--bc:${bk.c}" data-col="${i+1}" title="durch einen laufenden Termin belegt"></div>`;
       }else if(e){
         const l = label(e), done = e.status ? " done" : (e.nb && Object.keys(e.nb).length ? " halb" : ""), c = colorOf(e);
-        const qc = quelleFarbe(e);
+        const qc = quelleFarbe(e, true);
         const stil = (c ? `background:${c};border-color:${c};color:${textOn(c)};` : "") + (qc ? `--qc:${qc}` : "");
         const st = stil ? ` style="${stil}"` : "";
         h += `<button class="slot filled col${done}${alt}${qc?" hatq":""}"${st} data-col="${i+1}" data-day="${day}" data-hour="${hr}" title="${l.t1}${e.quelle?" · "+e.quelle:""}"><span class="t1">${l.t1}</span>${l.t2?`<span class="t2">${l.t2}</span>`:""}</button>`;
@@ -3209,7 +3220,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v53 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v55 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
