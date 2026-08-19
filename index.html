@@ -391,13 +391,11 @@ i.bvor{background:var(--surface-3)}
 /* Zählzeilen wie in der K70-Inventur: Text links, Zähler rechts */
 .zzeile{justify-content:space-between!important;text-align:left!important}
 .zzeile .ztitel{flex:1 1 auto!important;text-align:left!important}
-/* Quellenstrich am Kundentermin: sitzt buendig an der linken Kante und
-   deckt die Grundfarbe dort ab. Die Rundung kommt vom Feld selbst, das
-   den Strich beschneidet - deshalb braucht der Strich keine eigene. */
-.slot.filled.hatq{position:relative;border-left-color:var(--qc)}
-.slot.filled.hatq::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;
-  background:var(--qc)}
-.slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:9px}
+/* Quellenstrich am Kundentermin: ein Innenstrich, der die Rundung des
+   Feldes sauber mitlaeuft - wie bei markierten K70-Artikeln, nur etwas
+   kraeftiger, damit die Farbe im Planer auffaellt. */
+.slot.filled.hatq{box-shadow:inset 5px 0 0 var(--qc)}
+.slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:5px}
 /* Infokarte im geöffneten Termin - eigener Name, damit sie nicht mit den
    Karten der Heute-Seite kollidiert, die ebenfalls .tinfo benutzen */
 .tdetail{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);
@@ -1474,8 +1472,7 @@ function render(){
       }else if(e){
         const l = label(e), done = e.status ? " done" : (e.nb && Object.keys(e.nb).length ? " halb" : ""), c = colorOf(e);
         const qc = quelleFarbe(e, true);
-        const stil = (c ? `background:${c};border-color:${c};color:${textOn(c)};` : "")
-                   + (qc ? `--qc:${qc};border-left-color:${qc}` : "");
+        const stil = (c ? `background:${c};border-color:${c};color:${textOn(c)};` : "") + (qc ? `--qc:${qc}` : "");
         const st = stil ? ` style="${stil}"` : "";
         h += `<button class="slot filled col${done}${alt}${qc?" hatq":""}"${st} data-col="${i+1}" data-day="${day}" data-hour="${hr}" title="${l.t1}${e.quelle?" · "+e.quelle:""}"><span class="t1">${l.t1}</span>${l.t2?`<span class="t2">${l.t2}</span>`:""}</button>`;
       }else{
@@ -3239,7 +3236,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v60 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v61 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
