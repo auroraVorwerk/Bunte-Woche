@@ -1,4 +1,4 @@
-/* Digitaler Businessplan – Offlinebetriebx
+/* Digitaler Businessplan – Offlinebetrieb
    Die App selbst wird zwischengespeichert, die Daten holt Firebase.
    Bei der Versionsnummer eine Zahl hochzählen, wenn eine neue index.html
    ODER eine neue ui.css hochgeladen wird. */
