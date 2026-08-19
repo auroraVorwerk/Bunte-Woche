@@ -969,18 +969,59 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
   body.drucke-stat .modal,body.drucke-stat .login,body.drucke-stat .tabbar,body.drucke-stat .druckbereich,
   body.drucke-stat .savestate,body.drucke-stat .viewbanner{display:none!important}
   body.drucke-stat{background:var(--bg)!important;color:var(--text)!important;
-    margin:0!important;padding:0!important;height:auto!important;min-height:0!important}
+    margin:0!important;padding:0!important;height:auto!important;min-height:0!important;
+    -webkit-text-size-adjust:none!important;text-size-adjust:none!important}
   html:has(body.drucke-stat){background:var(--bg)!important;height:auto!important;min-height:0!important}
   body.drucke-stat .druckstat{display:block!important;position:static!important;left:auto!important;top:auto!important;
     width:auto!important;max-width:none!important;z-index:auto!important;pointer-events:auto!important}
   body.drucke-stat .druckstat{overflow:hidden}
-  body.drucke-stat .dsblatt{overflow:hidden;width:100%;
+  body.drucke-stat .dsblatt{width:100%;overflow:hidden;container-type:inline-size;
     page-break-inside:avoid;break-inside:avoid;page-break-after:avoid;break-after:avoid}
-  /* Notnagel, falls keine der berechneten Regeln greift */
-  body.drucke-stat .dsinner{transform:scale(var(--ds-klein,.45))}
-  body.drucke-stat .dsblatt{height:var(--ds-hoehe,190mm)}
   .druckstat .stat td.sticky,.druckstat .stat th.sticky{position:static!important}
   .druckstat .pdfbtn{display:none!important}
+
+  /* ---- Maßstab ohne Raten ---------------------------------------
+     Nichts wird mehr verkleinert und nichts wird gerechnet: das Blatt
+     misst sich an der Seite, auf der es landet. --u ist die Einheit,
+     in der die ganze Tabelle steckt - ein Hunderstel Seitenbreite
+     geteilt durch die natürliche Breite der Tabelle. Dadurch füllt
+     sie jede Seite genau aus, egal welches Gerät, welche Ausrichtung
+     und welches Papier. */
+  body.drucke-stat .dsinner{width:auto;transform:none;
+    --u:min(calc(100vw / var(--dw,1470)), calc(100vh / var(--dh,640)))}
+  body.drucke-stat .dsflaeche{width:auto}
+  body.drucke-stat .dskopf{font-size:calc(19*var(--u));margin:0 0 calc(14*var(--u))}
+  body.drucke-stat .dskopf small{font-size:calc(13*var(--u));margin-top:calc(3*var(--u))}
+
+  body.drucke-stat .stat{width:auto;min-width:0;font-size:calc(12.8*var(--u));
+    --sw1:calc(76*var(--u));--sw2:calc(200*var(--u))}
+  body.drucke-stat .stat th,body.drucke-stat .stat td{
+    padding:calc(9*var(--u)) calc(8*var(--u));border-width:calc(2*var(--u));border-radius:calc(10*var(--u))}
+  body.drucke-stat .stat thead tr.grp th{font-size:calc(10.9*var(--u));padding:calc(6*var(--u)) calc(8*var(--u))}
+  body.drucke-stat .stat th.vh{height:calc(158*var(--u));padding:calc(10*var(--u)) calc(2*var(--u));
+    font-size:calc(11.2*var(--u))}
+  body.drucke-stat .stat .col-alt{width:calc(120*var(--u))}
+  body.drucke-stat .stat .col-num{width:calc(96*var(--u))}
+  body.drucke-stat .stat .col-tick{width:calc(38*var(--u))}
+  body.drucke-stat .stat td.vsep,body.drucke-stat .stat th.vsep{
+    width:calc(9*var(--u));min-width:calc(9*var(--u));max-width:calc(9*var(--u))}
+  body.drucke-stat .stat tbody tr.z0 td,body.drucke-stat .stat tbody tr.z1 td{
+    border-top-width:calc(1*var(--u));border-bottom-width:calc(1*var(--u))}
+  body.drucke-stat .stat tr.dayrow td{padding:calc(18*var(--u)) 0 calc(6*var(--u))}
+  body.drucke-stat .stat tr.dayrow span{padding:calc(7*var(--u)) calc(16*var(--u));font-size:calc(12*var(--u))}
+  body.drucke-stat .stat td.name small{font-size:calc(11.5*var(--u))}
+  body.drucke-stat .stat td.alt{font-size:calc(12.5*var(--u))}
+  body.drucke-stat .stat td.tick{font-size:calc(15.2*var(--u))}
+  body.drucke-stat .stat tr.sum td.lbl{padding-left:calc(12*var(--u))}
+  body.drucke-stat .stat tr.empty td{padding:calc(40*var(--u)) calc(10*var(--u))}
+}
+/* Wo Container-Einheiten gehen (alle aktuellen Geräte), wird die echte
+   Breite des Blattes genommen statt der gemeldeten Fensterbreite -
+   manche Geräte melden beim Drucken nämlich die Bildschirmbreite. */
+@supports (container-type:inline-size){
+  @media print{
+    body.drucke-stat .dsinner{--u:min(calc(100cqw / var(--dw,1470)), calc(100vh / var(--dh,640)))}
+  }
 }
 
 /* ===== K70: Katalogpflege durch den Admin ============================= */
@@ -1134,7 +1175,6 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 
 <div id="druckPot" class="druckbereich"></div>
 <div id="druckStat" class="druckstat" aria-hidden="true"></div>
-<style id="druckMass"></style>
 
 <nav class="tabbar" id="tabbar" aria-label="Schnellzugriff">
   <a class="navlink tab" href="#heute" data-page="heute"><span class="mic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><i>Heute</i></a>
@@ -2968,36 +3008,21 @@ function druckBlattBauen(tabelle, mo, wer){
 }
 /* Zwei Maßstäbe: einer fürs Quer-, einer fürs Hochformat. So passt das
    Blatt auf eine Seite, egal was im Druckfenster eingestellt wird. */
-/* Wie viel Platz auf der Seite wirklich ist, meldet jedes Gerät anders -
-   und Ausrichtung, Papier und Skalierung kann im Druckfenster jeder noch
-   umstellen. Deshalb wird nichts geraten: es entsteht ein Satz Regeln für
-   jede mögliche Seitengröße, und das Gerät greift sich beim Drucken die
-   passende. So füllt das Blatt immer die Seite, egal wie sie ausfällt. */
+/* Gemessen wird nur noch, wie groß die Tabelle von Haus aus ist. Den
+   Rest macht das Druckblatt selbst: es rechnet seine Maße aus der
+   Breite der Seite, auf der es landet (siehe --u im Stylesheet). */
 function druckSkalieren(){
   const box = document.getElementById('druckStat');
   document.body.classList.add('druck-messen');
   const inner = box.querySelector('.dsinner');
   const t = box.querySelector('table.stat');
-  const w = Math.max(t ? t.scrollWidth : 1, inner ? inner.scrollWidth : 1) + 4;
-  const h = (inner ? inner.scrollHeight : 1) + 4;
+  const dw = Math.max(t ? t.scrollWidth : 0, inner ? inner.scrollWidth : 0, 400);
+  const dh = Math.max(inner ? inner.scrollHeight : 0, 200);
   document.body.classList.remove('druck-messen');
-
-  const breiten = [];
-  for(let B = 260; B <= 1500; B += 40) breiten.push(B);
-  const hoehen = [200,280,360,450,550,650,780,950,1150,1450];
-  const faktor = (B,H) => Math.min((B-12)/(w||1), (H-10)/(h||1), 1) * .96;
-
-  let css = "";
-  breiten.forEach(B => hoehen.forEach(H => {
-    const k = faktor(B,H);
-    if(k <= 0) return;
-    css += `@media print and (min-width:${B}px) and (min-height:${H}px){`
-        +  `body.drucke-stat .dsinner{transform:scale(${k.toFixed(3)})}`
-        +  `body.drucke-stat .dsblatt{height:${Math.ceil(h*k)}px}}\n`;
-  }));
-  const fach = document.getElementById('druckMass');
-  if(fach) fach.textContent = css;
-  document.documentElement.style.setProperty('--ds-klein', faktor(260,200).toFixed(3));
+  if(inner){
+    inner.style.setProperty('--dw', Math.ceil(dw * 1.01));
+    inner.style.setProperty('--dh', Math.ceil(dh * 1.06));   /* etwas Luft nach unten */
+  }
 }
 /* Das Blatt bleibt so lange stehen, bis wieder auf der Seite getippt wird.
    afterprint kommt auf manchen Geräten schon beim Öffnen der Vorschau –
@@ -3068,7 +3093,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v50 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v51 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
