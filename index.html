@@ -398,20 +398,21 @@ i.bvor{background:var(--surface-3)}
 .slot.filled.hatq::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;
   background:var(--qc)}
 .slot.filled.hatq .t1,.slot.filled.hatq .t2{padding-left:9px}
-/* Infokarte im geöffneten Termin */
-.tinfo{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);
+/* Infokarte im geöffneten Termin - eigener Name, damit sie nicht mit den
+   Karten der Heute-Seite kollidiert, die ebenfalls .tinfo benutzen */
+.tdetail{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-lg);
   padding:14px 16px;margin-bottom:14px}
-.tinfo .tname{font-size:1.02rem;font-weight:800;letter-spacing:-.01em}
-.tinfo .tq{display:inline-flex;align-items:center;gap:7px;margin-top:6px;font-size:.78rem;
+.tdetail .tdname{font-size:1.02rem;font-weight:800;letter-spacing:-.01em}
+.tdetail .tq{display:inline-flex;align-items:center;gap:7px;margin-top:6px;font-size:.78rem;
   font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--line);
   border-radius:999px;padding:4px 11px}
-.tinfo .tq i{width:9px;height:9px;border-radius:50%;background:var(--qc,var(--accent));display:block}
-.tinfo .tzeile{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:9px;font-size:.85rem;color:var(--muted)}
-.tinfo .tzeile b{color:var(--text);font-weight:600}
-.tinfo .tadresse{margin-top:9px;font-size:.9rem;line-height:1.45}
-.tinfo .tnotiz{margin-top:9px;font-size:.85rem;color:var(--muted);white-space:pre-wrap}
-.tinfo .tziel{margin-top:10px;font-size:.85rem}
-.tinfo .tziel b{font-weight:700}
+.tdetail .tq i{width:9px;height:9px;border-radius:50%;background:var(--qc,var(--accent));display:block}
+.tdetail .tzeile{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:9px;font-size:.85rem;color:var(--muted)}
+.tdetail .tzeile b{color:var(--text);font-weight:600}
+.tdetail .tadresse{margin-top:9px;font-size:.9rem;line-height:1.45}
+.tdetail .tdnotiz{margin-top:9px;font-size:.85rem;color:var(--muted);white-space:pre-wrap}
+.tdetail .tziel{margin-top:10px;font-size:.85rem}
+.tdetail .tziel b{font-weight:700}
 /* Zählmodus */
 #zaehlflaeche{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;
   padding:calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))}
@@ -495,6 +496,8 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   box-shadow:inset 3px 0 0 var(--accent)}
 .rufzeile.reminder{box-shadow:inset 3px 0 0 #E8C4F2}
 .rufzeile:last-child{margin-bottom:0}
+.rufbox.stumm{background:var(--surface);border-color:var(--line)}
+.rufbald{margin:10px 0 0;font-size:.78rem;color:var(--muted)}
 .rtitel{display:block;font-weight:700;font-size:.9rem}
 .rsub{display:block;font-size:.78rem;color:var(--muted);margin-top:2px}
 .raktion{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
@@ -2366,11 +2369,11 @@ function infoKarte(e){
       ${e.telefon?`<a class="btn" href="${telLink(e.telefon)}">Anrufen</a>`:""}
       ${adresseVon(e)?`<a class="btn" href="${mapsLink(adresseVon(e))}" target="_blank" rel="noopener">Route</a>`:""}
     </div>` : "";
-  return `<div class="tinfo"${qc?` style="--qc:${qc}"`:""}>
-      <div class="tname">${titel}</div>
+  return `<div class="tdetail"${qc?` style="--qc:${qc}"`:""}>
+      <div class="tdname">${titel}</div>
       ${quelle?`<div class="tq"><i></i>${quelle}</div>`:""}
       ${mitte}
-      ${e.notiz?`<div class="tnotiz">${e.notiz}</div>`:""}
+      ${e.notiz?`<div class="tdnotiz">${e.notiz}</div>`:""}
       ${ziel}
     </div>${knoepfe}`;
 }
@@ -3236,7 +3239,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v59 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "bw-v60 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -6437,6 +6440,7 @@ function offeneNachbereitung(){
   return offen.sort((a,b)=> a.tag === b.tag ? a.h - b.h : a.tag.localeCompare(b.tag));
 }
 /* Anrufe, die heute anstehen: Happy Call und Terminbestätigung */
+const ANRUF_VORLAUF = 5;          // Tage vor dem Premium CheckIn
 function offeneAnrufe(){
   const heute = dk(new Date());
   const liste = [];
@@ -6454,7 +6458,7 @@ function offeneAnrufe(){
     }
     /* Terminbestätigung: 5 Tage vor einem Premium CheckIn */
     if(e.kind === "premium" && !e.status && !e.bestaetigt){
-      const ab = plusTage(tag, -5);
+      const ab = plusTage(tag, -ANRUF_VORLAUF);
       if(ab <= heute && tag >= heute)
         liste.push({art:"reminder", tag, h:+h, e,
           titel:`Termin bestätigen · ${e.vorname||""} ${e.nachname||""}`.trim(),
@@ -6462,6 +6466,23 @@ function offeneAnrufe(){
     }
   });
   return liste.sort((a,b)=> a.tag.localeCompare(b.tag));
+}
+/* Was demnächst fällig wird - damit sichtbar ist, dass die Erinnerung
+   vorgemerkt ist, auch wenn sie erst in ein paar Tagen aufpoppt */
+function kommendeAnrufe(){
+  const heute = dk(new Date());
+  const liste = [];
+  Object.keys(entries).forEach(k=>{
+    const [tag,h] = k.split("|");
+    const e = entries[k];
+    if(e.kind !== "premium" || e.status || e.bestaetigt) return;
+    const ab = plusTage(tag, -ANRUF_VORLAUF);
+    if(ab > heute)
+      liste.push({tag, h:+h, ab, e,
+        titel:`Termin bestätigen · ${e.vorname||""} ${e.nachname||""}`.trim(),
+        sub:`Premium CheckIn am ${fmt(fromDk(tag))} · Erinnerung ab ${fmt(fromDk(ab))}`});
+  });
+  return liste.sort((a,b)=> a.ab.localeCompare(b.ab));
 }
 function renderHeute(){
   const box = document.getElementById('heute');
@@ -6492,6 +6513,7 @@ function renderHeute(){
   };
 
   const anrufe = offeneAnrufe();
+  const bald = kommendeAnrufe();
   box.innerHTML = `
     ${anrufe.length ? `<div class="rufbox">
       <b>${anrufe.length} ${anrufe.length===1?"Anruf steht an":"Anrufe stehen an"}</b>
@@ -6502,7 +6524,12 @@ function renderHeute(){
           <button class="mini" data-rufauf="${a.tag}|${a.h}">Öffnen</button>
           <button class="mini" data-rufweg="${a.art}|${a.tag}|${a.h}">Erledigt</button>
         </div></div>`).join("")}
-    </div>` : ""}
+      ${bald.length ? `<p class="rufbald">Vorgemerkt: ${bald[0].sub}${
+        bald.length>1?` · und ${bald.length-1} weitere`:""}</p>` : ""}
+    </div>` : (bald.length ? `<div class="rufbox stumm">
+      <b>Kein Anruf offen</b>
+      <p class="rufbald">Vorgemerkt: ${bald[0].sub}${bald.length>1?` · und ${bald.length-1} weitere`:""}</p>
+    </div>` : "")}
     ${offen.length ? `<div class="warnbox">
       <b>${offen.length} ${offen.length===1?"Termin wartet":"Termine warten"} auf Nachbereitung</b>
       <div class="woffen">${offen.slice(0,6).map(o=>
