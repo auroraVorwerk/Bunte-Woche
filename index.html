@@ -217,7 +217,9 @@ h1 span{color:var(--muted);font-weight:300}
 .field input,.field select,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:11px 14px}
 .field textarea{min-height:82px;resize:vertical}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);outline:none}
-.field input[type=date],.field input[type=time]{text-align:left;-webkit-appearance:none;appearance:none;min-height:46px}
+.field input[type=date],.field input[type=time],.field input[type=month]{text-align:left;-webkit-appearance:none;appearance:none;min-height:46px}
+.field input[type=month]::-webkit-date-and-time-value{text-align:left;margin:0}
+.field input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
 .field select{-webkit-appearance:none;appearance:none;text-align:left;min-height:46px;
   background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
   background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:38px}
@@ -979,6 +981,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 .asec textarea,
 .asec input[type=date],
 .asec input[type=time],
+.asec input[type=month],
 .asec .invzeile,
 .asec .invzeile .nm,
 .asec .stat tr.dayrow td{ text-align:left !important; }
@@ -1157,7 +1160,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
     <div class="pagetitle" id="pagetitle">Planer</div>
   </div>
 
-  <section class="page" id="page-heute"><div id="uebHeute"></div><div id="heute"></div></section>
+  <section class="page" id="page-heute"><div id="heute"></div></section>
   <section class="page active" id="page-planer">
     <div id="uebPlaner"></div>
     <div class="weekbar">
@@ -3485,7 +3488,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v65 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v66 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4900,8 +4903,7 @@ function renderTeam(){
     ? `<div class="tmblock"><div class="actions">
         <button class="btn primary" id="tmPdf">Statistik als PDF</button>
         <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>
-        <p class="hinweis">Statistik und Potenzialliste gibt es nur zum Herunterladen —
-        zum Ansehen reichen Planer und Wochenmeldung.${z.rest !== null && z.rest > 0
+        <p class="hinweis">Die Statistik gibt es nur zum Herunterladen.${z.rest !== null && z.rest > 0
           ? ` Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.`
           : (z.admin ? "" : " Ohne Einstellungsdatum läuft die 26-Wochen-Frist nicht.")}</p>
         ${einstZeile}</div>`
@@ -4915,7 +4917,11 @@ function renderTeam(){
         <div class="tagbar" id="tmTagbar"></div>
         <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>`
     : "";
-  box.innerHTML = kopf + planer + v.meld;
+  /* Die Potenzialliste bleibt immer sichtbar - unabhängig vom Einstellungsdatum */
+  const potenzialBlock = `<div class="tmblock"><h4>Potenzialliste · ${viewUser.name}</h4>
+    ${v.potListe.length ? v.potHtml
+      : `<p class="aempty">In dieser Liste steht noch niemand.</p>`}</div>`;
+  box.innerHTML = kopf + planer + potenzialBlock + v.meld;
   const pd = document.getElementById('tmPotDruck');
   if(pd) pd.onclick = ()=> potDrucken(v.potListe, viewUser.name);
   const pdf = document.getElementById('tmPdf');
@@ -7430,7 +7436,7 @@ document.getElementById('chips').innerHTML = CATS.map(c=>`<span class="chip"><i 
    Neues, sondern zeigt die Zahlen des laufenden Vertriebsmonats aus
    dem Provisionsrechner in vier Kacheln. */
 function renderUeberblick(){
-  const ziele = [document.getElementById('uebHeute'), document.getElementById('uebPlaner')].filter(Boolean);
+  const ziele = [document.getElementById('uebPlaner')].filter(Boolean);
   if(!ziele.length || !me) return;
   const vm = vertriebsmonat(new Date());
   const u  = umsatz(vm.fromK, vm.toK);
