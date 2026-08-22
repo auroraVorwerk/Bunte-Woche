@@ -1,6 +1,6 @@
 {
-  "name": "Bunte Woche",
-  "short_name": "Bunte Woche",
+  "name": "Digital Businessplan",
+  "short_name": "Businessplan",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
