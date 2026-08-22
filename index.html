@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -142,6 +141,37 @@ h1 span{color:var(--muted);font-weight:300}
 .metriclbl small{font-weight:400;color:var(--faint);font-size:.68rem;font-family:"JetBrains Mono",monospace}
 .ampel{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--a);margin-left:7px;vertical-align:middle}
 .pcard.faellig{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.pcard.gstreif{position:relative;overflow:hidden}
+.pcard.gstreif::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gf,var(--line))}
+.pcard.gstreif{padding-left:26px}
+.gchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.gchips span{border-radius:999px;padding:4px 11px;font-size:.75rem;font-weight:600;
+  border:1px solid color-mix(in srgb,var(--gc) 60%,transparent);
+  background:color-mix(in srgb,var(--gc) 18%,transparent)}
+.filterchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.filterchips button{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;
+  padding:7px 12px;cursor:pointer;font-size:.76rem;color:var(--text);transition:.15s}
+.filterchips button[aria-pressed="true"]{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 20%,var(--surface-2));font-weight:600}
+.checks.geraete4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.checks.geraete4 button{width:100%;border-radius:var(--r);padding:12px 4px;text-align:center;font-size:.8rem}
+.checks.gruende2{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.checks.gruende2 button{width:100%;border-radius:var(--r);padding:12px 10px;text-align:center;font-size:.78rem;line-height:1.25}
+.wvgruppe{margin-top:6px}
+.wvgruppe > h4{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:20px 0 10px}
+.stepper b[data-zedit]{cursor:pointer;border-bottom:1px dashed color-mix(in srgb,var(--faint) 60%,transparent)}
+#zahlbox{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.6)}
+#zahlbox .zbinner{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:20px;width:min(300px,100%)}
+#zahlbox .zbtitel{font-size:.8rem;color:var(--muted);margin-bottom:10px;text-align:center}
+#zahlbox input{width:100%;padding:14px;font-size:22px;text-align:center;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+  font-family:"JetBrains Mono",monospace}
+#zahlbox .zbakt{display:flex;gap:8px;margin-top:14px}
+#zahlbox .zbakt .btn{flex:1}
+@media (max-width:520px){ .checks.geraete4 button{font-size:.72rem;padding:11px 2px}
+  .checks.gruende2 button{font-size:.73rem;padding:11px 7px} }
 .pcard .wieder{font-size:.7rem;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);
   border-radius:999px;padding:3px 9px;margin-left:8px;vertical-align:middle}
 .hzeile{display:flex;justify-content:space-between;gap:10px;font-size:.82rem;padding:7px 0;border-bottom:1px solid var(--line-soft)}
@@ -1146,6 +1176,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
   </section>
 
   <section class="page" id="page-potenzial"><div id="plist"></div></section>
+  <section class="page" id="page-wiedervorlage"><div id="wvliste"></div></section>
   <section class="page" id="page-empfehlung"><div id="elist"></div></section>
   <section class="page" id="page-statistik">
     <div class="weekbar">
@@ -1230,7 +1261,7 @@ document.getElementById("tabMehr").onclick = () => document.getElementById("burg
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz", fahrten:"Fahrtenbuch", kunden:"Kundenliste"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", wiedervorlage:"Wiedervorlage", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz", fahrten:"Fahrtenbuch", kunden:"Kundenliste"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -1243,6 +1274,15 @@ const MEETINGS = ["Teammeeting","Training","Schulung","Event"];
 const DEMO = ["VK7 Grundgerät","EB7 Elektrobürste","SP7 Saugwischer","PB7 Polsterbürste","MR7 Milbenaufsatz",
               "AC7 Düsenset","VG100+ Flächenreiniger","VM7 Handstaubsauger","VR7 Saugroboter","RB7 Saugstation"];
 const BESITZ = ["VK7","EB7","SP7","PB7","VR7","RB7","VG100+","VM7"];
+/* Die häufigsten Gründe, warum nicht gekauft wurde - jeder mit eigener Farbe für den Streifen */
+const NK_GRUENDE = ["will 0 %","will 2. Akku","wartet auf Urlaubsgeld",
+                    "muss mit Partner sprechen","passt finanziell aktuell nicht","will „alt gegen neu“"];
+const NK_FARBE = {
+  "will 0 %":"#F2B33D", "will 2. Akku":"#77CDF5", "wartet auf Urlaubsgeld":"#A9D18E",
+  "muss mit Partner sprechen":"#9A6CE8", "passt finanziell aktuell nicht":"#E0402F",
+  "will „alt gegen neu“":"#E8C4F2"
+};
+const grundFarbe = g => NK_FARBE[g] || "#8899A6";
 const CATS = [
   {t:"Termin FG-Kunden",c:"#A9D18E"},{t:"Termin Telefon/Vertriebsadresse",c:"#E2F0D9"},
   {t:"Empfehlungstermin",c:"#9A6CE8"},{t:"Premium CheckIn",c:"#E8C4F2"},
@@ -1257,6 +1297,14 @@ const fromDk = s => {const [y,m,d]=String(s||"").split("-").map(Number);
   return (y && m && d) ? new Date(y,m-1,d) : new Date();};
 const fmt = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
 const fmtShort = d => `${pad(d.getDate())}.${pad(d.getMonth()+1)}.`;
+/* Wiedervorlagen laufen bewusst auf Monatsebene - ein Tag wäre zu genau gedacht */
+const MONATE = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const monatJetzt = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; };
+const monatText = m => { const [y,mm] = String(m||"").split("-").map(Number);
+  return (y && mm) ? `${MONATE[mm-1]} ${y}` : ""; };
+const monatKurz = m => { const [y,mm] = String(m||"").split("-").map(Number);
+  return (y && mm) ? `${MONATE[mm-1].slice(0,3)} ${String(y).slice(2)}` : ""; };
+const alsMonat = w => String(w||"").slice(0,7);
 function mondayOf(date){const d=new Date(date);d.setHours(0,0,0,0);d.setDate(d.getDate()-((d.getDay()+6)%7));return d;}
 function isoWeek(date){
   const t=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));
@@ -1290,6 +1338,7 @@ const archiv = [];         // abgesagte / nicht angetroffene Termine: {tag, h, a
 const fahrten = [];        // Fahrtenbuch: {datum, ziel, km, anlass}
 const jobtickets = {};     // {jahr: {geschrieben, manuell, qualifiziert, eigeneRegion, foerderung}}
 const teamumsatz = {};     // {jahr: {startKW: {team, einsteiger}}}
+const wiedervorlagen = []; // {id, name, adresse, monat:"2026-09", notiz}
 var monday = mondayOf(new Date());
 var tagWahl = Math.min(6, (new Date().getDay()+6)%7);   // Handyansicht: welcher Tag im Planer
 
@@ -1670,7 +1719,8 @@ const hourSelect = (id,cur) => `<select id="${id}">${HOURS_ASC.map(h=>`<option v
 
 const FIELD_IDS = ["jobAnzahl","geraet","demotuecher","einheiten","umsatz","k70betrag","grund","pcDatum","abDatum",
                    "f_vor","f_nach","f_str","f_hnr","f_plz","f_ort","f_tel","f_notiz","lieferdatum","vsDatum",
-                   "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG"];
+                   "tueren","erreicht","termine","rueck","ansprachen","gespraeche","kontakte","realStart","realEnde","umsatzFG","umsatzWG",
+                   "wvMonat"];
 function collect(){
   FIELD_IDS.forEach(id=>{const el=document.getElementById(id); if(el) draft.nb[id]=el.value;});
   const sel = document.getElementById('pcZeit'); if(sel) draft.nb.pcZeit = sel.value;
@@ -1749,8 +1799,7 @@ function nbForm(){
     `<div class="row2">
        ${fld("realStart","Gestartet",n.realStart||"","time",'step="300"')}
        ${fld("realEnde","Geendet",n.realEnde||"","time",'step="300"')}
-     </div>
-     <p class="hinweis">Oben im Termin lassen sich beide Zeiten mit einem Tipp setzen — hier nur zum Nachbessern.</p>`,
+     </div>`,
     (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "",
     true) +
   nbBlock("gespraech","Gespräch", `
@@ -1793,12 +1842,11 @@ function nbForm(){
       <div class="grp">
         ${fld("pcDatum","Datum",n.pcDatum||plusTage(draft.day,14),"date")}
         <div class="field"><label for="pcZeit">Startzeit</label>${hourSelect("pcZeit",n.pcZeit??draft.hour)}</div>
-        <p class="hinweis">Vorgeschlagen ist derselbe Zeitblock in zwei Wochen.</p>
       </div>`;
   }
   if(n.verkauft==="Nein"){
     const has = n.besitz||[];
-    const fertig = has.length >= BESITZ.length || (has.length && (n.grund||"").trim());
+    const fertig = nkFertig(n);
     h += `<div class="h4">Kein Kauf</div>
       <div class="grp">
         <div class="sect"><span class="lb">Gerät ausgeliehen, Kaufentscheidung später?</span>
@@ -1813,9 +1861,13 @@ function nbForm(){
       ${n.ausgeliehen==="Nein" ? `<div class="grp">
         <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
           ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
-        <p class="hinweis">Was der Kunde schon hat und warum er nicht gekauft hat — daraus entsteht der Eintrag in der Potenzialliste.</p>
       </div>` : ""}`;
   }
+  h += `<div class="h4">Wiedervorlage</div>
+    <div class="grp">
+      <div class="field"><label for="wvMonat">Wieder ansprechen im Monat (freiwillig)</label>
+        <input id="wvMonat" type="month" value="${n.wvMonat||""}"></div>
+    </div>`;
   return h;
 }
 
@@ -1827,8 +1879,7 @@ function nbPremiumForm(){
       `<div class="row2">
          ${fld("realStart","Gestartet",n.realStart||"","time",'step="300"')}
          ${fld("realEnde","Geendet",n.realEnde||"","time",'step="300"')}
-       </div>
-       <p class="hinweis">Oben im Termin lassen sich beide Zeiten mit einem Tipp setzen — hier nur zum Nachbessern.</p>`,
+       </div>`,
       (n.realStart && n.realEnde) ? `${n.realStart}–${n.realEnde}` : "", true)}
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde etwas nachgekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
@@ -1854,7 +1905,7 @@ function saveNbPremium(e){
 function abholForm(e){
   const n = draft.nb;
   const has = n.besitz || [];
-  const fertig = has.length >= BESITZ.length || (has.length && (n.grund||"").trim());
+  const fertig = nkFertig(n);
   return `<div class="h4">Kaufentscheidung</div>
     <div class="grp">
       <div class="sect"><span class="lb">Hat der Kunde gekauft?</span>${seg("verkauft",["Ja","Nein"],n.verkauft)}</div>
@@ -1869,7 +1920,7 @@ function abholForm(e){
       ${n.verkauft==="Nein" ? `
         <div class="actions"><button type="button" class="btn${fertig?"":" primary"}" id="potOeffnen">
           ${fertig ? `Potenzial erfasst · ${BESITZ.length - has.length} offen — ändern` : "Potenzial erfassen"}</button></div>
-        <p class="hinweis">Der Kunde wandert mit dem offenen Potenzial in die Potenzialliste.</p>` : ""}
+` : ""}
     </div>`;
 }
 function saveAbhol(e){
@@ -1882,7 +1933,7 @@ function saveAbhol(e){
     if(!n.k70){ error="Bitte angeben, ob K70 verkauft wurde."; draft.fokus='[data-seg="k70"]'; repaint(); return; }
     if(n.k70==="Ja" && num(n.k70betrag) <= 0){ error="Bitte den K70-Betrag eintragen."; draft.fokus="#k70betrag"; repaint(); return; }
   }else{
-    if((n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim()){
+    if((n.besitz||[]).length < BESITZ.length && !nkFertig(n)){
       error="Bitte kurz eintragen, warum nicht gekauft wurde."; draft.fokus="#potOeffnen"; repaint(); return;
     }
   }
@@ -1908,11 +1959,13 @@ function saveAbhol(e){
       u.grund = n.grund || "";
       if((u.besitz||[]).length < BESITZ.length){
         addPotenzial(urspruenglich, BESITZ.filter(b=>!(u.besitz||[]).includes(b)),
-          [u.grund, "Gerät war ausgeliehen"].filter(Boolean).join(" · "), e.vonTag);
+          [u.grund, "Gerät war ausgeliehen"].filter(Boolean).join(" · "), e.vonTag,
+          n.nkgruende, n.wvMonat || "");
       }
     }
   }else if(n.verkauft==="Nein" && (n.besitz||[]).length < BESITZ.length){
-    addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day);
+    addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day,
+      n.nkgruende, n.wvMonat || "");
   }
   e.status = "nachbereitet";
   e.nb = {...n};
@@ -1943,7 +1996,6 @@ function nbTermForm(e){
         ${fld("realStart","Gestartet",n.realStart||"","time",'step="300"')}
         ${fld("realEnde","Geendet",n.realEnde||"","time",'step="300"')}
       </div>
-      <p class="hinweis" style="margin-top:8px">Der Zählmodus setzt beide Zeiten von selbst.</p>
     </div>
     <div class="h4">Wetter</div>
     <div class="grp">
@@ -1960,7 +2012,7 @@ function nbTermForm(e){
           ${fld("umsatzFG","Bruttoumsatz Festgebiet €",n.umsatzFG,"text",'inputmode="decimal"')}
           ${fld("umsatzWG","Bruttoumsatz Weißgebiet €",n.umsatzWG,"text",'inputmode="decimal"')}
         </div>
-        <p class="hinweis">Getrennt eintragen — die Gebiete werden unterschiedlich vergütet.</p>` : ""}
+` : ""}
     </div>` : ""}`;
 }
 function saveNbTerm(e){
@@ -2005,7 +2057,7 @@ function saveNb(e){
     if(n.ausgeliehen==="Ja"){
       f(!n.abDatum || n.abZeit===undefined, "Datum und Zeit für den Abholtermin", "#abDatum", null);
     }else if(n.ausgeliehen==="Nein"){
-      f((n.besitz||[]).length < BESITZ.length && !(n.grund||"").trim(),
+      f((n.besitz||[]).length < BESITZ.length && !nkFertig(n),
         "Grund für den Nichtkauf", "#potOeffnen", null);
     }
   }
@@ -2041,7 +2093,8 @@ function saveNb(e){
   /* Bei ausgeliehenem Gerät ist noch nichts entschieden – die Potenzialliste
      wird erst beim Abholtermin gefüllt, falls es dann ein Nein wird. */
   if(n.verkauft==="Nein" && n.ausgeliehen!=="Ja" && (n.besitz||[]).length < BESITZ.length){
-    addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day);
+    addPotenzial(e, BESITZ.filter(b=>!(n.besitz||[]).includes(b)), n.grund, draft.day,
+      n.nkgruende, n.wvMonat || "");
   }
   if(n.empf==="Ja" && n.empfErhalten!=="Nein") (n.empfListe||[]).forEach(x=>{
     if(!(x.nach||"").trim()) return;
@@ -2052,6 +2105,7 @@ function saveNb(e){
     const i = empfehlungen.findIndex(y=>y.id===rec.id);
     if(i>=0) empfehlungen[i] = rec; else empfehlungen.push(rec);
   });
+  wvSetzen(e, n.wvMonat || "", [...(n.nkgruende||[]), n.grund||""].filter(Boolean).join(" · "));
   e.status = "stattgefunden";
   e.nb = {...n};
   closeModal(); renderAll();
@@ -2061,13 +2115,55 @@ function saveNb(e){
 /* Erkennt denselben Kunden unabhängig von Groß- und Kleinschreibung,
    doppelten Leerzeichen und Punkten in der Straße ("Dorfstr." = "dorfstr") */
 const norm = x => (x||"").toLowerCase().replace(/[.,]/g," ").replace(/\s+/g," ").trim();
+/* Reicht das, was zum Kein-Kauf erfasst wurde? */
+const nkFertig = n => {
+  const has = n.besitz || [];
+  return has.length >= BESITZ.length || !!(n.nkgruende||[]).length || !!(n.grund||"").trim();
+};
+/* Alle Gründe eines Eintrags in einer Zeile - für Suche und Anzeige */
+const nkText = x => [...((x.gruende)||[]), x.grund||""].join(" ");
 const pid = e => [e.vorname,e.nachname,e.strasse,e.plz,e.ort].map(norm).join("|");
-function addPotenzial(e,offen,grund,datum){
+
+/* ---------- Wiedervorlage ----------
+   Ein gemeinsamer Speicher für alles, was noch einmal angesprochen werden soll —
+   egal ob aus dem Kein-Kauf-Fenster, aus der Nachbereitung oder aus der Kundenliste. */
+const wvId = p => kundeId(p);
+const wvHolen = p => wiedervorlagen.find(w => w.id === wvId(p));
+function wvSetzen(p, monat, notiz){
+  const id = wvId(p);
+  const i = wiedervorlagen.findIndex(w => w.id === id);
+  if(!monat){ if(i >= 0) wiedervorlagen.splice(i,1); return; }
+  const rec = {
+    id, vorname:p.vorname||"", nachname:p.nachname||"",
+    str:p.str||"", hnr:p.hnr||"",
+    strasse:p.strasse || [p.str,p.hnr].filter(Boolean).join(" "),
+    plz:p.plz||"", ort:p.ort||"", telefon:p.telefon||"",
+    monat, notiz:(notiz||"").trim(), erstellt:dk(new Date())
+  };
+  if(i >= 0) wiedervorlagen[i] = {...wiedervorlagen[i], ...rec};
+  else wiedervorlagen.push(rec);
+}
+function wvLoeschen(id){
+  const i = wiedervorlagen.findIndex(w => w.id === id);
+  if(i >= 0) wiedervorlagen.splice(i,1);
+}
+/* Alte Einträge mit taggenauem Datum einmalig auf Monate umstellen */
+function wvUmstellen(){
+  potenzial.forEach(p=>{
+    if(p.wieder){
+      if(!wvHolen(p)) wvSetzen(p, alsMonat(p.wieder), p.grund);
+      delete p.wieder;
+    }
+  });
+}
+function addPotenzial(e,offen,grund,datum,gruende,monat){
   const id = pid(e);
-  const rec = {id, vorname:e.vorname, nachname:e.nachname, strasse:e.strasse, plz:e.plz, ort:e.ort,
-               telefon:e.telefon, letzterBesuch:datum, potenzial:offen, grund:grund};
+  const rec = {id, vorname:e.vorname, nachname:e.nachname, strasse:e.strasse, str:e.str, hnr:e.hnr,
+               plz:e.plz, ort:e.ort, telefon:e.telefon, letzterBesuch:datum,
+               potenzial:offen, grund:grund, gruende:(gruende||[]).slice()};
   const i = potenzial.findIndex(p=>p.id===id);
-  if(i>=0) potenzial[i] = rec; else potenzial.push(rec);
+  if(i>=0) potenzial[i] = {...potenzial[i], ...rec}; else potenzial.push(rec);
+  if(monat !== undefined) wvSetzen(rec, monat, grund);
 }
 /* Aus einem Potenzialeintrag direkt einen Kundentermin anlegen */
 function terminAusPotenzial(p, quelle){
@@ -2090,8 +2186,7 @@ function terminAusPotenzial(p, quelle){
         str:p.str||"", hnr:p.hnr||"", notiz:p.notiz||""};
       const i = empfehlungen.findIndex(x=>x.id===p.id);   // aus der Empfehlungsliste entfernen
       if(i>=0) empfehlungen.splice(i,1);
-      const j = potenzial.findIndex(x=>x.id===p.id);      // Potenzialeintrag bleibt, Wiedervorlage entfällt
-      if(j>=0) delete potenzial[j].wieder;
+      wvLoeschen(wvId(p));                               // Potenzialeintrag bleibt, Wiedervorlage entfällt
       closeModal(); renderAll();
     }, "Termin eintragen");
 }
@@ -2113,7 +2208,7 @@ function potDrucken(liste, wer){
         <td>${p.letzterBesuch ? fmt(fromDk(p.letzterBesuch)) : ""}</td>
         <td>${p.telefon||""}</td>
         <td>${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ")}</td>
-        <td>${p.grund||""}</td>
+        <td>${[...(p.gruende||[]), p.grund||""].filter(Boolean).join(" · ")}</td>
       </tr>`).join("")}</tbody>
     </table>`;
   druckTitel = "Potenzialliste" + (wer ? " · " + wer : "");
@@ -2173,20 +2268,24 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
          <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
            <input id="kb_str" data-adr="kb" value="${p.str||p.strasse||""}" autocomplete="off">
            <div class="vorschlaege" id="kb_vorschlaege" hidden></div></div>
-         <div class="field" style="flex:0 0 30%"><label>Nr.</label><input id="kb_hnr" value="${p.hnr||""}"></div>
+         <div class="field" style="flex:0 0 30%"><label>Nr.</label><input id="kb_hnr" value="${p.hnr||""}" inputmode="numeric"></div>
        </div>
        <div class="row2">
          <div class="field" style="flex:0 0 42%"><label>PLZ</label><input id="kb_plz" value="${p.plz||""}" inputmode="numeric" maxlength="5"></div>
          <div class="field"><label>Ort</label><input id="kb_ort" value="${p.ort||""}"></div>
        </div>
-       <div class="field"><label>Telefon</label><input id="kbTel" value="${p.telefon||""}"></div>
+       <div class="field"><label>Telefon</label><input id="kbTel" type="tel" inputmode="tel" value="${p.telefon||""}"></div>
        ${mitGeraeten?"":`<div class="field"><label>Empfohlen von</label><input id="kbVon" value="${p.von||""}" placeholder="Name des Kunden"></div>`}
        ${mitGeraeten?`<div class="sect"><span class="lb">Offenes Potenzial — was fehlt dem Kunden noch?</span>
          <div class="checks stack" id="kbPot">${BESITZ.map(g=>
            `<button type="button" data-kbpot="${g}" aria-pressed="${(p.potenzial||[]).includes(g)}">${g}</button>`).join("")}</div>
          </div>`:""}
-       <div class="field"><label for="kbWieder">Wieder ansprechen am</label>
-         <input id="kbWieder" type="date" value="${p.wieder||""}"></div>
+       ${mitGeraeten?`<div class="sect"><span class="lb">Top „Nicht kauf“ Gründe</span>
+         <div class="checks gruende2" id="kbGrd">${NK_GRUENDE.map(g=>
+           `<button type="button" data-kbgrd="${g}" aria-pressed="${(p.gruende||[]).includes(g)}">${g}</button>`).join("")}</div>
+         </div>`:""}
+       <div class="field"><label for="kbWieder">Wieder ansprechen im Monat</label>
+         <input id="kbWieder" type="month" value="${(wvHolen(p)||{}).monat||""}"></div>
        <div class="field"><label>Notiz</label><textarea id="kbNotiz" style="min-height:70px">${p.notiz||p.grund||""}</textarea></div>
      </div>
      <p class="err" id="kbErr" hidden></p>`,
@@ -2198,10 +2297,11 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
       p.plz = w('kb_plz'); p.ort = w('kb_ort'); p.telefon = w('kbTel');
       if(mitGeraeten){
         p.potenzial = [...document.querySelectorAll('[data-kbpot][aria-pressed="true"]')].map(b=>b.dataset.kbpot);
+        p.gruende = [...document.querySelectorAll('[data-kbgrd][aria-pressed="true"]')].map(b=>b.dataset.kbgrd);
         p.grund = w('kbNotiz');
       }
       else p.notiz = w('kbNotiz');
-      if(w('kbWieder')) p.wieder = w('kbWieder'); else delete p.wieder;
+      delete p.wieder;
       if(!mitGeraeten && document.getElementById('kbVon')) p.von = w('kbVon');
       if(istNeu){
         if(!p.nachname){
@@ -2213,16 +2313,42 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
         if(!p.datum) p.datum = dk(new Date());
         if(!liste.some(x=>x.id===p.id)) liste.push(p);
       }
+      wvSetzen(p, w('kbWieder'), p.grund || p.notiz);
       closeModal(); renderAll();
     }, "Speichern");
-  sheet.querySelectorAll('[data-kbpot]').forEach(b=> b.onclick = ()=>
+  sheet.querySelectorAll('[data-kbpot],[data-kbgrd]').forEach(b=> b.onclick = ()=>
     b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== "true"));
+}
+var potSuche = "", potFilter = "";
+/* Karte eines Potenzialeintrags - der Farbstreifen zeigt den ersten Grund */
+function potKarte(p){
+  const wv = wvHolen(p);
+  const jetzt = monatJetzt();
+  const gr = p.gruende || [];
+  const farbe = gr.length ? grundFarbe(gr[0]) : "";
+  return `<div class="pcard${farbe?" gstreif":""}${wv && wv.monat <= jetzt ? " faellig" : ""}"
+      ${farbe?`style="--gf:${farbe}"`:""}>
+      <div class="nm">${p.vorname} ${p.nachname}${wv ? `<span class="wieder">${
+        wv.monat <= jetzt ? "fällig" : monatKurz(wv.monat)}</span>` : ""}</div>
+      <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
+      <div class="meta">${p.telefon?p.telefon+" · ":""}${p.letzterBesuch
+        ? "Letzter Besuch: "+fmt(fromDk(p.letzterBesuch))
+        : "Von Hand angelegt"+(p.datum?" am "+fmt(fromDk(p.datum)):"")}</div>
+      <div class="pot">${(p.potenzial||[]).map(x=>`<span>${x}</span>`).join("")}</div>
+      ${gr.length?`<div class="gchips">${gr.map(g=>
+        `<span style="--gc:${grundFarbe(g)}">${g}</span>`).join("")}</div>`:""}
+      ${p.grund?`<div class="why">${p.grund}</div>`:""}
+      <div class="pact">
+        <button class="btn" data-ptermin="${p.id}">Termin anlegen</button>
+        <button class="btn" data-pedit="${p.id}">Bearbeiten</button>
+        <button class="btn danger" data-pdel="${p.id}">Löschen</button>
+      </div>
+    </div>`;
 }
 function renderPotenzial(){
   const el = document.getElementById('plist');
   const neuKnopf = `<div class="asec"><div class="actions">
-    <button class="btn primary" id="potNeu">Person hinzufügen</button></div>
-    <p class="hinweis">Für alle, die dich später noch einmal sehen wollen — auch beim Terminieren an der Tür.</p></div>`;
+    <button class="btn primary" id="potNeu">Person hinzufügen</button></div></div>`;
   const verdrahten = ()=>{
     const b = document.getElementById('potNeu');
     if(b) b.onclick = ()=> kontaktBearbeiten({potenzial:[...BESITZ], datum:dk(new Date())}, potenzial, true, true);
@@ -2233,32 +2359,47 @@ function renderPotenzial(){
     verdrahten();
     return;
   }
-  const heute = dk(new Date());
-  const rang = p => (p.wieder && p.wieder <= heute) ? 0 : (p.wieder ? 1 : 2);
-  el.innerHTML = neuKnopf + `<div class="plist">` + potenzial.slice().sort((a,b)=>
-      rang(a) - rang(b) || (rang(a)===2 ? (b.letzterBesuch||b.datum||"").localeCompare(a.letzterBesuch||a.datum||"")
-                                        : (a.wieder||"").localeCompare(b.wieder||""))).map(p=>`
-    <div class="pcard${p.wieder && p.wieder <= heute ? " faellig" : ""}">
-      <div class="nm">${p.vorname} ${p.nachname}${p.wieder ? `<span class="wieder">${
-        p.wieder <= heute ? "fällig" : "ab "+fmtShort(fromDk(p.wieder))}</span>` : ""}</div>
-      <div class="meta">${[p.strasse,[p.plz,p.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
-      <div class="meta">${p.telefon?p.telefon+" · ":""}${p.letzterBesuch
-        ? "Letzter Besuch: "+fmt(fromDk(p.letzterBesuch))
-        : "Von Hand angelegt"+(p.datum?" am "+fmt(fromDk(p.datum)):"")}</div>
-      <div class="pot">${(p.potenzial||[]).map(x=>`<span>${x}</span>`).join("")}</div>
-      ${p.grund?`<div class="why">${p.grund}</div>`:""}
-      <div class="pact">
-        <button class="btn" data-ptermin="${p.id}">Termin anlegen</button>
-        <button class="btn" data-pedit="${p.id}">Bearbeiten</button>
-        <button class="btn danger" data-pdel="${p.id}">Löschen</button>
+  const jetzt = monatJetzt();
+  const q = potSuche.trim().toLowerCase();
+  const gefiltert = potenzial.filter(p=>{
+    if(potFilter && !(p.gruende||[]).includes(potFilter)) return false;
+    if(!q) return true;
+    return [p.vorname, p.nachname, p.ort, p.strasse, p.telefon, nkText(p)]
+      .join(" ").toLowerCase().includes(q);
+  });
+  const wvM = p => (wvHolen(p)||{}).monat || "";
+  const rang = p => { const m = wvM(p); return m ? (m <= jetzt ? 0 : 1) : 2; };
+  /* In der Teamansicht wird die Liste nur abgebildet - dort wäre eine Suche ohne Funktion */
+  const suchfeld = fremdAktiv ? "" : `
+    <div class="asec">
+      <div class="field"><input id="potSuche" value="${potSuche}"
+        placeholder="Nach Grund, Zusatzinfo, Name oder Ort suchen" autocomplete="off" inputmode="search"></div>
+      <div class="filterchips">
+        <button type="button" data-pgf="" aria-pressed="${!potFilter}">Alle</button>
+        ${NK_GRUENDE.map(g=>`<button type="button" data-pgf="${g}" aria-pressed="${potFilter===g}"
+          style="border-left:4px solid ${grundFarbe(g)}">${g}</button>`).join("")}
       </div>
-    </div>`).join("") + `</div>`;
+      <p class="hinweis">${gefiltert.length} von ${potenzial.length} Einträgen${
+        potFilter||potSuche ? " · der Druckknopf unten nimmt genau diese Auswahl" : ""}</p>
+    </div>`;
+  el.innerHTML = neuKnopf + suchfeld +
+    (gefiltert.length
+      ? `<div class="plist">` + gefiltert.slice().sort((a,b)=>
+          rang(a) - rang(b) || (rang(a)===2
+            ? (b.letzterBesuch||b.datum||"").localeCompare(a.letzterBesuch||a.datum||"")
+            : wvM(a).localeCompare(wvM(b)))).map(potKarte).join("") + `</div>`
+      : `<div class="asec"><p class="aempty">Kein Eintrag passt zu dieser Suche.</p></div>`);
   el.insertAdjacentHTML('beforeend',
     `<div class="asec"><div class="actions"><button class="btn" id="potDruck">Potenzialliste drucken</button></div></div>`);
-  document.getElementById('potDruck').onclick = ()=> potDrucken(potenzial, me ? `${me.vorname} ${me.nachname}` : "");
+  const feld = document.getElementById('potSuche');
+  if(feld) feld.oninput = ()=>{ potSuche = feld.value; potListeNeu(); };
+  el.querySelectorAll('[data-pgf]').forEach(b=> b.onclick = ()=>{
+    potFilter = b.dataset.pgf; renderPotenzial();
+  });
+  document.getElementById('potDruck').onclick = ()=> potDrucken(gefiltert, me ? `${me.vorname} ${me.nachname}` : "");
   el.querySelectorAll('[data-pdel]').forEach(b=> b.onclick = ()=>{
     const i = potenzial.findIndex(x=>x.id===b.dataset.pdel);
-    if(i>=0) potenzial.splice(i,1);
+    if(i>=0){ wvLoeschen(wvId(potenzial[i])); potenzial.splice(i,1); }
     renderAll();
   });
   el.querySelectorAll('[data-ptermin]').forEach(b=> b.onclick = ()=>{
@@ -2270,6 +2411,96 @@ function renderPotenzial(){
     if(p) kontaktBearbeiten(p, potenzial, true);
   });
   verdrahten();                                  // gilt auch für die gefüllte Liste
+}
+/* ---------- Wiedervorlage ---------- */
+/* Alles, was noch einmal angesprochen werden soll — das Naheliegendste steht oben. */
+function renderWiedervorlage(){
+  const el = document.getElementById('wvliste');
+  if(!el) return;
+  const jetzt = monatJetzt();
+  const liste = wiedervorlagen.slice().sort((a,b)=>
+    (a.monat||"").localeCompare(b.monat||"") || (a.nachname||"").localeCompare(b.nachname||""));
+  if(!liste.length){
+    el.innerHTML = `<div class="placeholder">Noch keine Wiedervorlagen. Du setzt sie im Kein-Kauf-Fenster,
+      unten in der Nachbereitung eines Kundentermins oder direkt über die Kundenliste.</div>`;
+    return;
+  }
+  const gruppen = [
+    ["Überfällig",   liste.filter(w => w.monat <  jetzt)],
+    ["Diesen Monat", liste.filter(w => w.monat === jetzt)],
+    ["Später",       liste.filter(w => w.monat >  jetzt)]
+  ].filter(g => g[1].length);
+
+  const karte = w => {
+    const adr = [w.strasse,[w.plz,w.ort].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+    const pot = potenzial.find(x => wvId(x) === w.id);
+    const gr = (pot && pot.gruende) || [];
+    const farbe = gr.length ? grundFarbe(gr[0]) : "";
+    return `<div class="pcard${farbe?" gstreif":""}${w.monat <= jetzt ? " faellig" : ""}"
+        ${farbe?`style="--gf:${farbe}"`:""}>
+      <div class="nm">${w.vorname} ${w.nachname}
+        <span class="wieder">${monatText(w.monat)}</span></div>
+      <div class="meta">${adr || "keine Adresse hinterlegt"}</div>
+      ${w.telefon?`<div class="meta">${w.telefon}</div>`:""}
+      ${gr.length?`<div class="gchips">${gr.map(g=>
+        `<span style="--gc:${grundFarbe(g)}">${g}</span>`).join("")}</div>`:""}
+      ${w.notiz?`<div class="why">${w.notiz}</div>`:""}
+      <div class="pact">
+        ${w.telefon?`<a class="btn" href="${telLink(w.telefon)}">Anrufen</a>`:""}
+        ${adr?`<a class="btn" href="${mapsLink(adr)}" target="_blank" rel="noopener">Route</a>`:""}
+        <button class="btn" data-wvtermin="${w.id}">Termin anlegen</button>
+        <button class="btn" data-wvedit="${w.id}">Verschieben</button>
+        <button class="btn danger" data-wvweg="${w.id}">Erledigt</button>
+      </div>
+    </div>`;
+  };
+
+  el.innerHTML = `<div class="asec">
+      <h3>Wiedervorlage</h3>
+      <p class="sub">${liste.length} offen · das nächstliegende Datum steht oben.</p>
+    </div>` +
+    gruppen.map(([titel, ws]) => `<div class="wvgruppe"><h4>${titel} · ${ws.length}</h4>
+      <div class="plist">${ws.map(karte).join("")}</div></div>`).join("");
+
+  el.querySelectorAll('[data-wvweg]').forEach(b=> b.onclick = ()=>{
+    wvLoeschen(b.dataset.wvweg); renderAll();
+  });
+  el.querySelectorAll('[data-wvedit]').forEach(b=> b.onclick = ()=>{
+    const w = wiedervorlagen.find(x=>x.id===b.dataset.wvedit);
+    if(w) wvDialog(w, `${w.vorname} ${w.nachname}`.trim());
+  });
+  el.querySelectorAll('[data-wvtermin]').forEach(b=> b.onclick = ()=>{
+    const w = wiedervorlagen.find(x=>x.id===b.dataset.wvtermin);
+    if(w) terminAusPotenzial(w, "Vertriebsadresse");
+  });
+}
+/* Kleines Fenster zum Setzen oder Ändern einer Wiedervorlage */
+function wvDialog(person, titel){
+  const vorhanden = wvHolen(person) || {};
+  simpleDialog("Wiedervorlage", titel || `${person.vorname||""} ${person.nachname||""}`.trim(),
+    `<div class="grp">
+       <div class="field"><label for="wvdMonat">Wieder ansprechen im Monat</label>
+         <input id="wvdMonat" type="month" value="${vorhanden.monat||monatJetzt()}"></div>
+       <div class="field"><label for="wvdNotiz">Notiz</label>
+         <textarea id="wvdNotiz" style="min-height:70px">${vorhanden.notiz||""}</textarea></div>
+     </div>`,
+    ()=>{
+      const m = (document.getElementById('wvdMonat')||{value:""}).value;
+      const nz = (document.getElementById('wvdNotiz')||{value:""}).value;
+      wvSetzen(person, m, nz);
+      closeModal(); renderAll();
+    }, "Speichern");
+}
+let potTimer = null;
+function potListeNeu(){
+  clearTimeout(potTimer);
+  potTimer = setTimeout(()=>{
+    const alt = document.getElementById('potSuche');
+    const pos = alt ? alt.selectionStart : 0;
+    renderPotenzial();
+    const neu = document.getElementById('potSuche');
+    if(neu){ neu.focus(); try{ neu.setSelectionRange(pos,pos); }catch(e){} }
+  }, 220);
 }
 
 /* ---------- Dialogschritte ---------- */
@@ -2324,7 +2555,7 @@ function startEdit(e){
     draft.nb.zielTermine = e.ziel || 0;
     draft.modus = e.modus;
     if(e.quelle==="Promotion"){ draft.nb.f_ort = e.ort||""; step = "promo"; }
-    else step = "fgModus";
+    else step = "termQuelle";
   }else{ return; }
   paint();
 }
@@ -2471,11 +2702,11 @@ function paint(){
   if(step==="kind"){
     sheet.innerHTML = head("Was ist das für ein Termin?") +
       `<button class="opt" data-kind="kunde">Kundentermin</button>
-       <button class="opt" data-kind="eigenkauf">Eigenkauf<small>ohne Kundendaten</small></button>
-       <button class="opt" data-kind="premium">Premium CheckIn</button>
-       <button class="opt" data-kind="meeting">Meeting<small>mit eigener Uhrzeit</small></button>
        <button class="opt" data-kind="terminieren">Terminieren</button>
-       <button class="opt" data-kind="privat">Privat<small>mit eigener Uhrzeit</small></button>
+       <button class="opt" data-kind="premium">Premium CheckIn</button>
+       <button class="opt" data-kind="meeting">Meeting</button>
+       <button class="opt" data-kind="privat">Privat</button>
+       <button class="opt" data-kind="eigenkauf">Eigenkauf</button>
        <button class="opt" data-kind="individuell">Individuell<small>eigene Bezeichnung und Farbe</small></button>`;
     sheet.querySelectorAll('[data-kind]').forEach(b=> b.onclick = ()=>{
       draft.kind = b.dataset.kind;
@@ -2511,18 +2742,18 @@ function paint(){
            <input id="f_str" data-adr="f" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
            <div class="vorschlaege" id="f_vorschlaege" hidden></div></div>
          <div class="field" style="flex:0 0 30%"><label for="f_hnr">Hausnummer</label>
-           <input id="f_hnr" value="${n.f_hnr||""}" autocomplete="off" spellcheck="false"></div>
+           <input id="f_hnr" value="${n.f_hnr||""}" autocomplete="off" spellcheck="false" inputmode="numeric"></div>
        </div>
        <div class="row2"><div class="field" style="flex:0 0 42%"><label for="f_plz">PLZ</label>
          <input id="f_plz" value="${n.f_plz||""}" inputmode="numeric" maxlength="5" pattern="\\d{5}"></div>
          ${fld("f_ort","Ort",n.f_ort)}</div>
-       ${fld("f_tel","Telefonnummer (freiwillig)",n.f_tel,"tel")}
+       ${fld("f_tel","Telefonnummer (freiwillig)",n.f_tel,"tel",'inputmode="tel"')}
        <div class="field"><label for="f_notiz">Notiz zum Termin</label>
          <textarea id="f_notiz" style="min-height:70px">${n.f_notiz||""}</textarea></div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="${draft.back||'quelle'}">Zurück</button><button class="btn primary" id="save">Termin speichern</button></div>
        <div class="actions"><button class="btn" id="spaeter">Später nachtragen</button></div>
-       <div class="hint">Später nachtragen speichert nur die Namen — Adresse und Telefonnummer kannst du jederzeit über „Bearbeiten“ ergänzen.</div>`;
+`;
     wireBack();
     kundenTreffer();
     ['f_nach','f_plz','f_str'].forEach(id=>{
@@ -2573,7 +2804,7 @@ function paint(){
        </div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="kind">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
-       <div class="hint">Keine Nachbereitung — der Block ist nur farblich gekennzeichnet und blockiert die Zeit optisch.</div>`;
+`;
     wireBack();
     sheet.querySelectorAll('[data-farbe]').forEach(b=> b.onclick = ()=>{
       draft.titel = document.getElementById('ivTitel').value;
@@ -2603,24 +2834,41 @@ function paint(){
   if(step==="potenzial"){
     const n = draft.nb;
     const has = n.besitz||[];
+    const gr  = n.nkgruende||[];
     sheet.innerHTML = head("Kein Kauf") +
       `<div class="h4">Kein Kauf – hat der Kunde das hier bereits?</div>
-       <div class="grp">${checks("besitz",BESITZ,has,"stack")}</div>
-       ${has.length < BESITZ.length
-         ? `<div class="grp">
-              <div class="field"><label for="grund">Warum wurde nicht gekauft?</label><textarea id="grund">${n.grund||""}</textarea></div>
-              <p class="hinweis">Der Kunde landet mit dem offenen Potenzial in der Potenzialliste:
-                ${BESITZ.filter(b=>!has.includes(b)).join(" · ") || "–"}</p>
-            </div>`
-         : `<div class="grp"><p class="hinweis">Der Kunde hat bereits alles — es entsteht kein Eintrag in der Potenzialliste.</p></div>`}
+       <div class="grp">
+         ${checks("besitz",BESITZ,has,"geraete4")}
+         <div class="actions" style="margin-top:10px"><button type="button" class="btn" id="hatAlles">
+           ${has.length >= BESITZ.length ? "Auswahl leeren" : "Hat alles"}</button></div>
+       </div>
+       ${has.length < BESITZ.length ? `
+       <div class="h4">Top „Nicht kauf“ Gründe</div>
+       <div class="grp">
+         ${checks("nkgruende",NK_GRUENDE,gr,"gruende2")}
+         <div class="field" style="margin-top:14px"><label for="grund">Zusatz&nbsp;Info oder individueller Grund</label>
+           <textarea id="grund">${n.grund||""}</textarea></div>
+         <div class="field"><label for="wvMonat">Rückmeldung im Monat (freiwillig)</label>
+           <input id="wvMonat" type="month" value="${n.wvMonat||""}"></div>
+         <p class="hinweis">Offen bleibt: ${BESITZ.filter(b=>!has.includes(b)).join(" · ") || "–"}</p>
+       </div>` : `
+       <div class="grp"><p class="hinweis">Der Kunde hat bereits alles — es entsteht kein Eintrag in der Potenzialliste.</p></div>`}
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn primary" id="potFertig">Übernehmen</button></div>`;
     wireSegs();
+    const alles = document.getElementById('hatAlles');
+    if(alles) alles.onclick = ()=>{
+      collect();
+      draft.nb.besitz = (draft.nb.besitz||[]).length >= BESITZ.length ? [] : [...BESITZ];
+      repaint();
+    };
     document.getElementById('potFertig').onclick = ()=>{
       collect();
       const b = draft.nb.besitz||[];
-      if(b.length < BESITZ.length && !(draft.nb.grund||"").trim()){
-        error = "Bitte kurz eintragen, warum nicht gekauft wurde."; repaint(); return;
+      const g = draft.nb.nkgruende||[];
+      if(b.length < BESITZ.length && !g.length && !(draft.nb.grund||"").trim()){
+        error = "Bitte einen Grund wählen oder kurz eintragen, warum nicht gekauft wurde.";
+        draft.fokus = '[data-chk="nkgruende"]'; repaint(); return;
       }
       error = ""; step = "view"; paint();
     };
@@ -2643,7 +2891,7 @@ function paint(){
               <input id="emp${i}_str" data-emp="${i}|str" data-adr="emp${i}" value="${e.str||""}" autocomplete="off">
               <div class="vorschlaege" id="emp${i}_vorschlaege" hidden></div></div>
             <div class="field" style="flex:0 0 30%"><label>Nr.</label>
-              <input id="emp${i}_hnr" data-emp="${i}|hnr" value="${e.hnr||""}" autocomplete="off"></div>
+              <input id="emp${i}_hnr" data-emp="${i}|hnr" value="${e.hnr||""}" autocomplete="off" inputmode="numeric"></div>
           </div>
           <div class="row2">
             <div class="field" style="flex:0 0 42%"><label>PLZ</label>
@@ -2651,13 +2899,13 @@ function paint(){
             <div class="field"><label>Ort</label>
               <input id="emp${i}_ort" data-emp="${i}|ort" value="${e.ort||""}" autocomplete="off"></div>
           </div>
-          <div class="field"><label>Telefon (freiwillig)</label><input data-emp="${i}|tel" value="${e.tel||""}" autocomplete="off"></div>
+          <div class="field"><label>Telefon (freiwillig)</label><input data-emp="${i}|tel" type="tel" inputmode="tel" value="${e.tel||""}" autocomplete="off"></div>
           <div class="field"><label>Notiz</label><textarea data-emp="${i}|notiz" style="min-height:60px">${e.notiz||""}</textarea></div>
         </div>`).join("") +
       `<div class="actions"><button type="button" class="btn" id="empPlus">+ weitere Empfehlung</button></div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn primary" id="empFertig">Übernehmen</button></div>
-       <div class="hint">Mindestens der Nachname muss ausgefüllt sein, sonst wird die Empfehlung nicht gespeichert.</div>`;
+`;
     wireSegs();
     document.getElementById('empFertig').onclick = ()=>{
       collect();
@@ -2698,24 +2946,15 @@ function paint(){
 
   if(step==="termQuelle"){
     sheet.innerHTML = head("Woraus terminierst du?") +
-      `<button class="opt" data-tq="Festgebietsbegehung">Festgebietsbegehung</button>
+      `<button class="opt" data-tq="Festgebietsbegehung" data-fg="Bestandskunde">FGB – Bestandskunden</button>
+       <button class="opt" data-tq="Festgebietsbegehung" data-fg="Door to Door">FGB – Door to Door</button>
        <button class="opt" data-tq="Promotion">Promotion</button>` + backBtn("kind");
     wireBack();
     sheet.querySelectorAll('[data-tq]').forEach(b=> b.onclick = ()=>{
       draft.quelle = b.dataset.tq;
-      step = draft.quelle==="Promotion" ? "promo" : "fgModus";
+      draft.modus = b.dataset.fg || "";
+      step = draft.quelle==="Promotion" ? "promo" : "termZiel";
       paint();
-    });
-    return;
-  }
-
-  if(step==="fgModus"){
-    sheet.innerHTML = head("Festgebietsbegehung") +
-      `<button class="opt" data-fg="Bestandskunde">Bestandskunde</button>
-       <button class="opt" data-fg="Door to Door">Door to Door</button>` + backBtn("termQuelle");
-    wireBack();
-    sheet.querySelectorAll('[data-fg]').forEach(b=> b.onclick = ()=>{
-      draft.modus = b.dataset.fg; step = "termZiel"; paint();
     });
     return;
   }
@@ -2728,10 +2967,9 @@ function paint(){
          ${zaehlZeile("zielTermine","Termine", n.zielTermine)}
        </div>
        ${error?`<div class="err">${error}</div>`:""}
-       <div class="actions"><button class="btn" data-back="fgModus">Zurück</button>
+       <div class="actions"><button class="btn" data-back="termQuelle">Zurück</button>
          <button class="btn primary" id="save">Speichern</button></div>
-       <div class="hint">Wie viele Termine willst du in diesem Block holen? Das Ziel steht später
-         im Termin und im Zählmodus — ändern kannst du es jederzeit über „Daten bearbeiten“.</div>`;
+`;
     wireBack();
     wireSegs();
     document.getElementById('save').onclick = ()=>{
@@ -2761,7 +2999,7 @@ function paint(){
        <div class="grp">${zaehlZeile("zielTermine","Termine", draft.nb.zielTermine)}</div>
        ${error?`<div class="err">${error}</div>`:""}
        <div class="actions"><button class="btn" data-back="termQuelle">Zurück</button><button class="btn primary" id="save">Speichern</button></div>
-       <div class="hint">Für Messen und Events: die ganze Dauer wird im Planer gesperrt.</div>`;
+`;
     wireBack();
     wireSegs();
     sheet.querySelectorAll('[data-seg]').forEach(b=> b.onclick = ()=>{ collect(); draft.bis=document.getElementById('f_bis').value; draft.gebiet=b.dataset.val; repaint(); });
@@ -2842,6 +3080,16 @@ function wireSegs(){
     const a = sheet.querySelector(`[data-zwert="${id}"]`);
     if(a){ a.textContent = neu; a.parentElement.classList.toggle('hat', neu>0);
            a.closest('.zzeile').classList.toggle('hat', neu>0); }
+  });
+  sheet.querySelectorAll('[data-zwert][data-zedit]').forEach(el=> el.onclick = ()=>{
+    collect();
+    const id = el.dataset.zwert;
+    zahlEingabe(el.dataset.zedit, draft.nb[id], v=>{
+      draft.nb[id] = v;
+      el.textContent = v;
+      el.parentElement.classList.toggle('hat', v>0);
+      el.closest('.zzeile').classList.toggle('hat', v>0);
+    });
   });
   sheet.querySelectorAll('[data-zeit]').forEach(b=> b.onclick = ()=>{
     collect();
@@ -3237,7 +3485,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "bw-v61 · 19.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v65 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -3415,11 +3663,21 @@ function jahresUebersicht(jahr){
       });
       const nach = (nachtrag[jahr] && nachtrag[jahr][startW]) || null;
       const nachV = (nachtrag[jahr-1] && nachtrag[jahr-1][startW]) || null;
-      zeilen.push({nach, nachV, vorjahrNetto:netto(uV.fg+uV.wg+uV.k70ein) + (nachV?+nachV.umsatz||0:0),
-                   vorjahrEh: ehV + (nachV?+nachV.einheiten||0:0), startW, name:`${q+1}. Quartal · ${idx}`, kw:`${vm.startW}–${vm.endW}`,
-        nettoU: netto(u.fg+u.wg+u.k70ein) + (nach?+nach.umsatz||0:0),
-        einheiten: einheiten + (nach?+nach.einheiten||0:0),
-        auftraege: auftraege + (nach?+nach.auftraege||0:0), stufe:p.stufe, prov:p.prov,
+      /* „ersetzen“ heißt: der nachgetragene Wert gilt, die erfassten Zahlen treten zurück.
+         Leer gelassene Felder behalten weiterhin den Wert aus der App. */
+      const mit = (basis, n, feld) => {
+        if(!n) return basis;
+        const w = n[feld];
+        if(w === undefined || w === null || w === "") return basis;
+        return (n.modus === "ersetzen") ? (+w || 0) : basis + (+w || 0);
+      };
+      zeilen.push({nach, nachV,
+                   vorjahrNetto: mit(netto(uV.fg+uV.wg+uV.k70ein), nachV, "umsatz"),
+                   vorjahrEh:    mit(ehV, nachV, "einheiten"),
+                   startW, name:`${q+1}. Quartal · ${idx}`, kw:`${vm.startW}–${vm.endW}`,
+        nettoU:    mit(netto(u.fg+u.wg+u.k70ein), nach, "umsatz"),
+        einheiten: mit(einheiten, nach, "einheiten"),
+        auftraege: mit(auftraege, nach, "auftraege"), stufe:p.stufe, prov:p.prov,
         spanne:`${pad(vm.from.getDate())}.${pad(vm.from.getMonth()+1)}–${pad(vm.to.getDate())}.${pad(vm.to.getMonth()+1)}`,
         wochen: vm.weeks,
         kurz:`${q+1}Q${idx}`, aktuell: vm.startW === vmJetzt.startW && jahr === vmJetzt.year});
@@ -3843,11 +4101,48 @@ function renderAusw(){
         <span class="vl">${c} · ${pct(c,t.stattgefunden)}</span></div>`;
     }).join("") : `<p class="aempty">Noch keine nachbereiteten Termine.</p>`}</div>`;
 
+  /* Warum wurde nicht gekauft - und was wurde später doch daraus? */
+  const kdn = kundenListe();
+  const grZaehl = {};
+  t.list.forEach(x=>{
+    if(x.n.verkauft !== "Nein") return;
+    const gruende = [...(x.n.nkgruende||[])];
+    if(!gruende.length && (x.n.grund||"").trim()) gruende.push("Individueller Grund");
+    if(!gruende.length) return;
+    const kd = kdn.find(r => r.id === kundeId(x.e));
+    const spaeter = !!(kd && kd.letzterKauf && kd.letzterKauf > x.day);
+    gruende.forEach(g=>{
+      grZaehl[g] = grZaehl[g] || {n:0, kauf:0};
+      grZaehl[g].n++;
+      if(spaeter) grZaehl[g].kauf++;
+    });
+  });
+  const grListe = Object.keys(grZaehl).sort((a,b)=> grZaehl[b].n - grZaehl[a].n);
+  const grSumme = grListe.reduce((n,g)=> n + grZaehl[g].n, 0);
+  const grMax = Math.max(1, ...grListe.map(g=>grZaehl[g].n));
+  const s4 = `<div class="asec"><h3>Warum nicht gekauft wurde</h3>
+    <p class="sub">${grSumme} Nennungen aus ${t.list.filter(x=>x.n.verkauft==="Nein").length}
+      Terminen ohne Kauf · ein Termin kann mehrere Gründe haben</p>
+    ${grListe.length ? grListe.map(g=>{
+      const z = grZaehl[g];
+      return `<div class="aline"><span class="nm">${g}</span>
+        <span class="bar"><i style="width:${z.n/grMax*100}%;background:${grundFarbe(g)}"></i></span>
+        <span class="vl">${z.n} · ${pct(z.n,grSumme)}${z.kauf?` · ${z.kauf} später gekauft`:""}</span></div>`;
+    }).join("") : `<p class="aempty">Noch keine Gründe erfasst.</p>`}
+    ${grListe.length ? `<div class="ah4">Aus welchem Grund wird später doch gekauft?</div>
+      ${grListe.filter(g=>grZaehl[g].kauf).sort((a,b)=>
+          grZaehl[b].kauf/grZaehl[b].n - grZaehl[a].kauf/grZaehl[a].n).map(g=>
+        `<div class="aline"><span class="nm">${g}</span>
+          <span class="bar"><i style="width:${grZaehl[g].kauf/grZaehl[g].n*100}%;background:${grundFarbe(g)}"></i></span>
+          <span class="vl">${pct(grZaehl[g].kauf, grZaehl[g].n)}</span></div>`).join("")
+        || `<p class="aempty">Bisher hat noch keiner dieser Kunden später gekauft.</p>`}` : ""}
+  </div>`;
+
   const s0 = serie.wochen ? `<div class="asec"><div class="kpis">
       ${kpi("Wochen in Folge im Ziel", serie.wochen, serie.wochen>1?"weiter so":"erste Woche","hero")}
       ${kpi("Beste Serie", serie.beste, "seit Beginn")}
     </div></div>` : "";
-  document.getElementById('ausw').innerHTML = s0 + s1 + s2 + s3 + meldungHTML(monday);
+  document.getElementById('ausw').innerHTML = s0 + s1 + s2 + s3 + s4 + meldungHTML(monday);
 }
 document.getElementById('ausw').addEventListener('click', ev=>{
   const b = ev.target.closest('[data-reset]');
@@ -3922,13 +4217,14 @@ async function userSet(u){
 
 /* Alle Daten eines Benutzers als ein Paket */
 function dataBlob(){
-  return {entries, potenzial, empfehlungen, papierkorb, nachtrag, verlauf, archiv, einkaeufe, inventur, settings, wunsch, fahrten, jobtickets, teamumsatz, ts:Date.now()};
+  return {entries, potenzial, empfehlungen, wiedervorlagen, papierkorb, nachtrag, verlauf, archiv, einkaeufe, inventur, settings, wunsch, fahrten, jobtickets, teamumsatz, ts:Date.now()};
 }
 function applyData(d){
   Object.keys(entries).forEach(k=>delete entries[k]);
   Object.assign(entries, (d && d.entries) || {});
   potenzial.length = 0; ((d && d.potenzial) || []).forEach(x=>potenzial.push(x));
   empfehlungen.length = 0; ((d && d.empfehlungen) || []).forEach(x=>empfehlungen.push(x));
+  wiedervorlagen.length = 0; ((d && d.wiedervorlagen) || []).forEach(x=>wiedervorlagen.push(x));
   const grenze = Date.now() - 30*86400000;
   papierkorb.length = 0; ((d && d.papierkorb) || []).filter(x=>x.weg > grenze).forEach(x=>papierkorb.push(x));
   verlauf.length = 0;   ((d && d.verlauf)   || []).forEach(x=>verlauf.push(x));
@@ -3947,6 +4243,7 @@ function applyData(d){
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:270,quote:0}, (d && d.wunsch) || {});
   wunsch.proAuftrag = 270;
+  wvUmstellen();                       // taggenaue Alt-Termine werden zu Monaten
 }
 /* Der neuere Stand gewinnt – ist dort ein Bereich leer, springt der ältere ein.
    Verhindert, dass ein Teil der Daten durch einen halben Speichervorgang verschwindet. */
@@ -3993,6 +4290,7 @@ function mische(wolke, lokal){
   };
   nachId("potenzial", "id");
   nachId("empfehlungen", "id");
+  nachId("wiedervorlagen", "id");
   nachId("fahrten", "id");
 
   /* Objekte je Schlüssel zusammenlegen, der neuere Stand gewinnt bei Dopplung */
@@ -4080,7 +4378,7 @@ function flushSave(){
     updates[basis+'entries/'+k] = neuE[k];
   });
   Object.keys(altE).forEach(k=>{ if(!(k in neuE)) updates[basis+'entries/'+k] = null; });
-  ["potenzial","empfehlungen","papierkorb","nachtrag","verlauf","archiv","einkaeufe","inventur","settings","wunsch","fahrten","jobtickets","teamumsatz"].forEach(f=>{
+  ["potenzial","empfehlungen","wiedervorlagen","papierkorb","nachtrag","verlauf","archiv","einkaeufe","inventur","settings","wunsch","fahrten","jobtickets","teamumsatz"].forEach(f=>{
     if(!gleich(blob[f], shadow[f])) updates[basis+f] = (blob[f] === undefined ? null : blob[f]);
   });
   if(!Object.keys(updates).length){ saveState("gespeichert"); return; }
@@ -4760,7 +5058,7 @@ async function renderProfil(){
       <div class="grp"><div class="seg">${
         ["Dunkel","Hell"].map(t=>`<button type="button" data-thema="${t}"
           aria-pressed="${themaJetzt()===t}">${t}</button>`).join("")}</div>
-        <p class="hinweis" style="margin-top:6px">Hell ist draußen bei Sonne besser lesbar.</p></div>
+</div>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
       <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
       ${KALENDER_BASIS && me.feedToken ? `
@@ -5364,7 +5662,7 @@ function renderInventur(){
         <span class="pr">${preis(a.p)} €</span>
         <span class="stepper">
           <button type="button" data-minus="${id}" aria-label="weniger">−</button>
-          <b data-menge="${id}">${inventur[id]||0}</b>
+          <b data-menge="${id}" data-zedit="${a.n.replace(/"/g,'&quot;')}" role="button" tabindex="0">${inventur[id]||0}</b>
           <button type="button" data-plus="${id}" aria-label="mehr">+</button>
         </span>
         ${pflege?`<div class="invadmin">
@@ -5432,6 +5730,13 @@ function renderInventur(){
   });
   box.querySelectorAll('[data-menge]').forEach(el=>{
     el.parentElement.classList.toggle('hat', (+el.textContent||0) > 0);
+    el.onclick = ()=> zahlEingabe(el.dataset.zedit || "Bestand", inventur[el.dataset.menge], v=>{
+      const id = el.dataset.menge;
+      if(v > 0) inventur[id] = v; else delete inventur[id];
+      el.textContent = v;
+      el.parentElement.classList.toggle('hat', v > 0);
+      invSummeZeigen(); saveData(); renderProv();
+    });
   });
   box.querySelectorAll('[data-mark]').forEach(b=> b.onclick = async ()=>{
     const [kat,name] = b.dataset.mark.split("|");
@@ -5889,13 +6194,20 @@ function renderJobtickets(){
 
   const sel = document.getElementById('jobJahrSel');
   sel.onchange = ()=>{ jobJahr = +sel.value; renderJobtickets(); };
+  const jbFeld = {jbManuell:"manuell", jbQual:"qualifiziert", jbEigene:"qualEigene", jbFoerd:"foerderung"};
+  const jbSetzen = (feld, wert)=>{
+    jobtickets[jahr] = jobtickets[jahr] || {};
+    jobtickets[jahr][feld] = Math.max(0, wert);
+    saveData(); renderJobtickets(); renderZiele(); renderJahr();
+  };
   box.querySelectorAll('[data-jplus],[data-jminus]').forEach(b=> b.onclick = ()=>{
     const id = b.dataset.jplus || b.dataset.jminus;
-    const feld = {jbManuell:"manuell", jbQual:"qualifiziert", jbEigene:"qualEigene", jbFoerd:"foerderung"}[id];
-    jobtickets[jahr] = jobtickets[jahr] || {};
-    const neu = Math.max(0, (+jobtickets[jahr][feld] || 0) + (b.dataset.jplus ? 1 : -1));
-    jobtickets[jahr][feld] = neu;
-    saveData(); renderJobtickets(); renderZiele(); renderJahr();
+    const feld = jbFeld[id];
+    jbSetzen(feld, (+((jobtickets[jahr]||{})[feld]) || 0) + (b.dataset.jplus ? 1 : -1));
+  });
+  box.querySelectorAll('[data-jwert]').forEach(el=> el.onclick = ()=>{
+    const feld = jbFeld[el.dataset.jwert];
+    zahlEingabe(el.dataset.zedit || "Anzahl", (jobtickets[jahr]||{})[feld], v=> jbSetzen(feld, v));
   });
 }
 /* Zählzeile für die Seiten außerhalb der Nachbereitung */
@@ -5905,7 +6217,7 @@ function zaehlFeld(id, titel, wert){
     <span class="ztitel">${titel}</span>
     <span class="stepper${n?" hat":""}">
       <button type="button" data-jminus="${id}" aria-label="weniger">−</button>
-      <b>${n}</b>
+      <b data-jwert="${id}" data-zedit="${titel}" role="button" tabindex="0">${n}</b>
       <button type="button" data-jplus="${id}" aria-label="mehr">+</button>
     </span>
   </div>`;
@@ -6244,11 +6556,17 @@ function renderKunden(){
       <div class="seg">${[["alle","Alle"],["kunde","Käufer"],["offen","Ohne Kauf"]].map(([w,t])=>
         `<button type="button" data-kdf="${w}" aria-pressed="${kdFilter===w}">${t}</button>`).join("")}</div>
     </div>
+    ${dubletten(alle).map(g=>`<div class="asec">
+      <p class="hinweis" style="margin-top:0">Möglicherweise derselbe Kunde:
+        ${g.map(r=>`${r.vorname} ${r.nachname}, ${r.strasse||"ohne Straße"}`).join(" · ")}</p>
+      <div class="actions"><button class="btn" data-kdmerge="${g.map(r=>r.id).join("~")}">Zusammenführen</button></div>
+    </div>`).join("")}
     ${gefiltert.length ? `<div class="plist">${gefiltert.map(r=>{
       const letzter = r.termine[0];
       return `<div class="pcard kcard${r.kunde?" istkunde":""}">
         <div class="nm">${r.anrede?r.anrede+" ":""}${r.vorname} ${r.nachname}
-          ${r.kunde?`<span class="wieder">Kunde</span>`:""}</div>
+          ${r.kunde?`<span class="wieder">Kunde</span>`:""}
+          ${wvHolen(r)?`<span class="wieder">${monatKurz(wvHolen(r).monat)}</span>`:""}</div>
         <div class="meta">${[r.strasse,[r.plz,r.ort].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}</div>
         <div class="meta">${r.telefon?r.telefon+" · ":""}${r.termine.length} Termin${r.termine.length>1?"e":""}
           · zuletzt ${fmt(fromDk(r.letzterTermin))}</div>
@@ -6266,6 +6584,7 @@ function renderKunden(){
           ${r.telefon?`<a class="btn" href="${telLink(r.telefon)}">Anrufen</a>`:""}
           ${r.strasse?`<a class="btn" href="${mapsLink([r.strasse,[r.plz,r.ort].filter(Boolean).join(" ")].filter(Boolean).join(", "))}" target="_blank" rel="noopener">Route</a>`:""}
           <button class="btn" data-kdtermin="${r.id}">Termin anlegen</button>
+          <button class="btn" data-kdwv="${r.id}">Wiedervorlage</button>
           <button class="btn" data-kdhist="${r.id}">Verlauf</button>
         </div>
       </div>`;
@@ -6284,6 +6603,50 @@ function renderKunden(){
   box.querySelectorAll('[data-kdhist]').forEach(b=> b.onclick = ()=>{
     const r = alle.find(x=>x.id===b.dataset.kdhist);
     if(r) kundenVerlauf(r);
+  });
+  box.querySelectorAll('[data-kdwv]').forEach(b=> b.onclick = ()=>{
+    const r = alle.find(x=>x.id===b.dataset.kdwv);
+    if(r) wvDialog(r, `${r.vorname} ${r.nachname}`.trim());
+  });
+  box.querySelectorAll('[data-kdmerge]').forEach(b=> b.onclick = ()=>{
+    const ids = b.dataset.kdmerge.split("~");
+    zusammenfuehren(alle.filter(x=> ids.includes(x.id)));
+  });
+}
+/* Zwei Schreibweisen desselben Kunden, die die App noch nicht zusammenbringt:
+   gleicher Nachname und gleiche PLZ, aber unterschiedliche Straße. */
+function dubletten(alle){
+  const map = new Map();
+  alle.forEach(r=>{
+    if(!norm(r.nachname) || !norm(r.plz)) return;
+    const k = norm(r.nachname) + "|" + norm(r.plz);
+    map.set(k, [...(map.get(k)||[]), r]);
+  });
+  return [...map.values()].filter(g => g.length > 1);
+}
+/* Der gewählte Eintrag gewinnt - alle Termine der anderen bekommen dessen Daten */
+function zusammenfuehren(gruppe){
+  if(gruppe.length < 2) return;
+  simpleDialog("Zusammenführen", "Welcher Eintrag ist der richtige?",
+    `<div class="grp">
+       ${gruppe.map((r,i)=>`<button type="button" class="opt" data-master="${i}">
+         ${r.vorname} ${r.nachname}<small>${[r.strasse,[r.plz,r.ort].filter(Boolean).join(" ")]
+           .filter(Boolean).join(" · ")} · ${r.termine.length} Termin${r.termine.length>1?"e":""}</small></button>`).join("")}
+     </div>
+     <p class="hinweis">Alle Termine der übrigen Schreibweisen werden auf diese Daten umgeschrieben.
+       Umsätze und Statistik bleiben unverändert.</p>`,
+    ()=> closeModal(), "Abbrechen");
+  sheet.querySelectorAll('[data-master]').forEach(b=> b.onclick = ()=>{
+    const m = gruppe[+b.dataset.master];
+    const felder = ["vorname","nachname","anrede","strasse","str","hnr","plz","ort","telefon"];
+    gruppe.forEach(r=>{
+      if(r.id === m.id) return;
+      r.termine.forEach(t=> felder.forEach(f=>{ if(m[f]) t.e[f] = m[f]; }));
+      const i = potenzial.findIndex(x=>x.id===r.id);
+      if(i>=0) potenzial.splice(i,1);
+      wvLoeschen(r.id);
+    });
+    closeModal(); renderAll();
   });
 }
 /* Nur die Liste neu zeichnen, damit die Tastatur beim Suchen stehen bleibt */
@@ -6348,6 +6711,7 @@ const IC = {
   planer:'<path d="M4 6h16v14H4z"/><path d="M4 10h16M9 3v4M15 3v4M9 14h2M13 14h2M9 17h2M13 17h2"/>',
   statistik:'<path d="M3 5h18v14H3z"/><path d="M3 9h18M9 9v10M15 9v10"/>',
   auswertungen:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/>',
+  wiedervorlage:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/><path d="M3.5 5.5 6 3.5M20.5 5.5 18 3.5"/>',
   potenzial:'<path d="M4 6h10M4 12h10M4 18h7"/><path d="m17 14 1.6 3.3 3.4.5-2.5 2.4.6 3.4-3.1-1.6-3.1 1.6.6-3.4L12 17.8l3.4-.5z" transform="translate(0,-6) scale(0.85) translate(3,3)"/>',
   empfehlung:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M17 8h5M19.5 5.5v5"/>',
   inventur:'<path d="M3 8.5 12 4l9 4.5v7L12 20l-9-4.5z"/><path d="M3 8.5 12 13l9-4.5M12 13v7"/>',
@@ -6367,7 +6731,8 @@ const IC = {
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
 const MENUE = [
   ["heute","Heute"],["planer","Planer"],["statistik","Statistik"],["auswertungen","Auswertungen"],
-  ["kunden","Kundenliste"],["potenzial","Potenzialliste"],["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
+  ["kunden","Kundenliste"],["potenzial","Potenzialliste"],["wiedervorlage","Wiedervorlage"],
+  ["empfehlung","Empfehlungsliste"],["inventur","K70 Inventur"],
   ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["ziele","Ziele"],["jobtickets","Jobtickets"],
   ["fahrten","Fahrtenbuch"],["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
 ];
@@ -6632,8 +6997,8 @@ function renderJahr(){
 
     <div class="asec">
       <h3>Zahlen nachtragen</h3>
-      <p class="sub">Für Zeiten, in denen noch nicht mit der App gearbeitet wurde.<br>
-        Nachgetragenes wird zu den erfassten Zahlen addiert.</p>
+      <p class="sub">Für Zeiten, in denen noch nicht mit der App gearbeitet wurde —
+        oder um einen Monat zu korrigieren, in dem ein Termin fehlt.</p>
       <div class="grp" style="max-width:460px;margin:0 auto">
         <div class="row2">
           <div class="field"><label for="ntJahr">Jahr</label>
@@ -6645,6 +7010,13 @@ function renderJahr(){
         ${fld("ntEinheiten","Einheiten","","number",'min="0" inputmode="numeric"')}
         ${fld("ntUmsatz","Nettoumsatz €","","text",'inputmode="decimal"')}
         ${fld("ntAuftraege","Anzahl Aufträge","","number",'min="0" inputmode="numeric"')}
+        <div class="sect"><span class="lb">Wie sollen die Zahlen zählen?</span>
+          <div class="seg">
+            <button type="button" data-ntm="ersetzen" aria-pressed="true">Überschreiben</button>
+            <button type="button" data-ntm="ergaenzen" aria-pressed="false">Ergänzen</button>
+          </div></div>
+        <p class="hinweis" style="margin-top:0">Überschreiben ersetzt die erfassten Zahlen dieses Monats,
+          Ergänzen zählt sie dazu. Leere Felder bleiben in jedem Fall unberührt.</p>
         <div class="actions"><button class="btn primary wide" id="ntSpeichern">Nachtragen</button></div>
         <p class="err" id="ntErr" hidden></p>
       </div>
@@ -6670,6 +7042,9 @@ function renderJahr(){
     if(w > 0) settings.umsatzVor2020 = w; else delete settings.umsatzVor2020;
     saveData(); renderZiele(); renderJahr();
   };
+  box.querySelectorAll('[data-ntm]').forEach(b=> b.onclick = ()=>{
+    box.querySelectorAll('[data-ntm]').forEach(x=> x.setAttribute('aria-pressed', x === b));
+  });
   document.getElementById('ntSpeichern').onclick = ()=>{
     const w = id => document.getElementById(id).value.trim();
     const jahr = +w('ntJahr'), startW = +w('ntMonat');
@@ -6677,13 +7052,22 @@ function renderJahr(){
     if(!w('ntEinheiten') && !w('ntUmsatz') && !w('ntAuftraege')){
       err.textContent = "Bitte mindestens einen Wert eintragen."; err.hidden = false; return;
     }
+    const gewaehlt = box.querySelector('[data-ntm][aria-pressed="true"]');
+    const modus = gewaehlt ? gewaehlt.dataset.ntm : "ersetzen";
     nachtrag[jahr] = nachtrag[jahr] || {};
-    const alt = nachtrag[jahr][startW] || {einheiten:0, umsatz:0, auftraege:0};
-    nachtrag[jahr][startW] = {
-      einheiten: alt.einheiten + (+w('ntEinheiten')||0),
-      umsatz:    alt.umsatz    + num(w('ntUmsatz')),
-      auftraege: alt.auftraege + (+w('ntAuftraege')||0)
+    const alt = nachtrag[jahr][startW] || {};
+    const wertVon = (feld, roh, zahl) => {
+      if(roh === "") return (modus === "ersetzen") ? alt[feld] : alt[feld];
+      if(modus === "ersetzen") return zahl;
+      return (+alt[feld] || 0) + zahl;
     };
+    nachtrag[jahr][startW] = {
+      modus,
+      einheiten: wertVon("einheiten", w('ntEinheiten'), +w('ntEinheiten')||0),
+      umsatz:    wertVon("umsatz",    w('ntUmsatz'),    num(w('ntUmsatz'))),
+      auftraege: wertVon("auftraege", w('ntAuftraege'), +w('ntAuftraege')||0)
+    };
+    err.hidden = true;
     saveData(); renderJahr(); renderZiele();
   };
   box.querySelectorAll('[data-ntweg]').forEach(b=> b.onclick = ()=>{
@@ -6699,7 +7083,8 @@ function nachtragListe(heuteJahr){
       const n = nachtrag[jahr][kw];
       if(!n) return;
       zeilen.push(`<div class="ntzeile">
-        <span>${jahr} · ab KW ${kw}</span>
+        <span>${jahr} · ab KW ${kw}<br><small class="tspanne">${
+          n.modus === "ersetzen" ? "überschreibt" : "ergänzt"}</small></span>
         <span class="ntwerte">${n.einheiten||0} Einh. · ${eur(n.umsatz)} € · ${n.auftraege||0} Aufträge</span>
         <button class="mini" data-ntweg="${jahr}|${kw}">löschen</button></div>`);
     }));
@@ -6713,13 +7098,36 @@ const ZAEHLER = {
   Promotion: [["ansprachen","Ansprachen"],["gespraeche","Gespräche"],["termine","Termine"],["kontakte","Kontakte"]],
   Festgebietsbegehung: [["tueren","Türen"],["erreicht","Erreicht"],["termine","Termine"],["rueck","Rückmeldung"]]
 };
+/* Antippen der Zahl in einem Stepper: kleine Tastatur statt vielem Tippen */
+function zahlEingabe(titel, wert, cb){
+  const alt = document.getElementById('zahlbox');
+  if(alt) alt.remove();
+  const box = document.createElement('div');
+  box.id = 'zahlbox';
+  box.innerHTML = `<div class="zbinner">
+      <div class="zbtitel">${titel}</div>
+      <input id="zbFeld" type="number" inputmode="numeric" pattern="[0-9]*" min="0" step="1" value="${+wert||0}">
+      <div class="zbakt"><button type="button" class="btn" id="zbAb">Abbrechen</button>
+        <button type="button" class="btn primary" id="zbOk">Übernehmen</button></div>
+    </div>`;
+  document.body.appendChild(box);
+  const feld = box.querySelector('#zbFeld');
+  const zu = ()=> box.remove();
+  const ok = ()=>{ const v = Math.max(0, Math.round(+feld.value || 0)); zu(); cb(v); };
+  box.querySelector('#zbAb').onclick = zu;
+  box.querySelector('#zbOk').onclick = ok;
+  box.addEventListener('click', ev=>{ if(ev.target === box) zu(); });
+  feld.addEventListener('keydown', ev=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ok(); } });
+  setTimeout(()=>{ feld.focus(); feld.select(); }, 30);
+}
+
 function zaehlZeile(id, titel, wert){
   const n = +wert || 0;
   return `<div class="zzeile${n?" hat":""}">
     <span class="ztitel">${titel}</span>
     <span class="stepper${n?" hat":""}">
       <button type="button" data-zminus="${id}" aria-label="weniger">−</button>
-      <b data-zwert="${id}">${n}</b>
+      <b data-zwert="${id}" data-zedit="${titel}" role="button" tabindex="0">${n}</b>
       <button type="button" data-zplus="${id}" aria-label="mehr">+</button>
     </span>
   </div>`;
@@ -6756,8 +7164,7 @@ function zaehlZeichnen(){
     naechster.setMonth(naechster.getMonth()+1, 1);
     box.innerHTML = kopf + `
       <div class="zform">
-        <p class="zfhinweis">Für alle, die später noch einmal angesprochen werden wollen.
-          Der Eintrag landet in deiner Potenzialliste.</p>
+        <p class="zfhinweis">Der Eintrag landet in deiner Potenzialliste.</p>
         <div class="row2">
           <div class="field"><label for="zkVor">Vorname</label><input id="zkVor"></div>
           <div class="field"><label for="zkNach">Nachname</label><input id="zkNach"></div>
@@ -6766,15 +7173,15 @@ function zaehlZeichnen(){
           <div class="field vorschlagfeld" style="flex:1 1 65%"><label for="zk_str">Straße</label>
             <input id="zk_str" data-adr="zk" autocomplete="off" spellcheck="false">
             <div class="vorschlaege" id="zk_vorschlaege" hidden></div></div>
-          <div class="field" style="flex:0 0 30%"><label for="zk_hnr">Nr.</label><input id="zk_hnr"></div>
+          <div class="field" style="flex:0 0 30%"><label for="zk_hnr">Nr.</label><input id="zk_hnr" inputmode="numeric"></div>
         </div>
         <div class="row2">
           <div class="field" style="flex:0 0 42%"><label for="zk_plz">PLZ</label><input id="zk_plz" inputmode="numeric" maxlength="5"></div>
           <div class="field"><label for="zk_ort">Ort</label><input id="zk_ort"></div>
         </div>
         <div class="field"><label for="zkTel">Telefon</label><input id="zkTel" inputmode="tel"></div>
-        <div class="field"><label for="zkWieder">Wieder ansprechen am</label>
-          <input id="zkWieder" type="date" value="${dk(naechster)}"></div>
+        <div class="field"><label for="zkWieder">Wieder ansprechen im Monat</label>
+          <input id="zkWieder" type="month" value="${monatJetzt()}"></div>
         <div class="field"><label for="zkNotiz">Notiz</label><input id="zkNotiz" placeholder="z. B. melden im Oktober"></div>
         <p class="err" id="zkErr" hidden></p>
       </div>
@@ -6792,9 +7199,9 @@ function zaehlZeichnen(){
                  plz:w('zk_plz'), ort:w('zk_ort'), telefon:w('zkTel'),
                  potenzial:[...BESITZ], grund:w('zkNotiz') || `Angesprochen bei ${z.quelle}`,
                  quelle:z.quelle, datum:dk(new Date())};
-      if(w('zkWieder')) p.wieder = w('zkWieder');
       p.id = [p.vorname,p.nachname,p.str,p.plz].map(v=>(v||"").trim().toLowerCase()).join("|");
       if(!potenzial.some(x=>x.id===p.id)) potenzial.push(p);
+      if(w('zkWieder')) wvSetzen(p, w('zkWieder'), p.grund);
       z.gemerkt++;
       z.modus = "zaehlen";
       z.hinweis = `${[p.vorname,p.nachname].filter(Boolean).join(" ")} steht in der Potenzialliste.`;
@@ -6867,7 +7274,7 @@ function zaehlBeenden(){
 const FAQ = [
   ["Heute", "Zeigt die Termine des heutigen Tages mit Adresse, Notiz und Knöpfen zum Anrufen und Navigieren. Ganz oben stehen anstehende Anrufe und Termine, die noch keine Nachbereitung haben."],
   ["Planer", "Das Wochenraster. Ein Tipp auf ein freies Feld legt einen Termin an, ein Tipp auf einen Termin öffnet ihn. Gedrückt halten und dann ein freies Feld antippen verschiebt ihn. Unten die Kennzahlen ist/soll."],
-  ["Terminarten", "Kundentermin mit Quelle · Eigenkauf ohne Kundendaten · Premium CheckIn · Meeting · Terminieren aus Festgebietsbegehung oder Promotion · Privat und Individuell blockieren die Zeit nur optisch."],
+  ["Terminarten", "Kundentermin mit Quelle · Terminieren als FGB Bestandskunden, FGB Door to Door oder Promotion · Premium CheckIn · Meeting · Eigenkauf ohne Kundendaten · Privat und Individuell blockieren die Zeit nur optisch."],
   ["Nachbereitung", "Nach dem Termin auf den Eintrag tippen und den Status wählen. Die Blöcke klappen zu, sobald sie vollständig sind. „Zwischenspeichern“ sichert auch unvollständig, „Abschließen“ prüft auf Vollständigkeit."],
   ["Termin starten", "Im Block „Echte Zeiten“ setzen zwei Knöpfe Start- und Endzeit auf die aktuelle Uhrzeit — dadurch stimmt die Stundenauswertung ohne Schätzen."],
   ["Zählmodus", "Beim Terminieren öffnet „Einsatz starten“ vier große Zählflächen. Ein Tipp zählt hoch, das kleine Minus zieht ab. „Kurz raus“ sichert den Stand und schließt die Zählfläche, damit du zwischendurch einen Termin eintragen kannst. Der Knopf heißt danach „Einsatz fortsetzen“ und die Startzeit bleibt stehen — überschrieben wird sie nie. „Kontakt merken“ legt jemanden, der später noch einmal angesprochen werden will, direkt in die Potenzialliste. Erst „Einsatz beenden“ schreibt die Endzeit."],
@@ -6925,6 +7332,9 @@ const TOUR = [
 
   {seite:"potenzial", ziel:"#plist", t:"Potenzial und Empfehlungen",
    x:"Wer nicht gekauft hat, landet automatisch in der Potenzialliste mit dem, was ihm noch fehlt, und einer Wiedervorlage. Direkt daneben liegt die Empfehlungsliste mit allen Namen aus deinen Nachbereitungen — aus beiden legst du mit einem Tipp einen Termin an."},
+
+  {seite:"wiedervorlage", ziel:"#wvliste", t:"Wiedervorlage",
+   x:"Jeder Kunde mit einem Rückmelde-Monat steht hier — überfällig zuerst, danach der laufende Monat, dann alles Weitere. Setzen kannst du eine Wiedervorlage im Kein-Kauf-Fenster, unten in der Nachbereitung oder jederzeit über die Kundenliste."},
 
   {seite:"inventur", ziel:"#inventur .asec", t:"K70 Inventur",
    x:"Der komplette Shop in Originalreihenfolge. Kategorien lassen sich zuklappen, das merkt sich die App. Bestand über Plus und Minus zählen, oben nach Artikel oder Preis suchen. Der Warenbestand fließt in den Provisionsrechner."},
@@ -7040,12 +7450,24 @@ function renderUeberblick(){
   ziele.forEach(z => z.innerHTML = html);
 }
 
+/* Sicherheitsnetz: überall dort, wo Zahlen erwartet werden, die Zahlentastatur öffnen */
+const ZAHLENFELD = /(umsatz|betrag|einheiten|anzahl|auftraege|km|preis|menge|plz|einkommen|quote|rahmen|tage|zahl|ziel|team|einsteiger|minus|bestand)/i;
+function zahlenTastatur(){
+  document.querySelectorAll('input:not([inputmode]):not([type=date]):not([type=month]):not([type=time]):not([type=file]):not([type=range]):not([type=checkbox])')
+    .forEach(el=>{
+      const kenn = (el.id||"") + " " + (el.getAttribute('data-wf')||"") + " " + (el.getAttribute('data-tu')||"");
+      if(el.type === "number"){ el.setAttribute('inputmode','numeric'); return; }
+      if(ZAHLENFELD.test(kenn)) el.setAttribute('inputmode','decimal');
+    });
+}
 function renderAll(){
   /* Jede Seite einzeln zeichnen: stolpert eine, bleiben die anderen trotzdem gefüllt */
   [render, renderHeute, renderUeberblick, renderFaq, renderPapierkorb, renderJahr, renderStat, renderPotenzial,
    renderEmpfehlung, renderAusw, renderProv, renderWunsch, renderTeam, renderProfil, renderDelete,
-   renderInventur, renderZiele, renderJobtickets, renderTeamumsatz, renderFahrten, renderKunden]
+   renderInventur, renderZiele, renderJobtickets, renderTeamumsatz, renderFahrten, renderKunden,
+   renderWiedervorlage]
     .forEach(f=>{ try{ f(); }catch(e){ console.error("Fehler beim Zeichnen von " + (f.name||"?") + ":", e); } });
+  try{ zahlenTastatur(); }catch(e){}
   saveData();
 }
 const shiftWeek = n => { monday.setDate(monday.getDate()+n); renderAll(); };
