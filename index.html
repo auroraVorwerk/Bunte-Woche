@@ -3544,7 +3544,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v75 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v77 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -3785,6 +3785,23 @@ function sollWerte(){
   return out;
 }
 
+/* Abgerechneter Festgebietsumsatz aus den Nachtraegen.
+   Wird NUR fuer Quartals- und Jahresausgleich verwendet - nirgends sonst.
+   vonK/bisK grenzen ueber den Montag des jeweiligen Vertriebsmonats ein. */
+function ausgleichNachtrag(jahr, vonK, bisK){
+  const j = nachtrag[jahr];
+  if(!j) return 0;
+  let summe = 0;
+  Object.keys(j).forEach(kw=>{
+    const n = j[kw];
+    if(!n || !n.fgAbger) return;
+    const start = dk(mondayOfISOWeek(jahr, +kw));
+    if(start < vonK || start > bisK) return;
+    summe += +n.fgAbger || 0;
+  });
+  return summe;
+}
+
 /* ================= Provisionsrechner ================= */
 function renderProv(){
   const vm = vertriebsmonat(new Date());        // immer der laufende Vertriebsmonat
@@ -3798,6 +3815,10 @@ function renderProv(){
   const jU = vm.fromK > vm.jFromK ? umsatz(vm.jFromK, bisVormonat) : leer;
   const qFG = netto(qU.fg) + netto(qU.k70ein);
   const jFG = netto(jU.fg) + netto(jU.k70ein);
+  /* Steht ein abgerechneter FG-Umsatz nachgetragen, gilt er - er enthaelt
+     auch Online-Kaeufe und alles, was nicht selbst geschrieben wurde. */
+  const qAbg = ausgleichNachtrag(vm.year, vm.qFromK, bisVormonat);
+  const jAbg = ausgleichNachtrag(vm.year, vm.jFromK, bisVormonat);
   const jahrWochen = weeksInISOYear(vm.year);
   const std = arbeitsStunden(vm.fromK, vm.toK);
 
@@ -3859,10 +3880,16 @@ function renderProv(){
 
     ${provKlapp("ausgleich","Quartals- und Jahresausgleich", `
       <div class="foot2">
-        <div><b>${eur(qFG)} €</b> Festgebietsumsatz netto aus den bisherigen Vertriebsmonaten dieses Quartals — für den Quartalsausgleich.
-          Ziele auf 13 Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*13/4)} €`).join(" · ")}</div>
-        <div><b>${eur(jFG)} €</b> aus den Vormonaten dieses Jahres — für den Jahresausgleich.
-          Ziele auf ${jahrWochen} Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*jahrWochen/4)} €`).join(" · ")}</div>
+        <div><b>${eur(qAbg || qFG)} €</b> Festgebietsumsatz für den Quartalsausgleich${
+          qAbg ? " — abgerechnet, wie nachgetragen" : " netto aus den bisherigen Vertriebsmonaten dieses Quartals"}.
+          Ziele auf 13 Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*13/4)} €`).join(" · ")}
+          ${qAbg ? `<br><small class="tspanne">Selbst geschrieben wären es ${eur(qFG)} €.</small>` : ""}</div>
+        <div><b>${eur(jAbg || jFG)} €</b> für den Jahresausgleich${
+          jAbg ? " — abgerechnet, wie nachgetragen" : " aus den Vormonaten dieses Jahres"}.
+          Ziele auf ${jahrWochen} Wochen: ${TIERS.map(t=>`${Math.round(t.b*100)} % ab ${eur(t.u*jahrWochen/4)} €`).join(" · ")}
+          ${jAbg ? `<br><small class="tspanne">Selbst geschrieben wären es ${eur(jFG)} €.</small>` : ""}</div>
+        ${(qAbg || jAbg) ? "" : `<div class="hinweis">Den abgerechneten Festgebietsumsatz trägst du im
+          Jahresrückblick unter „Vertriebsmonat nachtragen“ ein — er zählt nur hier.</div>`}
       </div>`)}`;
   setzeProv();
   document.querySelectorAll('#prov [data-klapp]').forEach(b=> b.onclick = ()=>{
@@ -4309,6 +4336,10 @@ function applyData(d){
   Object.keys(nachtrag).forEach(k=>delete nachtrag[k]);
   Object.assign(nachtrag, (d && d.nachtrag) || {});
   bestandUmstellen();
+  /* WICHTIG: erst leeren, dann setzen. Vorher wurde nur ergaenzt - beim
+     Umschalten auf ein Teammitglied blieben eigene Werte stehen und
+     vermischten sich mit dessen Daten. */
+  Object.keys(settings).forEach(k => delete settings[k]);
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:270,quote:0}, (d && d.wunsch) || {});
   wunsch.proAuftrag = 270;
@@ -4929,10 +4960,21 @@ const TM_WOCHEN = 26;
    sonst hängt die Sperre daran, ob jemand sein Profil ausgefüllt hat.
    Stehen beide Daten da, zählt das frühere. */
 function tmEinstellung(dk){
+  return tmEinstQuelle(dk).datum;
+}
+/* Liefert zusaetzlich, woher das Datum stammt - damit in der Ansicht
+   nachvollziehbar steht, warum Planer und Statistik sichtbar sind. */
+function tmEinstQuelle(dk){
   const imProfil = teamBlob && teamBlob.settings && teamBlob.settings.einstellung;
   const notiert  = (settings.tmEinst || {})[dk || (viewUser && viewUser.dk) || ""];
-  if(imProfil && notiert) return imProfil < notiert ? imProfil : notiert;
-  return imProfil || notiert || null;
+  const gueltig = d => /^\d{4}-\d{2}-\d{2}$/.test(String(d || ""));
+  const p = gueltig(imProfil) ? imProfil : null;
+  const n = gueltig(notiert)  ? notiert  : null;
+  if(p && n) return p < n ? {datum:p, quelle:"aus dem Profil des Mitglieds"}
+                          : {datum:n, quelle:"von dir nachgetragen"};
+  if(p) return {datum:p, quelle:"aus dem Profil des Mitglieds"};
+  if(n) return {datum:n, quelle:"von dir nachgetragen"};
+  return {datum:null, quelle:(imProfil || notiert) ? "hinterlegt, aber unlesbar" : ""};
 }
 function tmZugriff(){
   const datum = tmEinstellung(viewUser && viewUser.dk);
@@ -4995,9 +5037,12 @@ function renderTeam(){
   }
   const v = fremdAnsicht();
   const z = tmZugriff();
+  const q = tmEinstQuelle(viewUser.dk);
   const stand = z.datum
-    ? `Eingestellt am ${fmt(fromDk(z.datum))} · Woche ${(z.wochen || 0) + 1}`
-    : "Einstellungsdatum nicht hinterlegt";
+    ? `Eingestellt am ${fmt(fromDk(z.datum))} · Woche ${(z.wochen || 0) + 1} · ${q.quelle}`
+    : (q.quelle
+        ? `Einstellungsdatum ${q.quelle} — Planer und Statistik bleiben sichtbar`
+        : "Kein Einstellungsdatum — Planer und Statistik bleiben sichtbar");
   const einstZeile = `<p class="hinweis tmeinst">${stand}
     <button type="button" class="mini" id="tmEinstBtn">${z.datum ? "ändern" : "eintragen"}</button></p>`;
   /* Immer verfügbar: der Download der Potenzialliste.
@@ -7380,6 +7425,11 @@ function renderJahr(){
         ${fld("ntEinheiten","Einheiten","","number",'min="0" inputmode="numeric"')}
         ${fld("ntUmsatz","Nettoumsatz €","","text",'inputmode="decimal"')}
         ${fld("ntAuftraege","Anzahl Aufträge","","number",'min="0" inputmode="numeric"')}
+        ${fld("ntFgAbger","Abgerechneter FG-Umsatz €","","text",'inputmode="decimal"')}
+        <p class="hinweis" style="margin-top:0">Der abgerechnete Festgebietsumsatz zählt
+          <b>ausschließlich</b> für Quartals- und Jahresausgleich im Provisionsrechner —
+          also auch Online-Käufe und alles, was nicht selbst geschrieben wurde.
+          In die persönlichen Ziele fließt er nicht ein.</p>
         <div class="sect"><span class="lb">Wie sollen die Zahlen zählen?</span>
           <div class="seg">
             <button type="button" data-ntm="ersetzen" aria-pressed="true">Überschreiben</button>
@@ -7419,7 +7469,7 @@ function renderJahr(){
     const w = id => document.getElementById(id).value.trim();
     const jahr = +w('ntJahr'), startW = +w('ntMonat');
     const err = document.getElementById('ntErr');
-    if(!w('ntEinheiten') && !w('ntUmsatz') && !w('ntAuftraege')){
+    if(!w('ntEinheiten') && !w('ntUmsatz') && !w('ntAuftraege') && !w('ntFgAbger')){
       err.textContent = "Bitte mindestens einen Wert eintragen."; err.hidden = false; return;
     }
     const gewaehlt = box.querySelector('[data-ntm][aria-pressed="true"]');
@@ -7435,7 +7485,10 @@ function renderJahr(){
       modus,
       einheiten: wertVon("einheiten", w('ntEinheiten'), +w('ntEinheiten')||0),
       umsatz:    wertVon("umsatz",    w('ntUmsatz'),    num(w('ntUmsatz'))),
-      auftraege: wertVon("auftraege", w('ntAuftraege'), +w('ntAuftraege')||0)
+      auftraege: wertVon("auftraege", w('ntAuftraege'), +w('ntAuftraege')||0),
+      /* Nur fuer den Ausgleich im Provisionsrechner - siehe ausgleichNachtrag().
+         Die Ziele lesen ausschliesslich umsatz/einheiten/auftraege. */
+      fgAbger:   wertVon("fgAbger",   w('ntFgAbger'),   num(w('ntFgAbger')))
     };
     err.hidden = true;
     saveData(); renderJahr(); renderZiele();
@@ -7455,7 +7508,8 @@ function nachtragListe(heuteJahr){
       zeilen.push(`<div class="ntzeile">
         <span>${jahr} · ab KW ${kw}<br><small class="tspanne">${
           n.modus === "ersetzen" ? "überschreibt" : "ergänzt"}</small></span>
-        <span class="ntwerte">${n.einheiten||0} Einh. · ${eur(n.umsatz)} € · ${n.auftraege||0} Aufträge</span>
+        <span class="ntwerte">${n.einheiten||0} Einh. · ${eur(n.umsatz)} € · ${n.auftraege||0} Aufträge${
+          n.fgAbger ? ` · FG abgerechnet ${eur(n.fgAbger)} €` : ""}</span>
         <button class="mini" data-ntweg="${jahr}|${kw}">löschen</button></div>`);
     }));
   if(!zeilen.length) return "";
