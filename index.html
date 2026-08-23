@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -3538,7 +3537,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v67 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v68 · 23.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4839,8 +4838,13 @@ function fremdAnsicht(){
     ergebnis.potListe = potenzial.map(x=>({...x}));
     ergebnis.meld = meldungHTML(new Date(teamMonday), viewUser.name);
   }catch(e){
+    /* Bricht hier etwas ab, bleiben Raster, Potenzialliste UND Wochenmeldung
+       leer - das sieht dann so aus, als sei der Zugriff gesperrt. Deshalb
+       steht der Grund jetzt in der Meldung und nicht nur in der Konsole. */
     console.error("Fremdansicht fehlgeschlagen:", e);
-    ergebnis.meld = `<div class="asec"><p class="aempty">Die Daten dieses Mitglieds lassen sich gerade nicht anzeigen.</p></div>`;
+    ergebnis.fehler = String((e && e.message) || e);
+    ergebnis.meld = `<div class="asec"><p class="aempty">Die Daten dieses Mitglieds lassen sich
+      gerade nicht anzeigen.<br><small class="tspanne">${ergebnis.fehler}</small></p></div>`;
   }finally{
     fremdEnde(sicherung);                 // laeuft immer, auch wenn oben etwas schiefgeht
   }
@@ -4904,8 +4908,11 @@ function tmEinstellung(dk){
 function tmZugriff(){
   const datum = tmEinstellung(viewUser && viewUser.dk);
   const wochen = datum ? Math.floor((Date.now() - fromDk(datum).getTime()) / (7*86400000)) : null;
+  /* Was ein Teamleiter sieht, haengt nur an Planer und Statistik.
+     Der Download der Potenzialliste und die Wochenmeldung stehen
+     immer zur Verfuegung - unabhaengig vom Einstellungsdatum. */
   if(istAdmin()) return {voll:true, datum, wochen, rest:null, admin:true};
-  if(!datum) return {voll:true, datum:null, wochen:null, rest:null};
+  if(!datum)     return {voll:true, datum:null, wochen:null, rest:null};
   return {voll: wochen < TM_WOCHEN, datum, wochen, rest: TM_WOCHEN - wochen};
 }
 /* Der Teamleiter trägt das Einstellungsdatum eines Mitglieds nach.
@@ -4920,7 +4927,8 @@ function tmEinstDialog(){
        ? `Im Profil von ${viewUser.name} steht der ${fmt(fromDk(imProfil))}. Trägst du ein früheres Datum ein, zählt das frühere.`
        : `${viewUser.name} hat im eigenen Profil noch kein Einstellungsdatum hinterlegt.
           Ohne Datum läuft die 26-Wochen-Frist nicht.`}
-       Planer und Statistik sind ${TM_WOCHEN} Wochen ab diesem Datum einsehbar.</p>`,
+       Planer und Statistik-PDF sind ${TM_WOCHEN} Wochen ab diesem Datum verfügbar.
+       Der Download der Potenzialliste und die Wochenmeldung bleiben dauerhaft.</p>`,
     ()=>{
       const v = document.getElementById('tmEinstDat').value;
       settings.tmEinst = settings.tmEinst || {};
@@ -4951,29 +4959,29 @@ function renderTeam(){
     : "Einstellungsdatum nicht hinterlegt";
   const einstZeile = `<p class="hinweis tmeinst">${stand}
     <button type="button" class="mini" id="tmEinstBtn">${z.datum ? "ändern" : "eintragen"}</button></p>`;
-  const kopf = z.voll
-    ? `<div class="tmblock"><div class="actions">
-        <button class="btn primary" id="tmPdf">Statistik als PDF</button>
-        <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>
-        <p class="hinweis">Die Statistik gibt es nur zum Herunterladen.${z.rest !== null && z.rest > 0
-          ? ` Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.`
-          : (z.admin ? "" : " Ohne Einstellungsdatum läuft die 26-Wochen-Frist nicht.")}</p>
-        ${einstZeile}</div>`
-    : `<div class="tmblock"><div class="actions einzeln">
-        <button class="btn primary" id="tmPotDruck">Potenzialliste als PDF</button></div>
-        <p class="hinweis">${viewUser.name} ist länger als ${TM_WOCHEN} Wochen dabei — Planer und Statistik
-        sind ab jetzt nicht mehr einsehbar. Potenzialliste und Wochenmeldung bleiben.</p>
-        ${einstZeile}</div>`;
+  /* Immer verfügbar: der Download der Potenzialliste.
+     Nur wenn das Zeitfenster offen ist: Planer und Statistik-PDF. */
+  const knoepfe = z.voll
+    ? `<div class="actions">
+         <button class="btn primary" id="tmPdf">Statistik als PDF</button>
+         <button class="btn" id="tmPotDruck">Potenzialliste als PDF</button></div>`
+    : `<div class="actions einzeln">
+         <button class="btn primary" id="tmPotDruck">Potenzialliste als PDF</button></div>`;
+  const standText = z.voll
+    ? (z.rest !== null && z.rest > 0
+        ? `Planer und Statistik sind noch ${z.rest} Woche${z.rest === 1 ? "" : "n"} einsehbar.`
+        : (z.admin ? "" : "Ohne Einstellungsdatum läuft die 26-Wochen-Frist nicht."))
+    : `${viewUser.name} ist länger als ${TM_WOCHEN} Wochen dabei — Planer und Statistik-PDF
+       fallen damit weg. Der Download der Potenzialliste und die Wochenmeldung bleiben.`;
+  const kopf = `<div class="tmblock">${knoepfe}
+      ${standText ? `<p class="hinweis">${standText}</p>` : ""}
+      ${einstZeile}</div>`;
   const planer = z.voll
     ? `<div class="tmblock"><h4>Planer · ${viewUser.name}</h4>
         <div class="tagbar" id="tmTagbar"></div>
         <div class="board"><div class="scroller"><div class="grid">${v.gridHtml}</div></div></div></div>`
     : "";
-  /* Die Potenzialliste bleibt immer sichtbar - unabhängig vom Einstellungsdatum */
-  const potenzialBlock = `<div class="tmblock"><h4>Potenzialliste · ${viewUser.name}</h4>
-    ${v.potListe.length ? v.potHtml
-      : `<p class="aempty">In dieser Liste steht noch niemand.</p>`}</div>`;
-  box.innerHTML = kopf + planer + potenzialBlock + v.meld;
+  box.innerHTML = kopf + planer + v.meld;
   const pd = document.getElementById('tmPotDruck');
   if(pd) pd.onclick = ()=> potDrucken(v.potListe, viewUser.name);
   const pdf = document.getElementById('tmPdf');
