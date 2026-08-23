@@ -1118,11 +1118,18 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 
 <header class="topbar" id="topbar">
   <button class="burger" id="burger" aria-label="Menü öffnen" aria-expanded="false" aria-controls="drawer"><span></span><span></span><span></span></button>
-  <span class="mark">Digitaler Businessplan</span>
-  <span class="savestate" id="saveState"></span>
+  <span class="mark" id="markText" data-seite="Heute"><span class="appname">Digitaler Businessplan</span></span>
+  <span class="rechts">
+    <span class="savestate" id="saveState"></span>
+    <button class="themaknopf" id="themaKnopf" aria-label="Helles oder dunkles Thema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg>
+    </button>
+  </span>
 </header>
 <div class="scrim" id="scrim"></div>
 <nav class="drawer" id="drawer" aria-label="Hauptmenü">
+  <button class="menuezu" id="menueZu" aria-label="Menü schließen">&#10005;</button>
   <div class="brandbox">
   <svg class="duese" viewBox="0 0 64 64" fill="none" aria-hidden="true">
       <path d="M11 24h42a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V28a4 4 0 0 1 4-4z" fill="currentColor"/>
@@ -1286,6 +1293,20 @@ const NK_FARBE = {
   "will „alt gegen neu“":"#E8C4F2"
 };
 const grundFarbe = g => NK_FARBE[g] || "#8899A6";
+/* E35: Eine leere Seite ist eine Einladung, nicht eine graue Zeile */
+const LEER_IC = {
+  liste:'<path d="M4 6h13M4 12h13M4 18h8"/><circle cx="19" cy="18" r="3"/>',
+  uhr:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.7M8.5 3.5 6 5.5M15.5 3.5 18 5.5"/>',
+  karte:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 14h5"/>'
+};
+function leerbox(icon, titel, text, knopf, ziel){
+  return `<div class="leerbox">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"
+      stroke-linecap="round" stroke-linejoin="round">${LEER_IC[icon] || LEER_IC.liste}</svg>
+    <b>${titel}</b><p>${text}</p>
+    ${knopf ? `<button class="btn primary" data-leerziel="${ziel}">${knopf}</button>` : ""}
+  </div>`;
+}
 const CATS = [
   {t:"Termin FG-Kunden",c:"#A9D18E"},{t:"Termin Telefon/Vertriebsadresse",c:"#E2F0D9"},
   {t:"Empfehlungstermin",c:"#9A6CE8"},{t:"Premium CheckIn",c:"#E8C4F2"},
@@ -1562,7 +1583,8 @@ function tagesleiste(){
     const tag = dk(d);
     const voll = START_HOURS.some(hr=>entries[key(tag,hr)]);
     return `<button type="button" data-tag="${i}" aria-pressed="${i===tagWahl}" class="${tag===today?"ist-heute":""}">
-      ${DAYS_S[i]}<small>${String(d.getDate()).padStart(2,"0")}.</small>${voll?`<i></i>`:""}</button>`;
+      ${DAYS_S[i]}<small>${String(d.getDate()).padStart(2,"0")}.</small>
+      <span class="tpunkt${voll?"":" leer"}"></span></button>`;
   }).join("");
   bar.querySelectorAll('[data-tag]').forEach(b=> b.onclick = ()=>{ tagWahl = +b.dataset.tag; setzeTagWahl(); });
   setzeTagWahl();
@@ -1708,11 +1730,31 @@ function closeUndZeichnen(){ if(closeModal()) renderAll(); }
 modal.addEventListener('click', e=>{ if(e.target.dataset.close!==undefined) closeUndZeichnen(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeUndZeichnen(); });
 
-function head(sub){
+function head(sub, zusatz=""){
   const d = fromDk(draft.day);
   return `<header><div><h3 id="mTitle">${sub}</h3>
     <div class="when">${DAYS_L[(d.getDay()+6)%7]}, ${fmtShort(d)} · ${pad(draft.hour)}–${pad(draft.hour+2)} Uhr</div></div>
-    <button class="x" data-close aria-label="Schließen">✕</button></header>`;
+    <button class="x" data-close aria-label="Schließen">✕</button>${zusatz}</header>`;
+}
+/* C13: Wie weit ist die Nachbereitung? Gezählt werden die Blöcke,
+   die die Prüfung beim Abschließen ohnehin verlangt. */
+function nbFortschritt(){
+  const n = draft.nb || {};
+  const bloecke = [
+    !!n.realStart && !!n.realEnde,
+    !!n.kundenart && !!n.gebiet,
+    !!n.empfehlung && !!n.jobticket,
+    !!(n.geraet||"").trim(),
+    (n.vorgefuehrt||[]).length > 0,
+    !!n.verkauft,
+    n.verkauft === "Nein" ? nkFertig(n) : (n.verkauft === "Ja" ? !!n.einheiten : false)
+  ];
+  const fertig = bloecke.filter(Boolean).length;
+  const pct = Math.round(fertig / bloecke.length * 100);
+  return `<div class="nbfortschritt">
+    <div class="nbbalken"><i style="width:${pct}%"></i></div>
+    <div class="nbtext"><span>${fertig} von ${bloecke.length} Blöcken vollständig</span><span>${pct} %</span></div>
+  </div>`;
 }
 const opts = (arr,act) => arr.map(o=>`<button class="opt" data-${act}="${o}">${o}</button>`).join("");
 const seg  = (name,vals,cur,cls="") => `<div class="seg ${cls}">${vals.map(v=>`<button type="button" data-seg="${name}" data-val="${v}" aria-pressed="${cur===v}">${v}</button>`).join("")}</div>`;
@@ -2267,7 +2309,7 @@ function kontaktBearbeiten(p, liste, mitGeraeten, istNeu){
          <div class="field"><label>Vorname</label><input id="kbVor" value="${p.vorname||""}"></div>
          <div class="field"><label>Nachname</label><input id="kbNach" value="${p.nachname||""}"></div>
        </div>
-       <div class="row2">
+       <div class="row2 strassenr">
          <div class="field vorschlagfeld" style="flex:1 1 65%"><label>Straße</label>
            <input id="kb_str" data-adr="kb" value="${p.str||p.strasse||""}" autocomplete="off">
            <div class="vorschlaege" id="kb_vorschlaege" hidden></div></div>
@@ -2357,8 +2399,8 @@ function renderPotenzial(){
     if(b) b.onclick = ()=> kontaktBearbeiten({potenzial:[...BESITZ], datum:dk(new Date())}, potenzial, true, true);
   };
   if(!potenzial.length){
-    el.innerHTML = neuKnopf + `<div class="placeholder">Noch keine Einträge. Kunden landen hier automatisch,
-      sobald ein Termin ohne Kauf nachbereitet wird.</div>`;
+    el.innerHTML = neuKnopf + leerbox("liste", "Hier steht noch niemand",
+      "Kunden landen automatisch hier, sobald ein Termin ohne Kauf nachbereitet wird.");
     verdrahten();
     return;
   }
@@ -2424,8 +2466,9 @@ function renderWiedervorlage(){
   const liste = wiedervorlagen.slice().sort((a,b)=>
     (a.monat||"").localeCompare(b.monat||"") || (a.nachname||"").localeCompare(b.nachname||""));
   if(!liste.length){
-    el.innerHTML = `<div class="placeholder">Noch keine Wiedervorlagen. Du setzt sie im Kein-Kauf-Fenster,
-      unten in der Nachbereitung eines Kundentermins oder direkt über die Kundenliste.</div>`;
+    el.innerHTML = leerbox("uhr", "Noch nichts vorgemerkt",
+      "Du setzt eine Wiedervorlage im Kein-Kauf-Fenster, unten in der Nachbereitung oder direkt aus der Kundenliste.",
+      "Kundenliste öffnen", "kunden");
     return;
   }
   const gruppen = [
@@ -2657,16 +2700,21 @@ function paint(){
       }
     }
     const bearbeitbar = ["kunde","premium","eigenkauf","meeting","privat","terminieren","individuell"].includes(e.kind);
+    /* Abschließen steht links, Löschen rechts - so liegt die Aktion,
+       die man fast immer will, unter dem Daumen und nicht neben dem Löschen. */
     const foot = `<div class="actions">
-        ${ohneLoeschen ? "" : `<button class="btn danger" id="del">Löschen</button>`}
         ${saveBtn}
+        ${ohneLoeschen ? "" : `<button class="btn danger" id="del">Löschen</button>`}
       </div>
       ${zweiteReihe ? `<div class="actions">${zweiteReihe}</div>` : ""}
       ${bearbeitbar ? `<div class="actions"><button class="btn wide" id="editBtn">${
         (e.kind==="kunde"||e.kind==="premium") ? "Kundendaten bearbeiten" : "Daten bearbeiten"}</button></div>` : ""}`;
 
     sheet.innerHTML = head(e.kind==="premium" ? "Premium CheckIn"
-                         : e.kind==="abholen" ? "Abholtermin" : "Eintrag") + body + historie(e) + extra + foot;
+                         : e.kind==="abholen" ? "Abholtermin" : "Eintrag",
+                           e.kind==="kunde" && draft.nb && draft.nb.status==="Stattgefunden" ? nbFortschritt() : "")
+      + `<div class="sheetkoerper">` + body + historie(e) + extra + `</div>`
+      + `<div class="sheetfuss">` + foot + `</div>`;
     wireSegs();
     const d1 = document.getElementById('del');
     if(d1) d1.onclick = ()=>{ inPapierkorb(draft.day,draft.hour); closeModal(); renderAll(); };
@@ -2740,14 +2788,14 @@ function paint(){
        <div class="field"><label for="f_anrede">Anrede</label>
          <select id="f_anrede">${["","Herr","Frau","Divers"].map(a=>
            `<option value="${a}" ${(n.f_anrede||"")===a?"selected":""}>${a||"kein Eintrag"}</option>`).join("")}</select></div>
-       <div class="row2">
+       <div class="row2 strassenr">
          <div class="field vorschlagfeld" style="flex:1 1 65%"><label for="f_str">Straße</label>
            <input id="f_str" data-adr="f" value="${n.f_str||""}" autocomplete="off" spellcheck="false">
            <div class="vorschlaege" id="f_vorschlaege" hidden></div></div>
          <div class="field" style="flex:0 0 30%"><label for="f_hnr">Hausnummer</label>
            <input id="f_hnr" value="${n.f_hnr||""}" autocomplete="off" spellcheck="false" inputmode="numeric"></div>
        </div>
-       <div class="row2"><div class="field" style="flex:0 0 42%"><label for="f_plz">PLZ</label>
+       <div class="row2 plzort"><div class="field" style="flex:0 0 42%"><label for="f_plz">PLZ</label>
          <input id="f_plz" value="${n.f_plz||""}" inputmode="numeric" maxlength="5" pattern="\\d{5}"></div>
          ${fld("f_ort","Ort",n.f_ort)}</div>
        ${fld("f_tel","Telefonnummer (freiwillig)",n.f_tel,"tel",'inputmode="tel"')}
@@ -3076,6 +3124,7 @@ const backBtn = to => `<div class="actions"><button class="btn" data-back="${to}
 function wireBack(){ sheet.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=>{ error=""; step=b.dataset.back; paint(); }); }
 function wireSegs(){
   sheet.querySelectorAll('[data-zplus],[data-zminus]').forEach(b=> b.onclick = ()=>{
+    stups();
     collect();
     const id = b.dataset.zplus || b.dataset.zminus;
     const neu = Math.max(0, (+draft.nb[id] || 0) + (b.dataset.zplus ? 1 : -1));
@@ -3488,7 +3537,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v66 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v67 · 22.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4393,6 +4442,8 @@ function flushSave(){
     .catch(err=>{ cloudOk = false; letzterFehler = (err&&err.message)||""; saveState("nur lokal · "+fehlerkurz(err), true); });   // nächster Versuch läuft wieder
 }
 var fremdAktiv = false;        // solange true, liegen fremde Daten im Speicher - es wird nichts geschrieben
+/* E40: ein sehr kurzer Impuls bestätigt, dass etwas gezählt oder gesichert wurde */
+function stups(ms=8){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 function saveData(){
   if(!me || !dataReady || fremdAktiv) return;
   clearTimeout(saveTimer);
@@ -5727,6 +5778,7 @@ function renderInventur(){
   feld.oninput = ()=>{ invSuche = feld.value; invFiltern(); invVorschlaege(feld.value); };
   feld.onkeydown = ev => { if(ev.key === "Enter"){ ev.preventDefault(); feld.blur(); invVorschlagZu(); } };
   box.querySelectorAll('[data-plus],[data-minus]').forEach(b=> b.onclick = ()=>{
+    stups();
     const id = b.dataset.plus || b.dataset.minus;
     const neu = Math.max(0, (+inventur[id] || 0) + (b.dataset.plus ? 1 : -1));
     if(neu > 0) inventur[id] = neu; else delete inventur[id];
@@ -6861,10 +6913,13 @@ function renderHeute(){
   const offen = offeneNachbereitung();
   const d = new Date();
 
+  const jetztH = d.getHours();
   const karte = ({h,e}) => {
     const l = label(e), c = colorOf(e) || "var(--accent)";
     const adr = adresseVon(e);
-    return `<div class="tkarte" style="--c:${c}">
+    const laeuft = jetztH >= h && jetztH < h + 2;      // D22
+    return `<div class="tkarte${laeuft ? " laeuft" : ""}" style="--c:${c}">
+      ${laeuft ? `<span class="laeuftband">läuft gerade</span>` : ""}
       <div class="tzeit">${pad(h)}<span>–${pad(h+2)}</span></div>
       <div class="tinfo">
         <div class="tname">${e.anrede?e.anrede+" ":""}${e.vorname||""} ${e.nachname||l.t1}</div>
@@ -6876,8 +6931,9 @@ function renderHeute(){
           ${adr?`<a class="mini" href="${mapsLink(adr)}" target="_blank" rel="noopener">Route</a>`:""}
           <button class="mini" data-oeffne="${heute}|${h}">Öffnen</button>
         </div>
+        ${e.status ? `<span class="tstatus">✓ ${
+          e.status === "nachbereitet" ? "Nachbereitet" : "Erfasst"}</span>` : ""}
       </div>
-      ${e.status?`<span class="thaken">✓</span>`:""}
     </div>`;
   };
 
@@ -7538,10 +7594,41 @@ function show(k){
   if((k==='team'||k==='kbdelete') && !istTeamleiter()) k='planer';
   document.getElementById('pagetitle').textContent = PAGES[k];
   document.title = 'Digitaler Businessplan – '+PAGES[k];
+  /* B7 + B8: die Kopfleiste am Handy traegt den Seitennamen, der Body
+     merkt sich die Seite - daran haengt die Groesse des Kopfbereichs. */
+  document.body.dataset.page = k;
+  const mk = document.getElementById('markText');
+  if(mk) mk.dataset.seite = PAGES[k];
   document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+k));
   document.querySelectorAll('.navlink').forEach(a=> a.dataset.page===k ? a.setAttribute('aria-current','page') : a.removeAttribute('aria-current'));
   setMenu(false); scrollTo({top:0});
 }
+/* B9: Menue laesst sich mit dem Kreuz und mit Wischen nach oben schliessen */
+const mz = document.getElementById('menueZu');
+if(mz) mz.onclick = ()=> setMenu(false);
+(function(){
+  const dr = document.getElementById('drawer');
+  if(!dr) return;
+  let y0 = null;
+  dr.addEventListener('touchstart', e=>{ y0 = e.touches[0].clientY; }, {passive:true});
+  dr.addEventListener('touchend', e=>{
+    if(y0 === null) return;
+    const weg = y0 - e.changedTouches[0].clientY;
+    if(weg > 70 && dr.scrollTop <= 0) setMenu(false);
+    y0 = null;
+  }, {passive:true});
+})();
+/* E41: Hell und Dunkel direkt aus der Kopfleiste */
+const tk = document.getElementById('themaKnopf');
+if(tk) tk.onclick = ()=>{
+  themaSetzen(themaJetzt() === "Hell" ? "Dunkel" : "Hell", true);
+  renderProfil();
+};
+/* E35: Der Knopf im Leerzustand fuehrt direkt zur passenden Seite */
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-leerziel]');
+  if(b) location.hash = "#" + b.dataset.leerziel;
+});
 addEventListener('hashchange', ()=> show(location.hash.slice(1)));
 addEventListener('scroll', ()=> document.getElementById('topbar').classList.toggle('scrolled', scrollY>40));
 
