@@ -1112,7 +1112,13 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 </head>
 <body>
 
-<div class="login" id="login">
+<div class="boot" id="boot">
+  <div class="bootring"><span></span><span></span><span></span></div>
+  <p>Anmeldung wird geprüft …</p>
+  <button class="mini" id="bootAbbruch" hidden>Doch von Hand anmelden</button>
+</div>
+
+<div class="login" id="login" hidden>
   <div class="loginbox" id="loginBox"></div>
 </div>
 
@@ -1231,6 +1237,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
   <section class="page" id="page-ziele"><div id="ziele"></div></section>
   <section class="page" id="page-jobtickets"><div id="jobt"></div></section>
   <section class="page" id="page-teamumsatz"><div id="tumsatz"></div></section>
+  <section class="page" id="page-teammeldung"><div id="tmeldung"></div></section>
   <section class="page" id="page-fahrten"><div id="fahrtenbuch"></div></section>
   <section class="page" id="page-kunden"><div id="kunden"></div></section>
   <section class="page" id="page-faq"><div id="faq"></div></section>
@@ -1271,7 +1278,7 @@ document.getElementById("tabMehr").onclick = () => document.getElementById("burg
 
 <script>
 /* ================= Konstanten ================= */
-const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", wiedervorlage:"Wiedervorlage", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz", fahrten:"Fahrtenbuch", kunden:"Kundenliste"};
+const PAGES = {heute:"Heute", planer:"Planer", potenzial:"Potenzialliste", wiedervorlage:"Wiedervorlage", statistik:"Statistik", auswertungen:"Auswertungen", empfehlung:"Empfehlungsliste", provision:"Provisionsrechner", jahr:"Jahresrückblick", faq:"Hilfe", wunsch:"Provisionswunsch", team:"Teammitglieder", kbdelete:"KB Delete", inventur:"K70 Inventur", profil:"Profil", ziele:"Ziele", jobtickets:"Jobtickets", teamumsatz:"Teamumsatz", fahrten:"Fahrtenbuch", kunden:"Kundenliste", teammeldung:"Wochenmeldung"};
 const DAYS_S = ["Mo","Di","Mi","Do","Fr","Sa","So"];
 const DAYS_L = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const START_HOURS = Array.from({length:16},(_,i)=>22-i);      // 22 … 7 (Anzeige)
@@ -3124,7 +3131,7 @@ const backBtn = to => `<div class="actions"><button class="btn" data-back="${to}
 function wireBack(){ sheet.querySelectorAll('[data-back]').forEach(b=> b.onclick = ()=>{ error=""; step=b.dataset.back; paint(); }); }
 function wireSegs(){
   sheet.querySelectorAll('[data-zplus],[data-zminus]').forEach(b=> b.onclick = ()=>{
-    stups();
+    stups(8, b.parentElement && b.parentElement.querySelector('.zahl'));
     collect();
     const id = b.dataset.zplus || b.dataset.zminus;
     const neu = Math.max(0, (+draft.nb[id] || 0) + (b.dataset.zplus ? 1 : -1));
@@ -3537,7 +3544,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v68 · 23.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v75 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4262,8 +4269,18 @@ async function userGet(dk){
   }
   return localUsers()[dk] || null;
 }
-async function userSet(u){
-  if(db){ await db.ref('users/'+u.dk).set(clean(u)); return; }
+/* WICHTIG: hier stand frueher .set() - das ueberschrieb den ganzen Datensatz
+   und loeschte dabei "leader". Genau daran haengt in den Firebase-Regeln das
+   Leserecht des Teamleiters: war es weg, kam "kein Zugriff auf diese Daten".
+   .update() laesst unbekannte Felder stehen. Was wirklich weg soll, wird in
+   "entferne" ausdruecklich genannt. */
+async function userSet(u, entferne){
+  if(db){
+    const paket = clean(u) || {};
+    (entferne || []).forEach(k => { paket[k] = null; });
+    await db.ref('users/'+u.dk).update(paket);
+    return;
+  }
   const all = localUsers(); all[u.dk] = u; store.set('bw-users', all);
 }
 
@@ -4443,7 +4460,11 @@ function flushSave(){
 }
 var fremdAktiv = false;        // solange true, liegen fremde Daten im Speicher - es wird nichts geschrieben
 /* E40: ein sehr kurzer Impuls bestätigt, dass etwas gezählt oder gesichert wurde */
-function stups(ms=8){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+function stups(ms=8, el){
+  try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){}
+  /* Sichtbare Quittung zusaetzlich zum Vibrieren - viele haben es aus */
+  if(el){ el.classList.remove('stups'); void el.offsetWidth; el.classList.add('stups'); }
+}
 function saveData(){
   if(!me || !dataReady || fremdAktiv) return;
   clearTimeout(saveTimer);
@@ -4725,7 +4746,7 @@ async function starteSitzung(u){
   if(auth && auth.currentUser && auth.currentUser.email && auth.currentUser.email !== mailOf(u.dk) && me.mail !== auth.currentUser.email){
     me.mail = auth.currentUser.email;
     delete me.mailPending;
-    try{ await userSet(me); }catch(e){}
+    try{ await userSet(me, ["mailPending"]); }catch(e){}
   }
   /* Der eine feste Admin-Zugang trägt sich selbst als Admin ein */
   if(db && auth && auth.currentUser && me.dk === "V-DK00000000"){
@@ -4790,13 +4811,21 @@ async function fuelleMemberSelect(){
     ? `${namen.length} Mitglied${namen.length>1?"er":""} im Team.`
     : "Noch keine Mitglieder. Der Kundenberater muss sich zuerst selbst angemeldet haben.";
 }
-let teamBlob = null, teamMonday = null;
+let teamBlob = null, teamMonday = null, teamLadeFehler = "";
 async function zeigeMember(dk){
   if(!dk){ zurueckZuMir(); return; }
   const u = await userGet(dk);
   if(!u) return;
   viewUser = {dk, name:`${u.vorname} ${u.nachname}`};
+  teamLadeFehler = "";
+  /* Das Leserecht haengt am Vermerk "leader" beim Mitglied. Fehlt er, traegt
+     ihn der Teamleiter hier selbst nach - die Regeln erlauben genau das. */
+  if(db && !istAdmin() && u.leader !== me.dk){
+    try{ await db.ref('users/'+dk+'/leader').set(me.dk); u.leader = me.dk; }
+    catch(e){ teamLadeFehler = "Der Teamleiter-Vermerk liess sich nicht setzen: " + (e.message || e); }
+  }
   teamBlob = await loadData(dk, true);
+  if(!teamBlob && !teamLadeFehler) teamLadeFehler = letzterFehler || "Die Daten kamen leer zurueck.";
   teamMonday = new Date(monday);
   renderTeam();
 }
@@ -4940,9 +4969,21 @@ function renderTeam(){
   const box = document.getElementById('tmViews');
   const bar = document.getElementById('tmWeekbar');
   if(!box) return;
-  if(!viewUser || !teamBlob){
+  if(!viewUser){
     box.innerHTML = "";
     if(bar) bar.hidden = true;
+    return;
+  }
+  /* Kommen keine Daten, stand hier frueher einfach nichts - das sah aus wie
+     eine Sperre. Jetzt steht der Grund da, samt Knopf zum erneuten Versuch. */
+  if(!teamBlob){
+    if(bar) bar.hidden = true;
+    box.innerHTML = `<div class="tmblock"><h4>${viewUser.name}</h4>
+      <p class="aempty">Die Daten dieses Mitglieds lassen sich nicht laden.
+      <br><small class="tspanne">${teamLadeFehler || "Grund unbekannt."}</small></p>
+      <div class="actions einzeln"><button class="btn" id="tmNochmal">Nochmal versuchen</button></div></div>`;
+    const nm = document.getElementById('tmNochmal');
+    if(nm) nm.onclick = ()=> zeigeMember(viewUser.dk);
     return;
   }
   const tage = Array.from({length:7},(_,i)=>{const d=new Date(teamMonday);d.setDate(d.getDate()+i);return d;});
@@ -5026,7 +5067,10 @@ function fremdPdf(){
   });
 }
 document.getElementById('memberSel').addEventListener('change', e=> zeigeMember(e.target.value));
-addEventListener('hashchange', ()=>{ if(location.hash === "#team") teamVergleich(); });
+addEventListener('hashchange', ()=>{
+  if(location.hash === "#team") teamVergleich();
+  if(location.hash === "#teammeldung") teamMeldung();
+});
 document.getElementById('tmPrev').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()-7); renderTeam(); } };
 document.getElementById('tmNext').onclick = ()=>{ if(teamMonday){ teamMonday.setDate(teamMonday.getDate()+7); renderTeam(); } };
 document.getElementById('addMember').onclick = ()=>{
@@ -5045,41 +5089,65 @@ document.getElementById('addMember').onclick = ()=>{
       if(me.team.includes(dk)) return zeig(`${u.vorname} ${u.nachname} ist schon im Team.`);
       me.team.push(dk);
       await userSet(me);
-      try{ await db.ref('users/'+dk+'/leader').set(me.dk); }catch(e){}   // gibt dem Teamleiter Leserecht
+      /* Ohne diesen Vermerk gibt es kein Leserecht - ein Fehlschlag darf
+         deshalb nicht mehr stillschweigend untergehen. */
+      try{ await db.ref('users/'+dk+'/leader').set(me.dk); }
+      catch(e){ return zeig("Aufgenommen, aber das Leserecht liess sich nicht setzen: " + (e.message || e)); }
       closeModal(); await fuelleMemberSelect();
     }, "Hinzufügen");
 };
 
-/* Bestehende Sitzung fortsetzen */
+/* Bestehende Sitzung fortsetzen.
+   Solange Firebase prueft, laeuft der Ladebildschirm - das Anmeldefenster
+   erscheint erst, wenn feststeht, dass wirklich niemand angemeldet ist. */
+const bootEl = document.getElementById('boot');
+let bootFertig = false;
+function bootWeg(){
+  bootFertig = true;
+  if(bootEl){ bootEl.classList.add('weg'); setTimeout(()=>{ bootEl.hidden = true; }, 260); }
+}
+function zeigeAnmeldung(){
+  bootWeg();
+  loginEl.hidden = false;
+}
+/* Sicherheitsnetz: antwortet Firebase nicht, kommt trotzdem das Anmeldefenster */
+setTimeout(()=>{
+  const ab = document.getElementById('bootAbbruch');
+  if(!bootFertig && ab){ ab.hidden = false; ab.onclick = zeigeAnmeldung; }
+}, 4000);
+setTimeout(()=>{ if(!bootFertig) zeigeAnmeldung(); }, 12000);
+
 renderLogin();
 if(auth){
   auth.onAuthStateChanged(async user=>{
     if(!user){
-      loginEl.hidden = false;
+      zeigeAnmeldung();
       try{ await auth.signInAnonymously(); }catch(err){}   // erlaubt die Prüfungen im Anmeldefenster
       return;
     }
-    if(user.isAnonymous){ loginEl.hidden = false; return; }
+    if(user.isAnonymous){ zeigeAnmeldung(); return; }
     try{
       const dk = (await db.ref('uids/'+user.uid).once('value')).val();
       const u  = dk ? await userGet(dk) : null;
-      if(u && await istGeloescht(dk)){ await auth.signOut(); lgFehler("Dieser Zugang wurde entfernt."); return; }
+      if(u && await istGeloescht(dk)){ await auth.signOut(); zeigeAnmeldung(); lgFehler("Dieser Zugang wurde entfernt."); return; }
       if(u){
         const grund = sitzungAbgelaufen(u);
-        if(grund){ await auth.signOut(); lgStep = "login"; lg = {dk}; lgFehler(grund); return; }
-        return starteSitzung(u);
+        if(grund){ await auth.signOut(); zeigeAnmeldung(); lgStep = "login"; lg = {dk}; lgFehler(grund); return; }
+        await starteSitzung(u);
+        bootWeg();
+        return;
       }
     }catch(err){ /* offline */ }
-    loginEl.hidden = false;
+    zeigeAnmeldung();
   });
 }else{
   (async ()=>{
     const s = store.get('bw-session');
     if(s && s.dk){
       const u = localUsers()[s.dk];
-      if(u) return starteSitzung(u);
+      if(u){ await starteSitzung(u); bootWeg(); return; }
     }
-    loginEl.hidden = false;
+    zeigeAnmeldung();
   })();
 }
 
@@ -5442,6 +5510,7 @@ function meldungDaten(start){
   const m = {termine:0, einheiten:0, einheitenFG:0, einheitenPromo:0,
              umsatzFG:0, umsatzWG:0, umsatzPromo:0, k70ein:0, pci:0,
              promoFG:0, promoWG:0, kontakteFG:0, kontakteWG:0,
+             promoTermineFG:0, promoTermineWG:0,
              empfehlungen:0, jobtickets:0,
              nTermine:0, nPromos:0, nTerminieren:0};
 
@@ -5464,8 +5533,8 @@ function meldungDaten(start){
       else if(n.gebiet==="Weißgebiet") m.umsatzWG += num(n.umsatz);
     }
     if(e.kind==="terminieren" && e.quelle==="Promotion"){
-      if(e.gebiet==="Weißgebiet"){ m.promoWG++; m.kontakteWG += +n.kontakte||0; }
-      else { m.promoFG++; m.kontakteFG += +n.kontakte||0; }
+      if(e.gebiet==="Weißgebiet"){ m.promoWG++; m.kontakteWG += +n.kontakte||0; m.promoTermineWG += +n.termine||0; }
+      else { m.promoFG++; m.kontakteFG += +n.kontakte||0; m.promoTermineFG += +n.termine||0; }
       if(n.verkauft==="Ja"){
         const eh = +n.einheiten || 0;
         m.einheiten += eh; m.einheitenPromo += eh;
@@ -5503,7 +5572,8 @@ function meldungHTML(start, name){
       ${zeile("K70 eingekauft", n(m.k70ein)+" €")}
       ${zeile("Premium CheckIn", m.pci)}
       ${zeile("Promotion", m.promoFG+m.promoWG, `Festgebiet ${m.promoFG} · Weißgebiet ${m.promoWG}`)}
-      ${zeile("Kontakte aus Promotion", m.kontakteFG+m.kontakteWG, `Festgebiet ${m.kontakteFG} · Weißgebiet ${m.kontakteWG}`)}
+      ${zeile("Aus Promotion", `${m.kontakteFG+m.kontakteWG} / ${m.promoTermineFG+m.promoTermineWG}`,
+              `Kontakte / Termine · zusammen ${m.kontakteFG+m.kontakteWG+m.promoTermineFG+m.promoTermineWG}`)}
       ${zeile("Empfehlungen gesammelt", m.empfehlungen)}
       ${zeile("Jobtickets gesammelt", m.jobtickets)}
     </tbody></table></div>
@@ -5530,7 +5600,7 @@ function meldungText(start, name){
     `K70 eingekauft: ${n(m.k70ein)}`,
     `Premium CheckIn: ${m.pci}`,
     `Promotion: ${m.promoFG+m.promoWG} (FG ${m.promoFG}, WG ${m.promoWG})`,
-    `Kontakte: FG ${m.kontakteFG}, WG ${m.kontakteWG}`,
+    `Aus Promotion: ${m.kontakteFG+m.kontakteWG} Kontakte / ${m.promoTermineFG+m.promoTermineWG} Termine (zusammen ${m.kontakteFG+m.kontakteWG+m.promoTermineFG+m.promoTermineWG})`,
     `Empfehlungen: ${m.empfehlungen} · Jobtickets: ${m.jobtickets}`,
     ``,
     `Kommende Woche:`,
@@ -5787,7 +5857,7 @@ function renderInventur(){
   feld.oninput = ()=>{ invSuche = feld.value; invFiltern(); invVorschlaege(feld.value); };
   feld.onkeydown = ev => { if(ev.key === "Enter"){ ev.preventDefault(); feld.blur(); invVorschlagZu(); } };
   box.querySelectorAll('[data-plus],[data-minus]').forEach(b=> b.onclick = ()=>{
-    stups();
+    stups(8, b.parentElement && b.parentElement.querySelector('.zahl'));
     const id = b.dataset.plus || b.dataset.minus;
     const neu = Math.max(0, (+inventur[id] || 0) + (b.dataset.plus ? 1 : -1));
     if(neu > 0) inventur[id] = neu; else delete inventur[id];
@@ -6102,7 +6172,7 @@ function zielBalken(titel, ist, ziel, einheit, hinweis){
   const z = v => einheit === "€" ? eur(v)+" €" : `${Math.round(v*10)/10}`.replace(".",",")+(einheit?" "+einheit:"");
   return `<div class="zziel${fertig?" erreicht":""}">
     <div class="zkopf"><span>${titel}</span><b>${z(ist)} / ${z(ziel)}</b></div>
-    <div class="zbalken"><i style="width:${pct}%"></i></div>
+    <div class="zbalken"><i style="--soll:${pct}%"></i></div>
     <div class="zfuss">${fertig ? "erreicht ✓" : `${pct} % · noch ${z(Math.max(0,ziel-ist))}`}${hinweis?` · ${hinweis}`:""}</div>
   </div>`;
 }
@@ -6349,6 +6419,142 @@ function renderTeamumsatz(){
 }
 var jobJahr = 0, tuJahr = 0;
 
+/* ================= Wochenmeldung des Teams ================= */
+/* Eine Zeile je Person, die Kennzahlen als Spalten - seitlich scrollbar.
+   Oben der Teamleiter selbst, darunter nach Einstellungsdatum: wer laenger
+   dabei ist steht oben, die juengsten unten, ohne Datum ganz nach unten. */
+let tmMontag = null, tmLaeuft = false;
+
+const TMSP = [
+  ["Kundentermine",  m => m.termine],
+  ["Aktiv",          m => m.einheiten > 0 ? 1 : 0],
+  ["Einheiten",      m => m.einheiten],
+  ["davon Festgebiet", m => m.einheitenFG],
+  ["davon Promotion",  m => m.einheitenPromo],
+  ["Umsatz netto",   m => netto(m.umsatzFG + m.umsatzWG), "eur"],
+  ["K70 Einkauf",    m => netto(m.k70ein), "eur"],
+  ["Premium CheckIn", m => m.pci],
+  ["Promotion",      m => m.promoFG + m.promoWG],
+  ["Kontakte / Termine", m => `${m.kontakteFG+m.kontakteWG} / ${m.promoTermineFG+m.promoTermineWG}`,
+                         "text", m => m.kontakteFG+m.kontakteWG+m.promoTermineFG+m.promoTermineWG],
+  ["Empfehlungen",   m => m.empfehlungen],
+  ["Jobtickets",     m => m.jobtickets]
+];
+const TMSP_N = [
+  ["Kundentermine",  m => m.nTermine],
+  ["Erw. Umsatz",    m => m.erwarteterUmsatz, "eur"],
+  ["Erw. Einheiten", m => m.erwarteteEinheiten, "dez"],
+  ["Promotion",      m => m.nPromos],
+  ["Terminierung",   m => m.nTerminieren]
+];
+
+/* Rechnet die Meldung eines fremden Datensatzes, ohne die eigenen anzutasten */
+function meldungAus(blob, start){
+  const sicherung = fremdStart();
+  try{ applyData(blob); return meldungDaten(start); }
+  finally{ fremdEnde(sicherung); }
+}
+function tmZelle(sp, m){
+  const roh = sp[1](m);
+  if(sp[2] === "eur")  return eur(roh) + " €";
+  if(sp[2] === "dez")  return dec(roh, 1);
+  return roh;
+}
+function tmSummeZeile(spalten, daten){
+  return spalten.map(sp=>{
+    if(sp[2] === "text"){
+      const k = daten.reduce((n,d)=> n + d.m.kontakteFG + d.m.kontakteWG, 0);
+      const t = daten.reduce((n,d)=> n + d.m.promoTermineFG + d.m.promoTermineWG, 0);
+      return `${k} / ${t}`;
+    }
+    const summe = daten.reduce((n,d)=> n + (+sp[1](d.m) || 0), 0);
+    if(sp[2] === "eur") return eur(summe) + " €";
+    if(sp[2] === "dez") return dec(summe, 1);
+    return summe;
+  });
+}
+function tmTabelle(titel, spalten, daten){
+  const kopf = `<tr><th class="fixspalte">Name</th>${spalten.map(sp=>`<th>${sp[0]}</th>`).join("")}</tr>`;
+  const zeilen = daten.map((d,i)=>
+    `<tr class="tmzeile" style="--verzug:${Math.min(i,12)*35}ms">
+       <td class="fixspalte">${d.name}${d.eigen?' <span class="chip mini">ich</span>':""}</td>
+       ${spalten.map(sp=>`<td class="v">${tmZelle(sp, d.m)}</td>`).join("")}</tr>`).join("");
+  const summe = tmSummeZeile(spalten, daten);
+  return `<div class="ah4">${titel}</div>
+    <div class="ascroll"><table class="atable tmtab">
+      <thead>${kopf}</thead><tbody>${zeilen}
+      <tr class="tmsumme"><td class="fixspalte">Gesamt</td>
+        ${summe.map(w=>`<td class="v">${w}</td>`).join("")}</tr>
+      </tbody></table></div>`;
+}
+async function teamMeldung(){
+  const box = document.getElementById('tmeldung');
+  if(!box || !istTeamleiter() || tmLaeuft) return;
+  if(!tmMontag) tmMontag = new Date(monday);
+  const {week} = isoWeek(tmMontag);
+  const ende = new Date(tmMontag); ende.setDate(ende.getDate()+6);
+  const kopf = `<div class="asec">
+    <div class="tmwoche">
+      <button class="mini" id="tmmVor">‹</button>
+      <div><b>KW ${week}</b><span class="sub">${fmt(tmMontag)} – ${fmt(ende)}</span></div>
+      <button class="mini" id="tmmZur">›</button>
+      <button class="mini" id="tmmHeute">Diese Woche</button>
+    </div></div>`;
+  box.innerHTML = kopf + `<div class="asec"><p class="aempty">Die Meldungen werden geholt …</p>
+    <div class="laedt" style="height:34px;margin-top:12px">.</div>
+    <div class="laedt" style="height:34px;margin-top:8px">.</div>
+    <div class="laedt" style="height:34px;margin-top:8px">.</div></div>`;
+  const bindeWoche = ()=>{
+    const setz = (id, tage)=>{
+      const b = document.getElementById(id);
+      if(b) b.onclick = ()=>{
+        if(tage === null) tmMontag = new Date(monday);
+        else { tmMontag = new Date(tmMontag); tmMontag.setDate(tmMontag.getDate()+tage); }
+        teamMeldung();
+      };
+    };
+    setz('tmmVor', -7); setz('tmmZur', 7); setz('tmmHeute', null);
+  };
+  bindeWoche();
+
+  tmLaeuft = true;
+  try{
+    /* Die eigenen Zahlen stehen sofort zur Verfuegung */
+    const daten = [{name:`${me.vorname} ${me.nachname}`, eigen:true, sort:-1,
+                    m: meldungDaten(tmMontag)}];
+    const dks = istAdmin()
+      ? (await alleNutzer()).filter(u=>u.dk!==me.dk).map(u=>u.dk)
+      : (me.team || []);
+    const fehler = [];
+    for(const d of dks){
+      const u = await userGet(d).catch(()=>null);
+      if(!u) continue;
+      const blob = await loadData(d, true).catch(()=>null);
+      const name = `${u.vorname} ${u.nachname}`;
+      if(!blob){ fehler.push(name); continue; }
+      const einst = (blob.settings && blob.settings.einstellung)
+                 || ((settings.tmEinst||{})[d] || "");
+      try{
+        daten.push({name, eigen:false, m: meldungAus(blob, tmMontag),
+                    sort: einst ? fromDk(einst).getTime() : Infinity});
+      }catch(e){ fehler.push(name); }
+    }
+    /* Der eigene Eintrag bleibt oben, danach: laenger dabei zuerst */
+    daten.sort((a,b)=> a.sort - b.sort);
+    box.innerHTML = kopf
+      + `<div class="asec">${tmTabelle("Diese Woche", TMSP, daten)}</div>`
+      + `<div class="asec">${tmTabelle("Kommende Woche", TMSP_N, daten)}</div>`
+      + (fehler.length
+          ? `<div class="asec"><p class="hinweis">Nicht geladen: ${fehler.join(", ")}.
+             Prüfe bei diesen Mitgliedern unter Teammitglieder, ob der Zugriff steht.</p></div>`
+          : "");
+    bindeWoche();
+  }catch(e){
+    box.innerHTML = kopf + `<div class="asec"><p class="aempty">Die Übersicht liess sich nicht bauen.
+      <br><small class="tspanne">${(e && e.message) || e}</small></p></div>`;
+    bindeWoche();
+  }finally{ tmLaeuft = false; }
+}
 /* ================= Fahrtenbuch ================= */
 /* Bewusst von Hand: Start und Ziel, Zeiten und Tachostand — daraus ergibt sich alles Weitere. */
 const fahrtKm = f => {
@@ -6792,6 +6998,7 @@ const IC = {
   ziele:'<path d="M6 3v9a6 6 0 0 0 12 0V3z"/><path d="M6 5H3.5v2A3.5 3.5 0 0 0 7 10.5M18 5h2.5v2A3.5 3.5 0 0 1 17 10.5"/><path d="M12 18v3M8.5 21h7"/>',
   jobtickets:'<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8.5 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2M3 12h18"/>',
   teamumsatz:'<path d="M4 19V9M10 19V5M16 19v-6M22 19H2"/><circle cx="10" cy="5" r="1.6"/>',
+  teammeldung:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11M3 14h18"/>',
   fahrten:'<path d="M5 17h14M6.5 17V9.5l1.7-3.5h7.6l1.7 3.5V17"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/><path d="M6.5 12.5h11"/>',
   kunden:'<circle cx="12" cy="7.5" r="3.4"/><path d="M4.5 20c0-4 3.4-6.3 7.5-6.3s7.5 2.3 7.5 6.3"/><path d="M4 4.5h2M18 4.5h2"/>'
 };
@@ -6803,7 +7010,7 @@ const MENUE = [
   ["wunsch","Provisionswunsch"],["provision","Provisionsrechner"],["ziele","Ziele"],["jobtickets","Jobtickets"],
   ["fahrten","Fahrtenbuch"],["jahr","Jahresrückblick"],["profil","Profil"],["faq","Hilfe"]
 ];
-const MENUE_TL = [["teamumsatz","Teamumsatz"],["team","Teammitglieder"],["kbdelete","KB Delete"]];
+const MENUE_TL = [["teammeldung","Wochenmeldung"],["teamumsatz","Teamumsatz"],["team","Teammitglieder"],["kbdelete","KB Delete"]];
 function renderMenu(){
   const bau = liste => liste.map(([k,t])=>
     `<a class="navlink" href="#${k}" data-page="${k}"><span class="mic">${ic(k)}</span>${t}</a>`).join("");
@@ -6914,6 +7121,96 @@ function kommendeAnrufe(){
   });
   return liste.sort((a,b)=> a.ab.localeCompare(b.ab));
 }
+/* ---------- Vorbereitung auf die kommende Woche ----------
+   Aus dem Provisionswunsch kommt das Wochenziel an Kundenterminen.
+   Was davon noch fehlt, muss terminiert werden - wie viele Bloecke das
+   sind, rechnet sich aus den eigenen Quoten der Auswertungen. */
+function vorbereitung(){
+  const start = new Date(monday); start.setDate(start.getDate()+7);
+  const tage = Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return dk(d);});
+  const von = tage[0], bis = tage[6];
+
+  let termine = 0, promos = 0, bloecke = 0;
+  Object.keys(entries).forEach(k=>{
+    const [tag] = k.split("|");
+    if(tag < von || tag > bis) return;
+    const e = entries[k];
+    if(e.kind === "kunde") termine++;
+    else if(e.kind === "terminieren"){ e.quelle === "Promotion" ? promos++ : bloecke++; }
+  });
+
+  const zielTermine = Math.round(wunschWerte().tWoche || 0);
+  const q = quoten(rangeWeeks);
+  const proFGB   = q.fgb.n   ? q.fgb.termine   / q.fgb.n   : 0;
+  const proPromo = q.promo.n ? q.promo.termine / q.promo.n : 0;
+  const luecke = Math.max(0, zielTermine - termine);
+
+  /* Die Luecke verteilt sich so, wie die Termine bisher tatsaechlich
+     entstanden sind - nicht nach einer erfundenen Faustregel. */
+  const summe = q.fgb.termine + q.promo.termine;
+  const anteilFGB = summe ? q.fgb.termine / summe : 1;
+
+  const zielFGB   = proFGB   ? Math.ceil(luecke * anteilFGB / proFGB) : null;
+  const zielPromo = proPromo ? Math.ceil(luecke * (1-anteilFGB) / proPromo) : null;
+
+  return {von, bis, termine, promos, bloecke, zielTermine, luecke,
+          zielFGB, zielPromo, proFGB, proPromo};
+}
+function vorbZeile(titel, ist, ziel, fuss){
+  const pct = ziel > 0 ? Math.min(100, Math.round(ist/ziel*1000)/10) : 0;
+  const fertig = ziel > 0 && ist >= ziel;
+  return `<div class="vzeile${fertig?" erreicht":""}">
+    <div class="vkopf"><span>${titel}</span>
+      <b><span class="vzahl" data-bis="${ist}">${ist}</span> / ${ziel > 0 ? ziel : "–"}</b></div>
+    <div class="zbalken"><i style="--soll:${pct}%"></i></div>
+    <div class="vfuss">${fertig ? "steht ✓" : fuss}</div>
+  </div>`;
+}
+function vorbereitungHTML(){
+  const v = vorbereitung();
+  if(!v.zielTermine){
+    return `<div class="asec vorb">
+      <h3>Vorbereitung für nächste Woche</h3>
+      <p class="aempty">Sobald im Provisionswunsch Einkommen und Abschlussquote stehen,
+      erscheint hier dein Wochenziel.
+      <br><button class="mini" data-leerziel="wunsch">Zum Provisionswunsch</button></p></div>`;
+  }
+  const rest = v.zielTermine - v.termine;
+  const zeilen = [
+    vorbZeile("Kundentermine", v.termine, v.zielTermine,
+      rest > 0 ? `noch ${rest} ${rest===1?"Termin":"Termine"} bis zum Wochenziel` : "Wochenziel steht"),
+    v.zielFGB !== null
+      ? vorbZeile("Festgebiet · Blöcke", v.bloecke, v.zielFGB,
+          `bei ${dec(v.proFGB,1)} Terminen je Block`)
+      : `<div class="vzeile stumm"><div class="vkopf"><span>Festgebiet · Blöcke</span><b>${v.bloecke}</b></div>
+         <div class="vfuss">Noch keine Quote — nach ein paar Blöcken steht hier ein Ziel.</div></div>`,
+    v.zielPromo !== null
+      ? vorbZeile("Promotion · Einsätze", v.promos, v.zielPromo,
+          `bei ${dec(v.proPromo,1)} Terminen je Einsatz`)
+      : `<div class="vzeile stumm"><div class="vkopf"><span>Promotion · Einsätze</span><b>${v.promos}</b></div>
+         <div class="vfuss">Noch keine Quote — nach ein paar Einsätzen steht hier ein Ziel.</div></div>`
+  ].join("");
+  return `<div class="asec vorb">
+    <h3>Vorbereitung für nächste Woche</h3>
+    <p class="sub">${fmt(fromDk(v.von))} – ${fmt(fromDk(v.bis))}</p>
+    ${zeilen}
+    <div class="actions einzeln"><button class="btn" data-leerziel="planer">Woche planen</button></div>
+  </div>`;
+}
+/* Die Zahlen laufen einmal hoch, wenn der Block erscheint */
+function vorbZahlen(box){
+  box.querySelectorAll('.vzahl').forEach(el=>{
+    const bis = +el.dataset.bis || 0;
+    if(bis <= 0 || bis > 60) return;
+    let n = 0;
+    const takt = Math.max(28, Math.round(520 / bis));
+    el.textContent = "0";
+    const t = setInterval(()=>{
+      n++; el.textContent = n;
+      if(n >= bis) clearInterval(t);
+    }, takt);
+  });
+}
 function renderHeute(){
   const box = document.getElementById('heute');
   if(!box || !me) return;
@@ -6949,6 +7246,7 @@ function renderHeute(){
   const anrufe = offeneAnrufe();
   const bald = kommendeAnrufe();
   box.innerHTML = `
+    ${vorbereitungHTML()}
     ${anrufe.length ? `<div class="rufbox">
       <b>${anrufe.length} ${anrufe.length===1?"Anruf steht an":"Anrufe stehen an"}</b>
       ${anrufe.map(a=>`<div class="rufzeile ${a.art}">
@@ -6977,6 +7275,7 @@ function renderHeute(){
       ${liste.map(karte).join("")}
     </div>`;
 
+  vorbZahlen(box);
   box.querySelectorAll('[data-rufauf]').forEach(b=> b.onclick = ()=>{
     const [tag,h] = b.dataset.rufauf.split("|");
     monday = mondayOf(fromDk(tag)); render(); openSlot(tag, +h);
@@ -7600,7 +7899,7 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') setMenu(false); }
 
 function show(k){
   if(!PAGES[k]) k='heute';
-  if((k==='team'||k==='kbdelete') && !istTeamleiter()) k='planer';
+  if((k==='team'||k==='kbdelete'||k==='teamumsatz'||k==='teammeldung') && !istTeamleiter()) k='planer';
   document.getElementById('pagetitle').textContent = PAGES[k];
   document.title = 'Digitaler Businessplan – '+PAGES[k];
   /* B7 + B8: die Kopfleiste am Handy traegt den Seitennamen, der Body
