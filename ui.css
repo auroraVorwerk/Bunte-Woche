@@ -952,34 +952,37 @@ button,a,.opt,.mini,.btn,.navlink,.tab,summary,[role="button"]{
 }
 
 /* 12.2 Fortschritt der Nachbereitung als Liste (Idee 1) */
-.nbtext{
-  display:flex;justify-content:space-between;width:100%;
-  background:none;border:0;padding:7px 0 0;color:inherit;
-  font:inherit;font-size:.78rem;cursor:pointer;text-align:left;
+/* .nbtext ist oben in 6.x schon als Zeile definiert - hier wird sie
+   nur antippbar gemacht, ohne das bestehende Layout zu ueberschreiben. */
+button.nbtext{
+  width:100%;background:none;border:0;padding:7px 0 0;
+  color:inherit;font:inherit;font-size:.78rem;cursor:pointer;text-align:left;
 }
 .nbtext .kp{display:inline-block;transition:transform .22s ease;font-weight:700}
 .nbtext[aria-expanded="true"] .kp{transform:rotate(90deg)}
-.nbblocks{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.nbblock{
+.fsblocks{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.fsblock{
   display:flex;align-items:center;gap:10px;width:100%;
   background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
   padding:9px 12px;font:inherit;font-size:.86rem;color:var(--text);
   cursor:pointer;text-align:left;transition:all .2s ease;
   animation:einlauf .26s ease-out both;
 }
-.nbblock i{
+.fsblock i{
   width:17px;height:17px;flex:none;border-radius:50%;border:2px solid var(--line);
   display:grid;place-items:center;font-size:10px;font-style:normal;transition:all .2s ease;
 }
-.nbblock.ok{color:var(--faint)}
-.nbblock.ok i{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#0F1A14)}
-.nbblock.dran{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
-.nbblocks .nbblock:nth-child(2){animation-delay:.03s}
-.nbblocks .nbblock:nth-child(3){animation-delay:.06s}
-.nbblocks .nbblock:nth-child(4){animation-delay:.09s}
-.nbblocks .nbblock:nth-child(5){animation-delay:.12s}
-.nbblocks .nbblock:nth-child(6){animation-delay:.15s}
-.nbblocks .nbblock:nth-child(7){animation-delay:.18s}
+.fsblock.ok{color:var(--faint)}
+.fsblock.ok i{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#0F1A14)}
+.fsblock.dran{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.fsblocks .fsblock:nth-child(2){animation-delay:.03s}
+.fsblocks .fsblock:nth-child(3){animation-delay:.06s}
+.fsblocks .fsblock:nth-child(4){animation-delay:.09s}
+.fsblocks .fsblock:nth-child(5){animation-delay:.12s}
+.fsblocks .fsblock:nth-child(6){animation-delay:.15s}
+.fsblocks .fsblock:nth-child(7){animation-delay:.18s}
+
+.vzahl{font-variant-numeric:tabular-nums;display:inline-block;min-width:1.6em;text-align:right}
 
 /* 12.3 Quittung beim Zwischenspeichern (Idee 9) */
 .quittung{
