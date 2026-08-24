@@ -201,7 +201,7 @@ h1 span{color:var(--muted);font-weight:300}
 .modal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:16px}
 .modal.open{display:flex}
 .modal .back{position:absolute;inset:0;background:rgba(0,0,0,.6)}
-.sheet{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);width:min(480px,100%);max-height:88vh;overflow-y:auto;padding:0 22px 22px;animation:pop .22s cubic-bezier(.2,.9,.3,1)}
+.sheet{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);width:min(480px,100%);max-height:88vh;animation:pop .22s cubic-bezier(.2,.9,.3,1)}
 @keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}}
 .sheet header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:3;margin:0 -22px 18px;padding:20px 22px 14px;background:var(--surface);border-bottom:1px solid var(--line);border-radius:var(--r-xl) var(--r-xl) 0 0}
 .sheet h3{font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
@@ -853,7 +853,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 /* =====================================================================
    Handyansicht – greift automatisch ab Bildschirmen unter 760 Pixeln
    ===================================================================== */
-@media screen and (max-width:759px){
+@media (orientation:portrait), (max-width:699px){
   .wrap{padding:0 11px calc(72px + env(safe-area-inset-bottom))}
   .hero{padding:20px 0 14px}
   .tagbar{display:flex}
@@ -950,7 +950,7 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
 
   /* Safari zoomt bei kleinerer Schrift in Eingabefelder hinein */
   .field input,.field select,.field textarea,.metric input{font-size:16px}
-  .sheet{border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:92vh}
+  /* Hoehe und Innenabstand stehen in der ui.css, Abschnitt 6.1 */
   .weekbar{padding:6px}
   .nav{width:38px;height:38px}
   h1{font-size:clamp(2.1rem,11vw,3rem)}
@@ -1670,6 +1670,7 @@ function simpleDialog(title, sub, body, onSave, saveLabel="Speichern"){
   sheet.innerHTML = `<header><div><h3>${title}</h3>${sub?`<div class="when">${sub}</div>`:""}</div>
       <button class="x" data-close aria-label="Schließen">✕</button></header>${body}
     <div class="actions"><button class="btn" data-close>Abbrechen</button><button class="btn primary" id="okBtn">${saveLabel}</button></div>`;
+  sheetNormalisieren();
   document.getElementById('okBtn').onclick = onSave;
 }
 function dlgEinkauf(){
@@ -1727,6 +1728,21 @@ function stilleSicherung(){
   saveData();
   return true;
 }
+/* Sorgt dafuer, dass JEDES Fenster einen scrollbaren Koerper hat -
+   egal welcher Schritt es gefuellt hat. Ohne das laeuft der Inhalt
+   unten aus dem Bild heraus und hat keinen Innenabstand. */
+function sheetNormalisieren(){
+  if(!sheet) return;
+  if(sheet.querySelector(':scope > .sheetkoerper')) return;
+  const lose = [...sheet.children].filter(k =>
+    k.tagName !== 'HEADER' && !k.classList.contains('sheetfuss'));
+  if(!lose.length) return;
+  const koerper = document.createElement('div');
+  koerper.className = 'sheetkoerper';
+  const fuss = sheet.querySelector(':scope > .sheetfuss');
+  lose.forEach(k => koerper.appendChild(k));
+  fuss ? sheet.insertBefore(koerper, fuss) : sheet.appendChild(koerper);
+}
 function closeModal(){
   const gesichert = (step === "view") ? stilleSicherung() : false;
   modal.classList.remove('open'); draft=null;
@@ -1735,6 +1751,34 @@ function closeModal(){
 /* Fenster einfach zumachen: der Zwischenstand bleibt trotzdem erhalten */
 function closeUndZeichnen(){ if(closeModal()) renderAll(); }
 modal.addEventListener('click', e=>{ if(e.target.dataset.close!==undefined) closeUndZeichnen(); });
+
+/* Am Griff nach unten ziehen schliesst das Fenster. Der Zwischenstand
+   wird dabei gesichert - closeModal() erledigt das ueber stilleSicherung(). */
+(function wischZu(){
+  let start = 0, zieht = false;
+  const griff = ev => {
+    const kopf = ev.target.closest('header');
+    return kopf && sheet.contains(kopf);
+  };
+  sheet.addEventListener('touchstart', ev=>{
+    if(!griff(ev)) return;
+    start = ev.touches[0].clientY; zieht = true;
+    sheet.style.transition = "none";
+  }, {passive:true});
+  sheet.addEventListener('touchmove', ev=>{
+    if(!zieht) return;
+    const d = ev.touches[0].clientY - start;
+    sheet.style.transform = d > 0 ? `translateY(${d}px)` : "";
+  }, {passive:true});
+  sheet.addEventListener('touchend', ev=>{
+    if(!zieht) return;
+    zieht = false;
+    const d = ev.changedTouches[0].clientY - start;
+    sheet.style.transition = "transform .22s ease";
+    sheet.style.transform = "";
+    if(d > 90) closeUndZeichnen();
+  }, {passive:true});
+})();
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeUndZeichnen(); });
 
 function head(sub, zusatz=""){
@@ -1756,11 +1800,25 @@ function nbFortschritt(){
     !!n.verkauft,
     n.verkauft === "Nein" ? nkFertig(n) : (n.verkauft === "Ja" ? !!n.einheiten : false)
   ];
+  const NAMEN = ["Zeiten","Kundenart und Gebiet","Empfehlung und Jobticket",
+                 "Gerät","Vorgeführt","Verkauft ja/nein","Abschluss"];
+  const ANKER = ["realStart","kundenart","empfehlung","geraet","vorgefuehrt","verkauft",
+                 n.verkauft === "Nein" ? "grund" : "einheiten"];
   const fertig = bloecke.filter(Boolean).length;
   const pct = Math.round(fertig / bloecke.length * 100);
+  const naechster = bloecke.indexOf(false);
+  /* Der Balken sagt nur DASS etwas fehlt. Die Liste sagt WAS - und
+     bringt einen mit einem Tipp direkt dorthin. */
+  const liste = NAMEN.map((name,i)=>
+    `<button type="button" class="nbblock${bloecke[i] ? " ok" : ""}${i === naechster ? " dran" : ""}"
+       data-nbspring="${ANKER[i]}"><i>${bloecke[i] ? "✓" : ""}</i>${name}</button>`).join("");
+  const offen = !!n._blockliste;
   return `<div class="nbfortschritt">
     <div class="nbbalken"><i style="width:${pct}%"></i></div>
-    <div class="nbtext"><span>${fertig} von ${bloecke.length} Blöcken vollständig</span><span>${pct} %</span></div>
+    <button type="button" class="nbtext" id="nbListeAuf" aria-expanded="${offen}">
+      <span>${fertig} von ${bloecke.length} Blöcken vollständig</span>
+      <span>${pct} % <b class="kp">›</b></span></button>
+    ${offen ? `<div class="nbblocks">${liste}</div>` : ""}
   </div>`;
 }
 const opts = (arr,act) => arr.map(o=>`<button class="opt" data-${act}="${o}">${o}</button>`).join("");
@@ -1790,7 +1848,27 @@ function collect(){
   }
   const vs  = document.getElementById('vsZeit');  if(vs)  draft.nb.vsZeit  = vs.value;
 }
-function repaint(){ const y = sheet.scrollTop; paint(); sheet.scrollTop = y; zumFehler(); }
+/* Sichtbare Antwort auf einen Knopfdruck - ohne Fenster zum Wegtippen */
+function quittung(knopf, text){
+  if(!knopf || !knopf.parentElement) return;
+  const alt = knopf.parentElement.querySelector('.quittung');
+  if(alt) alt.remove();
+  const q = document.createElement('span');
+  q.className = 'quittung';
+  q.innerHTML = `<svg viewBox="0 0 24 24" class="haken" aria-hidden="true">
+      <path d="M4 12.5l5.2 5.2L20 6.8"/></svg>${text}`;
+  knopf.parentElement.appendChild(q);
+  requestAnimationFrame(()=> q.classList.add('da'));
+  setTimeout(()=>{ q.classList.remove('da'); setTimeout(()=> q.remove(), 340); }, 2000);
+}
+function repaint(){
+  const alt = sheet.querySelector(':scope > .sheetkoerper');
+  const y = alt ? alt.scrollTop : sheet.scrollTop;
+  paint();
+  const neu = sheet.querySelector(':scope > .sheetkoerper');
+  if(neu) neu.scrollTop = y; else sheet.scrollTop = y;
+  zumFehler();
+}
 /* Springt zum ersten fehlenden Pflichtfeld und hebt es kurz hervor */
 function zumFehler(){
   if(!draft || !draft.fokus) return;
@@ -2659,7 +2737,8 @@ function infoKarte(e){
       ${ziel}
     </div>${knoepfe}`;
 }
-function paint(){
+function paint(){ paintRoh(); sheetNormalisieren(); }
+function paintRoh(){
   const e = draft ? entries[key(draft.day,draft.hour)] : null;
 
   if(step==="view" && e){
@@ -2729,7 +2808,19 @@ function paint(){
     const eb = document.getElementById('editBtn'); if(eb) eb.onclick = ()=> startEdit(e);
     const sn = document.getElementById('saveNb'); if(sn) sn.onclick = ()=> (e.kind==='premium' ? saveNbPremium(e) : saveNb(e));
     const sab = document.getElementById('saveAb'); if(sab) sab.onclick = ()=> saveAbhol(e);
-    const nz = document.getElementById('nbZwischen'); if(nz) nz.onclick = ()=> nbZwischen(e);
+    const nz = document.getElementById('nbZwischen');
+    if(nz) nz.onclick = ()=>{ nbZwischen(e); quittung(nz, "gespeichert"); };
+    const bl = document.getElementById('nbListeAuf');
+    if(bl) bl.onclick = ()=>{
+      collect();
+      draft.nb._blockliste = !draft.nb._blockliste;
+      repaint();
+    };
+    sheet.querySelectorAll('[data-nbspring]').forEach(b=> b.onclick = ()=>{
+      collect();
+      draft.fokus = `[data-seg="${b.dataset.nbspring}"], #${b.dataset.nbspring}, [name="${b.dataset.nbspring}"]`;
+      repaint();
+    });
     const stc = document.getElementById('stChange');
     if(stc) stc.onclick = ()=>{ draft.stEdit = true; repaint(); };
     const dc = document.getElementById('doCancel');
@@ -3544,7 +3635,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v77 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v79 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -7528,8 +7619,13 @@ function zahlEingabe(titel, wert, cb){
   if(alt) alt.remove();
   const box = document.createElement('div');
   box.id = 'zahlbox';
+  /* Band mit den kleinen Zahlen: ein Griff statt vielem Tippen.
+     Das Eingabefeld bleibt darunter fuer alles ab 21. */
+  const band = Array.from({length:21},(_,i)=>
+    `<button type="button" data-zb="${i}" aria-pressed="${i === (+wert||0)}">${i}</button>`).join("");
   box.innerHTML = `<div class="zbinner">
       <div class="zbtitel">${titel}</div>
+      <div class="zband" id="zbBand">${band}</div>
       <input id="zbFeld" type="number" inputmode="numeric" pattern="[0-9]*" min="0" step="1" value="${+wert||0}">
       <div class="zbakt"><button type="button" class="btn" id="zbAb">Abbrechen</button>
         <button type="button" class="btn primary" id="zbOk">Übernehmen</button></div>
@@ -7540,9 +7636,23 @@ function zahlEingabe(titel, wert, cb){
   const ok = ()=>{ const v = Math.max(0, Math.round(+feld.value || 0)); zu(); cb(v); };
   box.querySelector('#zbAb').onclick = zu;
   box.querySelector('#zbOk').onclick = ok;
+  box.querySelectorAll('[data-zb]').forEach(b=> b.onclick = ()=>{
+    feld.value = b.dataset.zb;
+    box.querySelectorAll('[data-zb]').forEach(x=> x.setAttribute('aria-pressed', x === b));
+    stups(8);
+    ok();
+  });
+  feld.addEventListener('input', ()=>{
+    box.querySelectorAll('[data-zb]').forEach(x=>
+      x.setAttribute('aria-pressed', x.dataset.zb === String(+feld.value||0)));
+  });
+  /* Die gewaehlte Zahl in den sichtbaren Bereich holen */
+  setTimeout(()=>{
+    const akt = box.querySelector('[data-zb][aria-pressed="true"]');
+    if(akt && akt.scrollIntoView) akt.scrollIntoView({inline:"center", block:"nearest"});
+  }, 40);
   box.addEventListener('click', ev=>{ if(ev.target === box) zu(); });
   feld.addEventListener('keydown', ev=>{ if(ev.key === 'Enter'){ ev.preventDefault(); ok(); } });
-  setTimeout(()=>{ feld.focus(); feld.select(); }, 30);
 }
 
 function zaehlZeile(id, titel, wert){
