@@ -959,7 +959,18 @@ body.schiebt .slot:not(.filled):not(.blocked){outline:1px dashed color-mix(in sr
   .wergibt{grid-template-columns:1fr}
   .tagbar button{font-size:.72rem;padding:8px 1px 7px}
 }
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Bewegung: die Systemeinstellung gilt, ausser der Nutzer hat in der App
+   ausdruecklich "Immer an" gewaehlt. "Aus" schaltet sie unabhaengig davon ab.
+   Es wird auf nahezu null verkuerzt statt hart abgeschaltet - so bleiben
+   Zustandswechsel sichtbar, ohne dass sich etwas bewegt. */
+@media (prefers-reduced-motion:reduce){
+  body:not([data-bewegung="an"]) *{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+body[data-bewegung="aus"] *{
+  animation-duration:.01ms!important;animation-iteration-count:1!important;
+  transition-duration:.01ms!important;scroll-behavior:auto!important}
 
 /* ===== Zentrierung in den Kacheln =====================================
    Steht bewusst hier und nicht nur in der ui.css: so wirkt es auch dann,
@@ -1111,7 +1122,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 <!-- Die Zahl hinter ?v= MUSS bei jeder Aenderung an der ui.css hochgezaehlt
      werden. Sonst holen Browser und Service Worker die alte Datei aus dem
      Zwischenspeicher und die neuen Regeln kommen nie an. -->
-<link rel="stylesheet" href="ui.css?v=90">
+<link rel="stylesheet" href="ui.css?v=92">
 </head>
 <body>
 
@@ -3638,7 +3649,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v90 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v92 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4435,6 +4446,7 @@ function applyData(d){
      vermischten sich mit dessen Daten. */
   Object.keys(settings).forEach(k => delete settings[k]);
   Object.assign(settings, {bestellrahmen:0}, (d && d.settings) || {});
+  if(typeof bewegungSetzen === "function") bewegungSetzen();
   Object.assign(wunsch, {einkommen:0,tage:5,proAuftrag:270,quote:0}, (d && d.wunsch) || {});
   wunsch.proAuftrag = 270;
   wvUmstellen();                       // taggenaue Alt-Termine werden zu Monaten
@@ -5327,11 +5339,29 @@ async function renderProfil(){
           <button type="button" class="eye" data-eye="pfPin" aria-label="PIN anzeigen">${EYE_AN}</button></div>
       </div>
       <p class="err" id="pfErr" hidden></p>
+      <div class="ah4">Was gerade läuft</div>
+      <div class="grp"><div class="aline"><span class="nm">Programmstand</span>
+          <span class="vl">${BUILD}</span></div>
+        <div class="aline"><span class="nm">Stilvorlage geladen</span>
+          <span class="vl" id="pfCss">wird geprüft …</span></div>
+        <div class="aline"><span class="nm">Telefon: Bewegung reduzieren</span>
+          <span class="vl" id="pfMotion">–</span></div>
+        <div class="aline"><span class="nm">Animationen in der App</span>
+          <span class="vl" id="pfAnim">–</span></div>
+      </div>
+
       <div class="ah4">Erscheinungsbild</div>
       <div class="grp"><div class="seg">${
         ["Dunkel","Hell"].map(t=>`<button type="button" data-thema="${t}"
           aria-pressed="${themaJetzt()===t}">${t}</button>`).join("")}</div>
-</div>
+        <div class="field" style="margin-top:14px"><label>Bewegung</label>
+          <div class="seg">${
+            [["system","Wie im System"],["an","Immer an"],["aus","Aus"]].map(([w,t])=>
+              `<button type="button" data-bewegung="${w}"
+                 aria-pressed="${bewegungJetzt()===w}">${t}</button>`).join("")}</div>
+          <p class="hinweis">Steht am Telefon unter Bedienungshilfen „Bewegung reduzieren“ an,
+            sind die Animationen der App aus. Mit „Immer an“ laufen sie trotzdem.</p></div>
+      </div>
       <div class="actions"><button class="btn primary" id="pfSave">Speichern</button></div>
       <div class="actions"><button class="btn" id="pfPinNeu">${pin ? "PIN ändern" : "PIN festlegen"}</button></div>
       ${KALENDER_BASIS && me.feedToken ? `
@@ -5431,7 +5461,29 @@ async function renderProfil(){
     setTimeout(()=> URL.revokeObjectURL(a.href), 4000);
     bk.textContent = "gesichert"; setTimeout(()=> bk.textContent = "Daten sichern", 1800);
   };
+  /* Sagt in einem Satz, ob der neue Stand wirklich angekommen ist -
+     statt dass wir es per Screenshot raten muessen. */
+  (function selbstauskunft(){
+    const css = document.getElementById('pfCss');
+    if(css){
+      const link = document.querySelector('link[href*="ui.css"]');
+      const geladen = [...document.styleSheets].some(b => (b.href||"").includes("ui.css"));
+      const regel = getComputedStyle(document.documentElement).getPropertyValue('--tab-h').trim();
+      css.textContent = (link ? link.getAttribute('href').split("=")[1] : "?")
+        + (geladen && regel ? " · aktiv" : " · NICHT aktiv");
+    }
+    const mm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const m = document.getElementById('pfMotion');
+    if(m) m.textContent = mm ? "an" : "aus";
+    const a = document.getElementById('pfAnim');
+    if(a) a.textContent = (bewegungJetzt() === "aus" || (mm && bewegungJetzt() !== "an"))
+      ? "laufen nicht" : "laufen";
+  })();
   box.querySelectorAll('[data-thema]').forEach(b=> b.onclick = ()=>{ themaSetzen(b.dataset.thema, true); renderProfil(); });
+  box.querySelectorAll('[data-bewegung]').forEach(b=> b.onclick = ()=>{
+    settings.bewegung = b.dataset.bewegung;
+    bewegungSetzen(); saveData(); renderProfil();
+  });
   document.getElementById('pfPinNeu').onclick = pinDialog;
   const fc = document.getElementById('pfFeedCopy');
   if(fc) fc.onclick = ()=>{
@@ -7265,17 +7317,27 @@ function kommendeAnrufe(){
    Was davon noch fehlt, muss terminiert werden - wie viele Bloecke das
    sind, rechnet sich aus den eigenen Quoten der Auswertungen. */
 function vorbereitung(){
-  const start = new Date(monday); start.setDate(start.getDate()+7);
-  const tage = Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return dk(d);});
-  const von = tage[0], bis = tage[6];
+  /* Zwei verschiedene Zeitraeume, und das mit Absicht:
+     Kundentermine zaehlen fuer die KOMMENDE Woche - das ist das Ziel.
+     Terminierung (Festgebiet, Promotion) zaehlt fuer DIESE Woche - denn
+     hier und jetzt wird terminiert, damit naechste Woche voll wird. */
+  const spanne = (ab)=>{
+    const d0 = new Date(monday); d0.setDate(d0.getDate() + ab);
+    const d6 = new Date(d0);     d6.setDate(d6.getDate() + 6);
+    return [dk(d0), dk(d6)];
+  };
+  const [von, bis]       = spanne(7);   // kommende Woche
+  const [tvon, tbis]     = spanne(0);   // laufende Woche
 
   let termine = 0, promos = 0, bloecke = 0;
   Object.keys(entries).forEach(k=>{
     const [tag] = k.split("|");
-    if(tag < von || tag > bis) return;
     const e = entries[k];
-    if(e.kind === "kunde") termine++;
-    else if(e.kind === "terminieren"){ e.quelle === "Promotion" ? promos++ : bloecke++; }
+    if(e.kind === "kunde"){
+      if(tag >= von && tag <= bis) termine++;
+    }else if(e.kind === "terminieren"){
+      if(tag >= tvon && tag <= tbis){ e.quelle === "Promotion" ? promos++ : bloecke++; }
+    }
   });
 
   const zielTermine = Math.round(wunschWerte().tWoche || 0);
@@ -7292,7 +7354,7 @@ function vorbereitung(){
   const zielFGB   = proFGB   ? Math.ceil(luecke * anteilFGB / proFGB) : null;
   const zielPromo = proPromo ? Math.ceil(luecke * (1-anteilFGB) / proPromo) : null;
 
-  return {von, bis, termine, promos, bloecke, zielTermine, luecke,
+  return {von, bis, tvon, tbis, termine, promos, bloecke, zielTermine, luecke,
           zielFGB, zielPromo, proFGB, proPromo};
 }
 function vorbZeile(titel, ist, ziel, fuss){
@@ -7316,22 +7378,23 @@ function vorbereitungHTML(){
   }
   const rest = v.zielTermine - v.termine;
   const zeilen = [
-    vorbZeile("Kundentermine", v.termine, v.zielTermine,
+    vorbZeile("Kundentermine nächste Woche", v.termine, v.zielTermine,
       rest > 0 ? `noch ${rest} ${rest===1?"Termin":"Termine"} bis zum Wochenziel` : "Wochenziel steht"),
     v.zielFGB !== null
-      ? vorbZeile("Festgebiet · Blöcke", v.bloecke, v.zielFGB,
+      ? vorbZeile("Festgebiet · Blöcke diese Woche", v.bloecke, v.zielFGB,
           `bei ${dec(v.proFGB,1)} Terminen je Block`)
-      : `<div class="vzeile stumm"><div class="vkopf"><span>Festgebiet · Blöcke</span><b>${v.bloecke}</b></div>
+      : `<div class="vzeile stumm"><div class="vkopf"><span>Festgebiet · Blöcke diese Woche</span><b>${v.bloecke}</b></div>
          <div class="vfuss">Noch keine Quote — nach ein paar Blöcken steht hier ein Ziel.</div></div>`,
     v.zielPromo !== null
-      ? vorbZeile("Promotion · Einsätze", v.promos, v.zielPromo,
+      ? vorbZeile("Promotion · Einsätze diese Woche", v.promos, v.zielPromo,
           `bei ${dec(v.proPromo,1)} Terminen je Einsatz`)
-      : `<div class="vzeile stumm"><div class="vkopf"><span>Promotion · Einsätze</span><b>${v.promos}</b></div>
+      : `<div class="vzeile stumm"><div class="vkopf"><span>Promotion · Einsätze diese Woche</span><b>${v.promos}</b></div>
          <div class="vfuss">Noch keine Quote — nach ein paar Einsätzen steht hier ein Ziel.</div></div>`
   ].join("");
   return `<div class="asec vorb">
     <h3>Vorbereitung für nächste Woche</h3>
-    <p class="sub">${fmt(fromDk(v.von))} – ${fmt(fromDk(v.bis))}</p>
+    <p class="sub">Termine für ${fmt(fromDk(v.von))} – ${fmt(fromDk(v.bis))} ·
+      terminiert wird in dieser Woche</p>
     ${zeilen}
     <div class="actions einzeln"><button class="btn" data-leerziel="planer">Woche planen</button></div>
   </div>`;
@@ -7440,8 +7503,13 @@ if("serviceWorker" in navigator){
   addEventListener("load", ()=> navigator.serviceWorker.register("sw.js").catch(()=>{}));
 }
 
+/* "system" folgt der Einstellung des Telefons, "an" ueberstimmt sie,
+   "aus" schaltet die Bewegung unabhaengig davon ab. */
+function bewegungJetzt(){ return settings.bewegung || "an"; }
+function bewegungSetzen(){ document.body.dataset.bewegung = bewegungJetzt(); }
 function themaJetzt(){ return (me && me.thema) || store.get('bw-thema') || "Dunkel"; }
 function themaSetzen(t, sichern){
+  bewegungSetzen();
   store.set('bw-thema', t);
   if(sichern && me){ me.thema = t; userSet(me).catch(()=>{}); }
   document.body.classList.toggle('hell', t === "Hell");
