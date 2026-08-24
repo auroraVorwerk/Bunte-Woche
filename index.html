@@ -1111,7 +1111,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 <!-- Die Zahl hinter ?v= MUSS bei jeder Aenderung an der ui.css hochgezaehlt
      werden. Sonst holen Browser und Service Worker die alte Datei aus dem
      Zwischenspeicher und die neuen Regeln kommen nie an. -->
-<link rel="stylesheet" href="ui.css?v=79">
+<link rel="stylesheet" href="ui.css?v=90">
 </head>
 <body>
 
@@ -1813,7 +1813,7 @@ function nbFortschritt(){
   /* Der Balken sagt nur DASS etwas fehlt. Die Liste sagt WAS - und
      bringt einen mit einem Tipp direkt dorthin. */
   const liste = NAMEN.map((name,i)=>
-    `<button type="button" class="nbblock${bloecke[i] ? " ok" : ""}${i === naechster ? " dran" : ""}"
+    `<button type="button" class="fsblock${bloecke[i] ? " ok" : ""}${i === naechster ? " dran" : ""}"
        data-nbspring="${ANKER[i]}"><i>${bloecke[i] ? "✓" : ""}</i>${name}</button>`).join("");
   const offen = !!n._blockliste;
   return `<div class="nbfortschritt">
@@ -1821,7 +1821,7 @@ function nbFortschritt(){
     <button type="button" class="nbtext" id="nbListeAuf" aria-expanded="${offen}">
       <span>${fertig} von ${bloecke.length} Blöcken vollständig</span>
       <span>${pct} % <b class="kp">›</b></span></button>
-    ${offen ? `<div class="nbblocks">${liste}</div>` : ""}
+    ${offen ? `<div class="fsblocks">${liste}</div>` : ""}
   </div>`;
 }
 const opts = (arr,act) => arr.map(o=>`<button class="opt" data-${act}="${o}">${o}</button>`).join("");
@@ -3638,7 +3638,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v79 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v90 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
