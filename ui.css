@@ -790,7 +790,14 @@ button,a,.opt,.mini,.btn,.navlink,.tab,summary,[role="button"]{
 .mini{min-height:38px;display:inline-flex;align-items:center}
 
 @media (prefers-reduced-motion:reduce){
-  *{animation:none !important;transition:none !important}
+  body:not([data-bewegung="an"]) *{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important;
+  }
+}
+body[data-bewegung="aus"] *{
+  animation-duration:.01ms !important;animation-iteration-count:1 !important;
+  transition-duration:.01ms !important;scroll-behavior:auto !important;
 }
 
 /* Beim PDF-Export darf weder Spalte noch Leiste Platz belegen */
