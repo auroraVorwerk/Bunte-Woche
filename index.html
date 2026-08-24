@@ -1108,7 +1108,10 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 .invsumme span{ text-align:left !important; }
 .invsumme b{ text-align:right !important; font-size:1.25rem; }
 </style>
-<link rel="stylesheet" href="ui.css?v=33">
+<!-- Die Zahl hinter ?v= MUSS bei jeder Aenderung an der ui.css hochgezaehlt
+     werden. Sonst holen Browser und Service Worker die alte Datei aus dem
+     Zwischenspeicher und die neuen Regeln kommen nie an. -->
+<link rel="stylesheet" href="ui.css?v=79">
 </head>
 <body>
 
