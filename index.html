@@ -1122,7 +1122,7 @@ body.druck-messen .druckstat{display:block;position:fixed;left:-30000px;top:0;wi
 <!-- Die Zahl hinter ?v= MUSS bei jeder Aenderung an der ui.css hochgezaehlt
      werden. Sonst holen Browser und Service Worker die alte Datei aus dem
      Zwischenspeicher und die neuen Regeln kommen nie an. -->
-<link rel="stylesheet" href="ui.css?v=92">
+<link rel="stylesheet" href="ui.css?v=93">
 </head>
 <body>
 
@@ -3649,7 +3649,7 @@ document.addEventListener('click', ev=>{
 
 /* ================= Vertriebsmonat, Provision, Ziele ================= */
 const MWST = 1.19;
-const BUILD = "v92 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
+const BUILD = "v93 · 24.08.2026";        // steht unten im Profil – zum Prüfen, welcher Stand geladen ist
 const TIERS = [{u:3000,b:.04},{u:5000,b:.08},{u:7000,b:.10},{u:12000,b:.12}];
 const settings = {bestellrahmen:0};
 const RESET_PFEIL = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`;
@@ -4388,7 +4388,12 @@ const store = {
 };
 const DK_RE = /^(V-|TL-)?DK\d{8}$/;
 const istAdmin      = () => !!me && me.dk.startsWith("V-DK");
-const istTeamleiter = () => !!me && (me.dk.startsWith("TL-DK") || istAdmin());
+/* Teamleiter ist, wer eine TL-DK-Nummer hat ODER im Datensatz ausdruecklich
+   als Teamleader eingetragen ist. Das zweite gibt es fuer alle, die sich
+   versehentlich ohne das Kuerzel registriert haben - so bleiben Daten,
+   Anmeldung und Firebase-Regeln unveraendert. */
+const istTeamleiter = () => !!me &&
+  (me.dk.startsWith("TL-DK") || me.rolle === "Teamleader" || istAdmin());
 const rolleAus = dk => dk.startsWith("V-DK") ? "Admin" : (dk.startsWith("TL-DK") ? "Teamleader" : "Kundenberater");
 const SEED_USERS = {
   "V-DK00000000": {dk:"V-DK00000000", vorname:"admin", nachname:"admin", rolle:"Admin", team:[]}
@@ -5584,6 +5589,7 @@ async function renderDelete(){
     const alle = istAdmin() ? await alleNutzer() : [];
     const grenze = Date.now() - 365*TAG;
     inaktiv = alle.filter(u => u.dk !== me.dk && !u.dk.startsWith("V-DK") && !u.dk.startsWith("TL-DK")
+                               && u.rolle !== "Teamleader"
                                && (u.lastLogin || 0) < grenze);
   }catch(e){}
   box.innerHTML = `
@@ -5598,6 +5604,25 @@ async function renderDelete(){
       <div class="actions"><button class="btn danger" id="delGo">Löschen</button></div>
     </div>
     ${istAdmin() ? `<div class="asec">
+      <h3>Rolle ändern</h3>
+      <p class="sub">Für alle, die sich ohne das Kürzel TL-DK registriert haben.
+        Die DK-Nummer bleibt, nur die Rolle wechselt.</p>
+      <div class="grp">
+        ${fld("rolDk","DK-Nummer","","text",'autocomplete="off" spellcheck="false"')}
+        <div class="field"><label>Neue Rolle</label>
+          <div class="seg" id="rolSeg">
+            <button type="button" data-rolle="Teamleader" aria-pressed="true">Teamleiter</button>
+            <button type="button" data-rolle="Kundenberater" aria-pressed="false">Kundenberater</button>
+          </div></div>
+      </div>
+      <p class="err" id="rolErr" hidden></p>
+      <p class="hinweis" id="rolOk" hidden></p>
+      <div class="actions einzeln"><button class="btn" id="rolGo">Rolle setzen</button></div>
+      <p class="hinweis">Die betroffene Person muss sich danach einmal ab- und wieder
+        anmelden, damit die neuen Menüpunkte erscheinen.</p>
+    </div>
+
+    <div class="asec">
       <h3>Seit über 12 Monaten inaktiv</h3>
       ${inaktiv.length ? inaktiv.map(u=>`<div class="aline">
           <span class="nm">${u.vorname} ${u.nachname} · ${u.dk}</span>
@@ -5606,6 +5631,28 @@ async function renderDelete(){
         : `<p class="aempty">Keine inaktiven Zugänge.</p>`}
       <p class="hinweis">Die Liste erscheint bei jedem Aufruf neu — ein automatisches Löschen im Hintergrund ist ohne kostenpflichtige Serverfunktionen nicht möglich.</p>
     </div>` : ""}`;
+  const rolSeg = document.getElementById('rolSeg');
+  if(rolSeg) rolSeg.querySelectorAll('[data-rolle]').forEach(b=> b.onclick = ()=>
+    rolSeg.querySelectorAll('[data-rolle]').forEach(x=> x.setAttribute('aria-pressed', x===b)));
+  const rolGo = document.getElementById('rolGo');
+  if(rolGo) rolGo.onclick = async ()=>{
+    const err = document.getElementById('rolErr'), ok = document.getElementById('rolOk');
+    const zeig = m => { err.textContent = m; err.hidden = !m; ok.hidden = true; };
+    const dkv = document.getElementById('rolDk').value.trim().toUpperCase();
+    const rolle = (rolSeg.querySelector('[aria-pressed="true"]') || {}).dataset.rolle;
+    zeig("");
+    if(!dkv) return zeig("Bitte eine DK-Nummer eintragen.");
+    if(dkv === me.dk) return zeig("Die eigene Rolle lässt sich hier nicht ändern.");
+    let u;
+    try{ u = await userGet(dkv); }catch(e){ return zeig("Keine Verbindung zur Datenbank."); }
+    if(!u) return zeig("Zu dieser DK-Nummer ist niemand angemeldet.");
+    if(u.rolle === "Admin") return zeig("Ein Admin-Zugang lässt sich hier nicht ändern.");
+    try{ await db.ref('users/'+dkv+'/rolle').set(rolle); }
+    catch(e){ return zeig("Nicht gespeichert: " + (e.message || e)); }
+    err.hidden = true;
+    ok.textContent = `${u.vorname} ${u.nachname} ist jetzt ${rolle}.`;
+    ok.hidden = false;
+  };
   document.getElementById('delGo').onclick = ()=> loeschenStarten(
     document.getElementById('delDk').value.trim().toUpperCase(),
     document.getElementById('delVor').value.trim(),
